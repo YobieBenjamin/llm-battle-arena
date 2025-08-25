@@ -1,0 +1,42 @@
+{
+  "name": "llm-battle-arena",
+  "version": "1.0.0",
+  "description": "🤖⚔️ The Ultimate AI Showdown - Compare Claude, ChatGPT, and Gemini responses in real-time!",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "deploy": "vercel --prod",
+    "start": "vercel dev",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "claude",
+    "chatgpt",
+    "gemini",
+    "comparison",
+    "battle",
+    "arena",
+    "vercel",
+    "edge-functions"
+  ],
+  "author": "LLM Battle Arena Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/llm-battle-arena.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/llm-battle-arena/issues"
+  },
+  "homepage": "https://github.com/yourusername/llm-battle-arena#readme",
+  "devDependencies": {
+    "vercel": "^37.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
