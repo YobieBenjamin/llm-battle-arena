@@ -7,9 +7,10 @@ const appRoot=path.resolve(__dirname,'..');
 (async()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'arena-smoke-'));
  const app=await electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH || require('electron'),args:[appRoot,`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});
+ let page;
  try {
  console.log('Electron launched');
- const page=await app.firstWindow({timeout:30000}); page.setDefaultTimeout(15000); console.log('Window ready',page.url());
+ page=await app.firstWindow({timeout:30000}); page.setDefaultTimeout(15000); console.log('Window ready',page.url());
  if(process.env.ARENA_DEBUG) { app.process().stderr?.on('data',data=>process.stderr.write(data)); page.on('console',message=>{if(message.type()==='error')console.error('Renderer:',message.text());}); }const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.locator('#compare').click();
  await page.locator('#claude-answer').filter({hasText:'ILLUSTRATIVE SAMPLE'}).waitFor();
@@ -133,5 +134,5 @@ const appRoot=path.resolve(__dirname,'..');
  assert.ok(!roles.some(role=>['reload','forcereload','toggledevtools'].includes(role)));
  assert.deepEqual(errors,[]);
  console.log('PASS: manual paste shortcuts preserve answers; pinned preview stays readable at three laptop sizes and scrolls; pinned Compare shortcut and standard menus; friendly IPC errors; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
- } catch(error) {console.error('Failure URL:',page.url());throw error;} finally {await app.close();fs.rmSync(dir,{recursive:true,force:true});}
+ } catch(error) {console.error('Failure URL:',page?.url());throw error;} finally {await app.close();fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
