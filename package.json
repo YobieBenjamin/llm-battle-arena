@@ -12,9 +12,9 @@
     "dev": "electron .",
     "test": "node --test test/*.test.js",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win nsis portable",
-    "dist:mac": "electron-builder --mac zip"
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win nsis portable --publish never",
+    "dist:mac": "electron-builder --mac zip --publish never"
   },
   "devDependencies": {
     "electron": "^42.0.0",
