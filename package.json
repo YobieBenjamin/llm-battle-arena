@@ -1,42 +1,54 @@
 {
   "name": "llm-battle-arena",
-  "version": "1.0.0",
-  "description": "🤖⚔️ The Ultimate AI Showdown - Compare Claude, ChatGPT, and Gemini responses in real-time!",
-  "main": "index.html",
+  "version": "2.0.0",
+  "description": "One prompt. Three perspectives. A private desktop LLM comparison app.",
+  "main": "desktop/main.cjs",
   "type": "module",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build step required'",
-    "deploy": "vercel --prod",
-    "start": "vercel dev",
-    "test": "echo 'No tests configured'"
-  },
-  "keywords": [
-    "llm",
-    "ai",
-    "claude",
-    "chatgpt",
-    "gemini",
-    "comparison",
-    "battle",
-    "arena",
-    "vercel",
-    "edge-functions"
-  ],
-  "author": "LLM Battle Arena Team",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/llm-battle-arena.git"
+  "author": "Yobie Benjamin",
+  "repository": "https://github.com/yobieben/llm-battle-arena",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "test": "node --test test/*.test.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:mac": "electron-builder --mac zip"
   },
-  "bugs": {
-    "url": "https://github.com/yourusername/llm-battle-arena/issues"
-  },
-  "homepage": "https://github.com/yourusername/llm-battle-arena#readme",
   "devDependencies": {
-    "vercel": "^37.0.0"
+    "electron": "^42.0.0",
+    "electron-builder": "^26.0.12"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.12.0"
+  },
+  "build": {
+    "appId": "com.yobieben.llmbattlearena",
+    "productName": "LLM Battle Arena",
+    "files": [
+      "desktop/**",
+      "src/**",
+      "index.html",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "zip",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }
