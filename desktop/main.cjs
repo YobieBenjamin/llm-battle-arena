@@ -121,6 +121,9 @@ if(ownsProfile) app.whenReady().then(async () => {
     if(running.size) throw new Error('Wait for the comparison to finish before changing connections.');
     if(!value || typeof value!=='object') throw new Error('Invalid settings.');
     const before=store.snapshot();
+    // Check the whole submission before any provider request, including keys in later fields.
+    const hasNewKey=['claude','openai','gemini','openrouter'].some(id=>!value[id]?.remove && typeof value[id]?.key==='string' && value[id].key.trim());
+    if(hasNewKey && !before.canPersist)throw new Error('OS credential encryption is unavailable. Use Website assist on this machine.');
     for(const id of ['claude','openai','gemini','openrouter']) {
       const entry=value[id]; if(!entry || entry.remove) continue;
       if(typeof entry.key!=='string')throw new Error('Invalid API key.');

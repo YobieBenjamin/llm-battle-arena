@@ -22,7 +22,7 @@ function battleUI() {
     card.querySelector('.enabled-label').hidden=hidden;
     $(`${id}-answer`).setAttribute('aria-label',hidden?`Answer ${String.fromCharCode(65+order.indexOf(id))}`:`${PROVIDERS[id].name} answer`);
     $(`${id}-vote`).textContent=hidden?'Pick winner':comparison?.blind?.winner===id?'Winner':'Not selected';
-    $(`${id}-vote`).setAttribute('aria-label',`Pick Answer ${String.fromCharCode(65+order.indexOf(id))} as winner`);
+    $(`${id}-vote`).setAttribute('aria-label',hidden?`Pick Answer ${String.fromCharCode(65+order.indexOf(id))} as winner`:`${PROVIDERS[id].name}: ${$(`${id}-vote`).textContent}`);
     $(`${id}-vote`).hidden=!comparison?.blind; $(`${id}-vote`).disabled=voting || !canVote(comparison,results,pending.size);
   }
   $('export-md').disabled=hidden; $('export-json').disabled=hidden; $('reveal-blind').hidden=!hidden; $('reveal-blind').disabled=Boolean(pending.size);

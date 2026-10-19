@@ -1,3 +1,12 @@
+## v2.4.4 — verification follow-up
+
+- Normalize text files to LF on every platform before packaging.
+- Announce actual vote results to screen readers after reveal.
+- Refuse saving new API keys before provider checks when secure OS encryption is unavailable.
+- Clarify how to deliberately recheck an unchanged saved key.
+
+See [the verification follow-up](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/AUDIT-RESPONSE-2.4.4.md) for the audit review and remaining real-machine checks.
+
 ## v2.4.3 — independent audit fixes
 
 - Responsive streaming: coalesce updates, show plain text while streaming, then render safe Markdown and artifact badges once the answer stops.

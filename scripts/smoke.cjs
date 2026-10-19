@@ -203,6 +203,7 @@ const appRoot=path.resolve(__dirname,'..');
  await page.locator('#claude-vote').click();
  await page.locator('#battle-note').filter({hasText:'Winner: Claude'}).waitFor();
  assert.equal(await page.locator('.claude h3').textContent(),'Claude');
+ for(const [id,name] of [['claude','Claude'],['openai','OpenAI'],['gemini','Gemini']]) assert.equal(await page.locator(`#${id}-vote`).getAttribute('aria-label'),`${name}: ${id==='claude'?'Winner':'Not selected'}`);
  assert.equal(await page.locator('#export-json').isEnabled(),true);
  const tally=await page.evaluate(()=>window.arena.preferences());assert.equal(tally.tally.claude,1);
  await page.locator('#history').click();await page.locator('.history-row button').filter({hasText:'Blind test question'}).first().click();

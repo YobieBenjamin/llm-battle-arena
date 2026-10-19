@@ -283,3 +283,10 @@ An initial HTTP 503 or 529 gets one retry after two seconds, with a visible retr
 - **A vote was saved but history could not update?** The winner still appears and counts once. Reopening that comparison recovers the recorded winner.
 
 Opening the app again brings the existing window forward. Only one instance may write a profile at a time. Markdown and JSON exports identify whether a live comparison used direct providers or OpenRouter.
+
+
+### What Save connections checks
+
+When you paste a new key, Save first checks that this computer can encrypt it. If encryption is unavailable, Save refuses before contacting any provider. Nothing is stored; Website assist remains available.
+
+Save checks newly supplied keys and changed active-provider settings. It intentionally does not recheck unchanged saved keys, so another provider's outage cannot block an unrelated change. A successful Save does not prove those unchanged keys are still valid. To check one now, click **Check key & load models** beside it. A revoked key will otherwise be reported on its next comparison. A successful model-list check still does not guarantee billing credit or generation access.

@@ -4,9 +4,25 @@ const {_electron}=require('playwright-core');const assert=require('node:assert/s
 try{
  app=await _electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH||require('electron'),args:[path.resolve(__dirname,'..'),`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'));
  await app.evaluate(({safeStorage})=>{
-  Object.defineProperty(safeStorage,'isEncryptionAvailable',{value:()=>true});Object.defineProperty(safeStorage,'getSelectedStorageBackend',{value:()=> 'test'});Object.defineProperty(safeStorage,'encryptString',{value:key=>Buffer.from(key)});Object.defineProperty(safeStorage,'decryptString',{value:buffer=>buffer.toString()});
+  Object.defineProperty(safeStorage,'isEncryptionAvailable',{value:()=>globalThis.testEncryptionAvailable!==false});Object.defineProperty(safeStorage,'getSelectedStorageBackend',{value:()=>globalThis.testStorageBackend||'test'});Object.defineProperty(safeStorage,'encryptString',{value:key=>Buffer.from(key)});Object.defineProperty(safeStorage,'decryptString',{value:buffer=>buffer.toString()});
   globalThis.catalogCalls=[];globalThis.fetch=async url=>{globalThis.catalogCalls.push(url);if(globalThis.catalogOffline)throw new Error('offline');return new Response(JSON.stringify({data:[{id:'test-model'}],models:[{name:'models/test-model',supportedGenerationMethods:['generateContent']}]}));};
  });
+ // Save must reject new secrets before checking any provider, including later fields and router keys.
+ const settingsBefore=await page.evaluate(()=>window.arena.connections());
+ for(const backend of ['unavailable','basic_text']) {
+  await app.evaluate((_electron,backend)=>{globalThis.testEncryptionAvailable=backend!=='unavailable';globalThis.testStorageBackend=backend==='basic_text'?'basic_text':'test';globalThis.catalogCalls=[];},backend);
+  for(const id of ['claude','gemini','openrouter']) {
+   const message=await page.evaluate(async({id,config})=>{
+    const value=Object.fromEntries(Object.entries(config.providers).map(([name,p])=>[name,{model:p.model,key:'',remove:false}]));
+    value.openrouter={key:'',enabled:false,remove:false,models:config.openrouter.models};value[id].key='synthetic-new-key';
+    try{await window.arena.saveConnections(value);return 'unexpected success';}catch(e){return e.message;}
+   },{id,config:settingsBefore});
+   assert.match(message,/credential encryption is unavailable/);
+  }
+  assert.deepEqual(await app.evaluate(()=>globalThis.catalogCalls),[],'No provider checks when new keys cannot be encrypted');
+ }
+ await app.evaluate(()=>{globalThis.testEncryptionAvailable=true;globalThis.testStorageBackend='test';});
+ assert.deepEqual(await page.evaluate(()=>window.arena.connections()),settingsBefore,'Rejected saves must preserve connections');
  await page.evaluate(async()=>{const c=await window.arena.connections();globalThis.testSettings=Object.fromEntries(Object.entries(c.providers).map(([id,p])=>[id,{model:p.model,key:'synthetic-key',remove:false}]));await window.arena.saveConnections(globalThis.testSettings);for(const entry of Object.values(globalThis.testSettings))entry.key='';});
  assert.equal((await app.evaluate(()=>globalThis.catalogCalls)).length,3);
  await app.evaluate(()=>{globalThis.catalogCalls=[];globalThis.catalogOffline=true;});
@@ -32,6 +48,6 @@ try{
  });
  assert.equal(await app.evaluate(()=>globalThis.recoveryTitle),'Arena needs to reload');
  assert.equal(await app.evaluate(()=>globalThis.recoveryLostAllWindows),false,'Recovery must not trigger quit-on-last-window on Windows/Linux');
- console.log('PASS: renderer crash offers recovery; unchanged keys survive provider outage; named key errors; vote/history partial failure is idempotent and recoverable; failed preference reverts checkbox; Save cannot be dismissed mid-flight.');
+ console.log('PASS: encryption preflight prevents provider calls; renderer crash offers recovery; unchanged keys survive provider outage; named key errors; vote/history partial failure is idempotent and recoverable; failed preference reverts checkbox; Save cannot be dismissed mid-flight.');
 }finally{if(app)await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
