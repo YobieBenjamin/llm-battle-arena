@@ -50,17 +50,18 @@ export function buildRequest(id, prompt, model, maxTokens, key) {
   throw new Error('Unknown provider.');
 }
 
-export async function runProvider({ id, prompt, model, maxTokens, key, keyError, signal, emit, fetchImpl = fetch, timeoutMs = 300000, idleMs = 45000 }) {
+export async function runProvider({ id, prompt, model, maxTokens, key, keyError, signal, emit, fetchImpl = fetch, timeoutMs = 300000, idleMs = 45000, firstByteMs = 120000 }) {
   const started = Date.now();
   let text = '', tokens = null, inputTokens = null, reasoningTokens = null, finished = false, truncated = false;
   const deadline = new AbortController();
   let timeoutKind = '', idleTimer;
   const totalTimer = setTimeout(() => { timeoutKind = 'total'; deadline.abort(); }, timeoutMs);
-  const touch = () => {
+  const armIdle = delay => {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => { timeoutKind = 'idle'; deadline.abort(); }, idleMs);
+    idleTimer = setTimeout(() => { timeoutKind = 'idle'; deadline.abort(); }, delay);
   };
-  touch();
+  const touch = () => armIdle(idleMs);
+  armIdle(firstByteMs);
   const combined = AbortSignal.any([signal, deadline.signal]);
   const send = (status, extra = {}) => emit({ id, model, status, text, tokens, inputTokens, reasoningTokens, elapsed: Date.now() - started, ...extra });
   try {

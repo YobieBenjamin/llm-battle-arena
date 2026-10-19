@@ -165,7 +165,7 @@ Changing the prompt or included providers in Website assist clears the pasted co
 The Arena recognizes complete, labeled fenced code blocks as files. A small gold **Y** appears at the top of the matching answer card. Examples include HTML, SVG, JSON, CSV, Markdown, JavaScript, TypeScript/JSX/TSX, Python, CSS, and text. An unfinished code block does not produce a badge until its closing fence arrives. Up to 12 files are shown per answer, each limited to one million characters.
 
 1. **Hover over Y** to reveal the preview. You can move your pointer into the preview to inspect it; moving away from both hides an unpinned peek.
-2. **Click Y** to pin the preview in a dock beside the cards on wide windows or below the cards on smaller windows. It stays displayed without covering the answer controls.
+2. **Click Y** to pin the preview in a dock beside the cards on wide windows or below the cards on smaller windows. It stays displayed without covering the answer controls. On smaller windows, scroll the results area to move between the answers and the preview; both keep readable heights. Ctrl/Cmd+Enter still starts a comparison while the preview is pinned (except inside website-answer paste boxes).
 3. **Click the same Y again** to hide it. The Close button also hides it.
 4. A pinned file stays put if you merely hover over another provider's badge. Clicking the other provider's Y deliberately switches the pinned preview.
 5. Use the filename tabs for multiple files. **Show source** toggles the source view for HTML, SVG, and JSON.
@@ -205,7 +205,7 @@ Connection settings normally survive because they are stored in your user profil
 | Access denied | Check your provider account's access to the selected model. |
 | Model unavailable / HTTP 404 | Open Connections and change the Model ID to a currently available model for your provider account. |
 | Rate limit or billing quota reached | Check the provider dashboard for credits, billing, or limits. Wait before retrying. |
-| Timed out | No stream data arrived for 45 seconds, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
+| Timed out | No first response data arrived within two minutes, no further data arrived for 45 seconds after streaming started, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
 | Saved key could not be unlocked | Unlock your OS keychain/credential store, or open Connections and paste a replacement key. A saved-key indicator does not guarantee the OS can decrypt it. |
 | Only one or two answers | Read the other card's error, check its key/Include setting, and Retry just that provider. |
 | No text or output limit reached | Increase the output limit or shorten the task. Reasoning models may spend the budget before producing visible text. |

@@ -31,7 +31,7 @@ Electron downloads its development runtime on first use if it is not already cac
 | `test/` | Behavioral tests with provider fixtures and a fake encryption adapter. |
 | `.github/workflows/desktop.yml` | Four architecture-specific installer builds and tag-triggered release publishing. |
 
-Live mode uses Anthropic Messages streaming, OpenAI Responses streaming (`store: false`), and Gemini `streamGenerateContent`. Every selected adapter receives the unchanged prompt. Requests have separate cancellation/error outcomes, a 45-second idle deadline refreshed by stream bytes, and a five-minute overall cap. API errors are simplified for users; the app does not display raw provider error bodies. Partial text is retained. Retries are explicit rather than automatic to avoid surprise repeat charges.
+Live mode uses Anthropic Messages streaming, OpenAI Responses streaming (`store: false`), and Gemini `streamGenerateContent`. Every selected adapter receives the unchanged prompt. Requests have separate cancellation/error outcomes, a two-minute first-byte allowance followed by a 45-second idle deadline refreshed by stream bytes, and a five-minute overall cap. API errors are simplified for users; the app does not display raw provider error bodies. Partial text is retained. Retries are explicit rather than automatic to avoid surprise repeat charges.
 
 No persistent chat history or analytics is implemented. Sample answers are fixed written fixtures. Website assist opens fixed official URLs and lets the user paste answers manually. Model IDs are editable because account access and provider catalogs change; defaults are not a guarantee of equal capabilities or current availability.
 
@@ -101,7 +101,7 @@ The default branch is `main` in **YobieBenjamin/llm-battle-arena**. This reposit
 1. Update the version in `package.json` and the root/package entries in `package-lock.json`.
 2. Update `docs/RELEASE_NOTES.md` and the user guide for changed behavior.
 3. Run tests and manual checks. Commit and push to main.
-4. Tag the reviewed commit with the matching version, for example `git tag v2.2.1`, then push the tag.
+4. Tag the reviewed commit with the matching version, for example `git tag v2.2.2`, then push the tag.
 5. The **Desktop installers** workflow builds Windows x64, Windows ARM64, macOS ARM64, and macOS x64. All four build jobs and the UI regression job must pass before publishing.
 6. The release job combines artifacts, produces `SHA256SUMS.txt`, and publishes GitHub Release downloads using the workflow token.
 7. Check the public release and README links. The download filenames remain stable across versions, so `/releases/latest/download/...` always selects the newest release.

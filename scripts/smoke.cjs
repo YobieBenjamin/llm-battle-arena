@@ -108,18 +108,30 @@ const appRoot=path.resolve(__dirname,'..');
  await page.locator('#settings[open]').waitFor();
  await page.locator('#settings-form button[type=submit]').click();
  await page.locator('#settings').waitFor({state:'hidden'});
- await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setBounds({width:880,height:650}));
- await page.waitForFunction(()=>innerWidth===880,null,{timeout:15000});
- await page.locator('#mode').selectOption('sample');
- await page.locator('#compare').click();
- await page.locator('#gemini-artifact').click();
- const fits=await page.evaluate(()=>{
-  const panel=document.getElementById('artifact-panel').getBoundingClientRect();
-  const actions=document.querySelector('.gemini .card-actions').getBoundingClientRect();
-  return {ok:panel.bottom<=innerHeight+1 && actions.bottom<=panel.top+1,panel:{top:panel.top,bottom:panel.bottom},actions:{top:actions.top,bottom:actions.bottom},height:innerHeight};
- });
- assert.ok(fits.ok,'small laptop geometry: '+JSON.stringify(fits));
+ for(const [width,height] of [[880,650],[1280,720],[1440,900]]) {
+  await app.evaluate(({BrowserWindow},{width,height})=>BrowserWindow.getAllWindows()[0].setBounds({width,height}),{width,height});
+  await page.waitForFunction(width=>innerWidth===width,width,{timeout:15000});
+  await page.locator('#mode').selectOption('sample');
+  await page.locator('#compare').click();
+  await page.locator('#gemini-artifact').click();
+  const geometry=await page.evaluate(()=>({
+   answers:[...document.querySelectorAll('.answer')].map(el=>el.clientHeight),
+   preview:document.getElementById('artifact-body').clientHeight,
+   scrollable:document.querySelector('.results-workspace').scrollHeight>document.querySelector('.results-workspace').clientHeight
+  }));
+  assert.ok(geometry.answers.every(h=>h>=150) && geometry.preview>=150,`Readable dock at ${width}x${height}: ${JSON.stringify(geometry)}`);
+  if(width<1400) assert.ok(geometry.scrollable,'stacked results must scroll');
+  await page.locator('#artifact-save').scrollIntoViewIfNeeded();
+  assert.ok(await page.locator('#artifact-save').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight;}));
+  await page.locator('body').click({position:{x:5,y:5}});
+  await page.keyboard.press(process.platform==='darwin'?'Meta+Enter':'Control+Enter');
+  await page.locator('#artifact-panel').waitFor({state:'hidden'});
+ }
+ const roles=await app.evaluate(({Menu})=>{const roles=[];const walk=menu=>menu?.items.forEach(item=>{if(item.role)roles.push(item.role.toLowerCase());walk(item.submenu)});walk(Menu.getApplicationMenu());return roles;});
+ for(const role of ['close','minimize']) assert.ok(roles.includes(role),`Missing ${role} menu role`);
+ if(process.platform==='darwin') for(const role of ['about','hide','hideothers']) assert.ok(roles.includes(role));
+ assert.ok(!roles.some(role=>['reload','forcereload','toggledevtools'].includes(role)));
  assert.deepEqual(errors,[]);
- console.log('PASS: manual paste shortcuts preserve answers; pinned preview does not overlap cards; friendly IPC errors; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
+ console.log('PASS: manual paste shortcuts preserve answers; pinned preview stays readable at three laptop sizes and scrolls; pinned Compare shortcut and standard menus; friendly IPC errors; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
  } catch(error) {console.error('Failure URL:',page.url());throw error;} finally {await app.close();fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

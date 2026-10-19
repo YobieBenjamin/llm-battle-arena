@@ -1,3 +1,13 @@
+## v2.2.2 — readable artifact docks on laptops
+
+- Stacked pinned previews now keep 360px for the cards and 360px for the preview. Scroll inside the results area to reach both.
+- Ctrl/Cmd+Enter works with a pinned preview; website-answer paste boxes remain protected.
+- Restored standard Mac About, Hide, Close and Minimize actions without enabling reload or DevTools.
+- Providers get two minutes before the first response bytes, then 45 seconds between chunks, with the existing five-minute total cap.
+- Regression checks measure visible answer and preview heights at 880×650, 1280×720 and 1440×900, rather than checking only overlap.
+
+Mac bundles remain ad-hoc signed, not Apple notarized. A fresh Safari download and first launch on a real Mac has not been certified. See the novice guide below.
+
 One question. Three answers. A small, free desktop curiosity toy for comparing Claude, OpenAI, and Gemini.
 
 ## Download

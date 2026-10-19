@@ -39,3 +39,9 @@ A fresh Safari-download → Applications → first-launch approval flow has **no
 - [OpenAI output-token accounting](https://developers.openai.com/api/docs/guides/token-counting) explains why output minus reasoning is not necessarily visible text.
 
 [Start here](../START-HERE.md) · [User guide](USER_GUIDE.md) · [Historical 2.2.0 audit](AUDIT.md)
+
+## v2.2.2 follow-up to the independent re-audit
+
+The 2.2.1 non-overlap check missed an actual readability regression: stacking the dock divided a fixed-height area into tiny panes. The corrected stacked workspace scrolls vertically and reserves 360px each for cards and preview. The UI regression now asserts every answer body and the preview body are at least 150px tall at 880×650, 1280×720 and 1440×900, and checks scroll access to preview controls. It also verifies Compare's keyboard shortcut with the dock pinned and standard menu roles, while keeping paste boxes protected.
+
+The first-byte wait is now 120 seconds, followed by 45-second inactivity windows after bytes arrive; the total remains five minutes. New unit fixtures distinguish silent initial thinking from a stalled stream. All 36 unit tests and the local Electron regression passed without real keys or paid calls. The earlier Mac first-launch limitations still apply.

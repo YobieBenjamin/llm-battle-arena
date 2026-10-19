@@ -110,7 +110,7 @@ test('an unreadable saved key reports unlocking failure, not a missing key',asyn
 });
 test('idle timeout fires while waiting for response data',async()=>{
  const updates=[];
- await runProvider({...base,id:'openai',idleMs:10,timeoutMs:1000,emit:e=>updates.push(e),fetchImpl:async(_url,{signal})=>new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}))});
+ await runProvider({...base,id:'openai',firstByteMs:10,idleMs:10,timeoutMs:1000,emit:e=>updates.push(e),fetchImpl:async(_url,{signal})=>new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}))});
  assert.match(updates.at(-1).error,/waiting for provider data/);
 });
 test('continuing stream chunks refresh the idle deadline',async()=>{
@@ -120,4 +120,21 @@ test('continuing stream chunks refresh the idle deadline',async()=>{
   controller.enqueue(new TextEncoder().encode(fixtures.openai.map(frame).join('')));controller.close();
  }}))});
  assert.equal(updates.at(-1).status,'done');
+});
+
+test('silent thinking gets the first-byte allowance before the shorter idle deadline',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'openai',firstByteMs:1000,idleMs:10,emit:e=>updates.push(e),fetchImpl:async()=>{
+  await new Promise(r=>setTimeout(r,50));
+  return stream(fixtures.openai.map(frame).join(''));
+ }});
+ assert.equal(updates.at(-1).status,'done');
+});
+test('after first bytes, a stalled stream uses the shorter idle deadline',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'openai',firstByteMs:1000,idleMs:10,emit:e=>updates.push(e),fetchImpl:async(_url,{signal})=>new Response(new ReadableStream({start(controller){
+  controller.enqueue(new TextEncoder().encode(': heartbeat\n\n'));
+  signal.addEventListener('abort',()=>controller.error(signal.reason),{once:true});
+ }}))});
+ assert.match(updates.at(-1).error,/waiting for provider data/);
 });

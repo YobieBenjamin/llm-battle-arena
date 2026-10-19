@@ -175,7 +175,7 @@ $('settings-form').onsubmit = async event => {
     notice('Connections saved on this computer.');
   } catch (error) { $('settings-error').textContent = error.message; }
 };
-document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && $('artifact-panel').hidden && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
+document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
 if (api) {
   api.onUpdate(update => {
     if (update.runId !== runId || !pending.has(update.id)) return;
