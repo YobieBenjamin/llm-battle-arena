@@ -1,0 +1,192 @@
+# LLM Battle Arena: the friendly user guide
+
+One prompt, three answers, and no complicated setup. Start with the sample, then connect your own model accounts through API keys if you want live answers.
+
+[Download the app](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Back to the quick start](../README.md)
+
+## Choose your download
+
+| Computer | File to download |
+| --- | --- |
+| Most Windows laptops (Intel or AMD) | `LLM-Battle-Arena-Windows-x64-Setup.exe` |
+| Windows laptop with an ARM/Snapdragon processor | `LLM-Battle-Arena-Windows-arm64-Setup.exe` |
+| Mac with an Apple M-series chip | `LLM-Battle-Arena-macOS-arm64.dmg` |
+| Mac with an Intel processor | `LLM-Battle-Arena-macOS-x64.dmg` |
+
+**Not sure?** On Mac, Apple menu → About This Mac shows Chip or Processor. On Windows, Settings → System → About → System type shows whether the processor is x64 or ARM. Use a currently supported, updated version of macOS or Windows; older systems may not run the bundled Electron runtime. Windows 7/8 and 32-bit PCs are not supported.
+
+Download the installer listed above, not GitHub's “Source code” ZIP. No GitHub account is needed to download public release assets. API keys require provider accounts, but the Arena itself has no account or password.
+
+## Install on Windows
+
+1. Click the Windows download link in the [README](../README.md), or find your Setup file on the [latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).
+2. Open your Downloads folder and double-click the downloaded `.exe`.
+3. Follow any Windows security approval described below. Only proceed if you trust this project and obtained the file from this repository's release page.
+4. The one-click installer installs for your Windows user, creates shortcuts, and opens the app. No destination-selection wizard is needed.
+5. Next time, use the **LLM Battle Arena** shortcut on your desktop or in Start.
+
+**Optional portable version:** release assets also include a `Portable.exe` for each Windows processor type. Double-click it to run without installing shortcuts. Connection settings are still saved in your Windows user profile, not alongside the portable file. Choose Setup for the easiest everyday experience.
+
+## Install on Mac
+
+1. Download the disk image matching your Mac's processor.
+2. Double-click the `.dmg` in Downloads.
+3. Drag **LLM Battle Arena** onto the **Applications** folder shown in the disk-image window.
+4. Open Finder → Applications → **LLM Battle Arena**.
+5. If macOS blocks the first launch, see the next section.
+6. Once the installed copy opens, eject the disk image from Finder. You can delete the downloaded `.dmg` if you wish.
+7. Next time, launch from Applications or Spotlight. You can also keep the app in your Dock.
+
+Do not keep running the app from inside the disk image. Install it into Applications first.
+
+## First-launch security prompts
+
+This hobby release is not signed with a verified publisher certificate and is not notarized by Apple. A warning is expected; a warning alone is not proof that a download is safe. Use only this project's release page and decide whether you trust the source. Never turn off antivirus, Gatekeeper, or Smart App Control globally to run it.
+
+**Mac:** after an attempted launch, macOS may offer a per-app approval in System Settings → Privacy & Security → Open Anyway. Follow the prompts only if you trust the downloaded app. Exact wording varies by macOS version. [Apple's official explanation](https://support.apple.com/en-us/102445).
+
+**Windows:** SmartScreen may say “Windows protected your PC.” Where Windows offers **More info → Run anyway**, that is a per-app choice you can make after checking the source. Smart App Control or an organization's policy may block it without offering that option. Do not disable those protections globally; on a managed machine, ask the administrator. [Microsoft's explanation of Smart App Control](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions).
+
+Publisher signing would reduce installation friction, but these downloads do not claim a verified publisher identity.
+
+## Your first minute: try Sample
+
+1. Open the app.
+2. Leave **Sample · no setup** selected.
+3. Click **Show sample**.
+4. Read the three example answers. Scroll inside any card to read more.
+5. Click **How to play** at the top whenever you want a reminder.
+
+The sample question is fixed and cannot be edited in this mode. Sample answers are human-written illustrations, not model output. They work offline and make no API calls. Choose Live API or Website assist for your own questions.
+
+## Connect your API keys
+
+API keys are like access passes for software. They are not your chat website username or password. Paying for a chat subscription does not automatically enable the matching API.
+
+1. Click **Connections**.
+2. For each provider, click **Get API key** to open its official developer site in your browser.
+3. Sign in there and create or find an API key. Providers may ask you to create a project or enable billing. Their screens and account requirements change over time.
+4. Copy the key and paste it into the matching Arena field. You can use the normal keyboard paste shortcut.
+5. Leave the **Model ID** unchanged to start. Availability depends on your provider account; you can edit it later.
+6. Repeat for the other providers, then click **Save connections**.
+7. With at least one saved key, the app selects **Live API · automatic**.
+
+Official key pages: [Anthropic](https://platform.claude.com/settings/keys), [OpenAI](https://platform.openai.com/api-keys), [Google AI Studio](https://aistudio.google.com/api-keys).
+
+You can start with one key. Uncheck **Include** on cards you have not connected. Three automatic answers require all three keys and working provider accounts. Saving a key does not contact the provider to validate billing or model access; the first live comparison tests whether it works.
+
+**Cost:** the Arena is free. Providers control API charges, credits, and quotas. Gemini has free tiers for some API models, but a free allowance is not guaranteed for every model or account. A comparison can make three paid requests, and Retry makes another request to that provider. Start with short questions and the default output limit. Set spending controls in the provider dashboards if desired.
+
+### Change or remove a key
+
+- Open Connections, paste a new key into that provider's field, and Save connections to replace it.
+- Leave a key field blank to keep the saved key. The app does not display saved keys.
+- Check **Remove saved key** and Save connections to delete it locally. If both a replacement and Remove are selected, removal takes precedence.
+- To invalidate a key everywhere, revoke it in the provider's own dashboard. Removing it from this app alone does not revoke it.
+
+## Run a real comparison
+
+1. Select **Live API · automatic**.
+2. Check **Include** on the providers you want.
+3. Type a question into the compact prompt box. Long prompts scroll inside that box; click it and use the mouse wheel, trackpad, or arrow keys to move through the text.
+4. Click **Compare** or press Ctrl+Enter on Windows / Cmd+Enter on Mac.
+5. Each provider starts independently. One error does not cancel the other answers.
+6. Scroll inside each answer card to read its full response. You can select text and copy it, or use **Copy answer** for the whole answer.
+
+The exact same prompt goes to every included provider. Each new comparison starts fresh: previous answers are not sent as conversation history. Model IDs appear on cards so you know which models were used. OpenAI API results are not necessarily identical to the ChatGPT website's answers.
+
+### Controls explained
+
+| Control | What it does |
+| --- | --- |
+| Include | Selects which providers receive your prompt on the next comparison. |
+| Output limit | Sets the maximum generated token budget per provider. Some models use part of this budget for reasoning. It is not a fixed word count or price estimate. |
+| Stop | Stops active requests; keeps whatever text has arrived. It does not undo provider charges already incurred. |
+| Retry | Repeats only that card using the original comparison prompt and output limit. A fresh response may be different. |
+| Copy answer | Copies the entire answer, including text below the visible scroll area. |
+| Export Markdown | Opens a save dialog for a readable `.md` file containing the prompt and all recorded results. |
+| JSON | Opens a save dialog for structured data including mode, prompt, results, and status. It contains no saved API keys. |
+| Try an example | Fills in an example question in a mode that accepts your own prompts. |
+| How to play | Opens a short guide inside the app. |
+
+An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Model answers render as readable plain text; Markdown symbols are preserved rather than formatted into HTML.
+
+## Have some fun
+
+- “Write a dramatic breakup letter from a toaster to a microwave.”
+- “Explain black holes to a five-year-old, then to a pirate.”
+- “Give me a terrible business idea and sell it like it is brilliant.”
+- “Invent a superhero whose only power is mildly inconvenient.”
+- “Give three different endings to a mystery about a missing sock.”
+- “Find the flaw in this argument: all cats are mammals, so all mammals are cats.”
+
+Judge the results yourself: funniest, clearest, most useful, or most surprising. There is no automatic quality score, and fastest does not necessarily mean best.
+
+## Use it without API keys: Website assist
+
+1. Select **Website assist · no API keys**.
+2. Enter your prompt and choose the providers with Include.
+3. Click **Prepare comparison**.
+4. Click **Open Claude**, **Open OpenAI**, or **Open Gemini** on a card. The app copies your prompt and opens the official site in your system browser.
+5. Paste the prompt into that website, sign in if required, and submit it yourself.
+6. Copy the resulting answer from the website.
+7. Return to the Arena and paste it into that provider's answer field. The field scrolls as the answer grows.
+8. Repeat for the other providers, then copy or export the comparison.
+
+This mode does not automate website submissions or read website answers. Each provider controls its own free limits and login requirements. There is no guaranteed shared “one or three free questions” offer. The app never collects website passwords.
+
+Changing the prompt or included providers in Website assist clears the pasted comparison to avoid mixing answers from different questions. Export before changing those settings if you want to keep it.
+
+## Keep or share a comparison
+
+Click **Export Markdown** or **JSON**, choose a folder and filename, and save. The export includes answers even when they extend below the visible part of a card, plus errors or partial results if a run failed or was stopped.
+
+There is no automatic prompt/answer history. A new comparison, switching modes, or closing the app replaces/discards the in-memory results. Export first. Files and clipboard contents can contain sensitive prompts or answers, so check them before sharing.
+
+## Updates
+
+There is no background updater. Download a newer installer from [Releases](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).
+
+- **Windows:** close the Arena and run the newer Setup file for the same processor type.
+- **Mac:** close the Arena, open the newer `.dmg`, and replace the existing app in Applications.
+
+Connection settings normally survive because they are stored in your user profile, outside the installed application. You may need to re-enter keys if OS credential protection changes or you move to another computer. Do not copy encrypted key files between laptops.
+
+## Troubleshooting
+
+| What you see | What to try |
+| --- | --- |
+| Download link fails | Open the latest Releases page and choose the matching asset. Don't download source code. Report a missing asset if none appears. |
+| Installer won't run | Check x64 vs ARM and Mac vs Windows. Use a supported, updated OS. See first-launch security prompts above. |
+| Add an API key | Open Connections, save that provider's key, or uncheck Include for that card. |
+| API key rejected | Replace the matching key. Check that it is an API key, not a website password, and has not been revoked. |
+| Access denied | Check your provider account's access to the selected model. |
+| Model unavailable / HTTP 404 | Open Connections and change the Model ID to a currently available model for your provider account. |
+| Rate limit or billing quota reached | Check the provider dashboard for credits, billing, or limits. Wait before retrying. |
+| Timed out | Check the internet connection. Try a shorter prompt, a faster model, or Retry. Partial text is retained. |
+| Only one or two answers | Read the other card's error, check its key/Include setting, and Retry just that provider. |
+| No text or output limit reached | Increase the output limit or shorten the task. Reasoning models may spend the budget before producing visible text. |
+| Can't save keys | OS credential encryption is unavailable. Use a normal logged-in user session with the OS keychain/credential store available, or use Website assist. |
+| A damaged connection file prevents launch | Close the app. Rename `connections.json` in its app-data folder (below), reopen, and re-enter keys. Keep the old file only if you need to investigate it. |
+| Answer appears cut off in its card | Put your pointer over that card and scroll. The whole answer remains available to Copy answer or Export. |
+
+If you report a bug, include the app version (the release you downloaded), OS, processor type, selected model IDs, and error wording. **Never include API keys or private prompts.** Use [GitHub Issues](https://github.com/YobieBenjamin/llm-battle-arena/issues).
+
+## Privacy and local settings
+
+Keys are encrypted with Electron's OS-backed `safeStorage`. They are used in the desktop process for fixed official API endpoints and are not sent to the interface. The app has no analytics, app login, shared key, or hosted backend. Live prompts are processed by the selected providers under their terms. Website assist uses your existing system browser.
+
+The app-data folder contains `connections.json` (encrypted keys and model IDs):
+
+- **Mac:** `~/Library/Application Support/LLM Battle Arena/`
+- **Windows:** `%APPDATA%\LLM Battle Arena\`
+
+Finder → Go → Go to Folder on Mac, or File Explorer's address bar on Windows, can open these paths. OS encryption protects stored key material but is not a substitute for protecting your logged-in user account. Someone with access to that account may be able to use its applications and credentials.
+
+## Uninstall
+
+**Windows:** Settings → Apps → Installed apps → LLM Battle Arena → Uninstall. For the portable version, close it and delete the downloaded executable.
+
+**Mac:** close the app, then move LLM Battle Arena from Applications to Trash.
+
+Uninstalling may leave the app-data folder and encrypted connection settings behind. To remove those too, delete only the Arena's app-data folder listed above after closing the app. Exported comparisons and clipboard contents are separate; remove/clear those yourself if desired. Revoke API keys in each provider dashboard if you want to invalidate them beyond this app.

@@ -123,6 +123,8 @@ function exportData(format) {
   const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); const a = document.createElement('a'); a.href = url; a.download = `comparison.${format}`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 createCards();
+$('help').onclick = () => $('help-dialog').showModal();
+$('close-help').onclick = () => $('help-dialog').close();
 $('mode').onchange = changeMode;
 $('prompt').oninput = () => { count(); if (mode() === 'manual') reset(); };
 $('example').onclick = () => { $('prompt').value = samplePrompt; count(); if (mode() === 'manual') reset(); };
@@ -138,11 +140,12 @@ $('settings-form').onsubmit = async event => {
   try {
     const value = Object.fromEntries(Object.keys(PROVIDERS).map(id => [id, { key: $(`${id}-key`).value, model: $(`${id}-config-model`).value.trim(), remove: $(`${id}-remove`).checked }]));
     connections = await api.saveConnections(value); $('settings').close();
+    if (mode() === 'sample' && Object.values(connections.providers).some(p => p.connected)) { $('mode').value = 'live'; changeMode(); }
     for (const id of Object.keys(PROVIDERS)) render(id);
     notice('Connections saved on this computer.');
   } catch (error) { $('settings-error').textContent = error.message; }
 };
-document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
+document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
 if (api) {
   api.onUpdate(update => {
     if (update.runId !== runId || !pending.has(update.id)) return;

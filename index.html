@@ -7,13 +7,13 @@
 <script type="module" src="src/app.js"></script>
 </head>
 <body>
-<header><a class="brand" href="#"><span class="brand-icon">≋</span> LLM Battle Arena <span class="tag">DESKTOP</span></a><button id="connections">Connections <span aria-hidden="true">↗</span></button></header>
+<header><a class="brand" href="#"><span class="brand-icon">≋</span> LLM Battle Arena <span class="tag">DESKTOP</span></a><div class="header-actions"><button id="help">How to play</button><button id="connections">Connections <span aria-hidden="true">↗</span></button></div></header>
 <main>
 <div class="intro"><span class="eyebrow">THREE MODELS. ONE STARTING POINT.</span><h1>One question. <span>Three perspectives.</span></h1><p>Give your curiosity a second and third opinion.</p></div>
 <section class="composer" aria-label="Comparison setup">
 <div class="toolbar"><label>Compare with <select id="mode"><option value="sample">Sample · no setup</option><option value="manual">Website assist · no API keys</option><option value="live">Live API · automatic</option></select></label><label id="limit-label">Output limit <select id="limit"><option value="2048">2,048 tokens</option><option value="4096" selected>4,096 tokens</option><option value="8192">8,192 tokens</option></select></label></div>
 <p id="mode-note" class="note"></p>
-<label for="prompt" class="sr-only">Your question</label><textarea id="prompt" maxlength="16000" placeholder="What would you like to explore?" rows="3"></textarea>
+<label for="prompt" class="sr-only">Your question</label><textarea id="prompt" maxlength="16000" placeholder="What would you like to explore?" rows="2"></textarea>
 <div class="composer-bottom"><button id="example" class="subtle">↗ Try an example</button><span id="count" class="muted">0 / 16,000</span><button id="stop" hidden>Stop</button><button id="compare" class="primary">Show sample <span aria-hidden="true">→</span></button></div>
 </section>
 <div class="results-heading"><div><h2>The arena</h2><p>Same prompt. Independent answers.</p></div><div><button id="export-md">Export Markdown</button><button id="export-json">JSON</button></div></div>
@@ -22,4 +22,6 @@
 <footer>Built for curiosity. Answers can be wrong—check what matters. <span>Prompts go only to the providers you choose in Live API mode.</span></footer>
 </main>
 <dialog id="settings"><form id="settings-form"><div class="dialog-title"><div><span class="eyebrow">YOUR KEYS, YOUR MACHINE</span><h2>Connections</h2></div><button type="button" id="close-settings" aria-label="Close connections">✕</button></div><p>API access is separate from chat subscriptions. Usage may be billed by each provider. Leave a key blank to keep it.</p><p id="storage-note" class="note"></p><div id="connection-fields"></div><p id="settings-error" role="alert"></p><div class="dialog-actions"><button class="primary" type="submit">Save connections</button></div></form></dialog>
+<dialog id="help-dialog"><div class="dialog-title"><h2>One question. Three answers.</h2><button id="close-help" aria-label="Close help">✕</button></div>
+<ol class="help-steps"><li><strong>Just looking?</strong> Choose Sample and click Show sample. These are written examples, so there is no setup or charge.</li><li><strong>Ready for real answers?</strong> Open Connections. Paste your Claude, OpenAI, and Gemini API keys, then Save connections. You can start with just one provider.</li><li><strong>Ask anything.</strong> Choose Live API, type a question, and click Compare. Each answer appears independently.</li><li><strong>Play with it.</strong> Try a silly poem, a tricky riddle, or three takes on a travel plan. Use Stop, Retry, Copy answer, or Export Markdown.</li></ol><p>API keys are different from chat subscriptions. Providers may charge for usage. Keys stay encrypted on this computer. No app account is needed.</p><p>No API keys? Choose Website assist: click Prepare comparison, use Open on each card, submit the copied prompt yourself, and paste the answers back.</p><p>Tip: Ctrl+Enter on Windows or Cmd+Enter on Mac starts a comparison. Each new question starts fresh; this is not a continuing chat.</p></dialog>
 </body></html>

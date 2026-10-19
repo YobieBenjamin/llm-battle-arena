@@ -1,12 +1,12 @@
 {
   "name": "llm-battle-arena",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "One prompt. Three perspectives. A private desktop LLM comparison app.",
   "main": "desktop/main.cjs",
   "type": "module",
   "license": "MIT",
   "author": "Yobie Benjamin",
-  "repository": "https://github.com/yobieben/llm-battle-arena",
+  "repository": "https://github.com/YobieBenjamin/llm-battle-arena",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
@@ -14,7 +14,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win nsis portable --publish never",
-    "dist:mac": "electron-builder --mac zip --publish never"
+    "dist:mac": "electron-builder --mac dmg --publish never"
   },
   "devDependencies": {
     "electron": "^42.0.0",
@@ -40,15 +40,29 @@
       ]
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "artifactName": "LLM-Battle-Arena-Windows-${arch}-Setup.${ext}"
     },
     "mac": {
-      "target": "zip",
+      "target": "dmg",
       "category": "public.app-category.productivity"
     },
     "linux": {
       "target": "AppImage"
+    },
+    "portable": {
+      "artifactName": "LLM-Battle-Arena-Windows-${arch}-Portable.${ext}"
+    },
+    "dmg": {
+      "artifactName": "LLM-Battle-Arena-macOS-${arch}.${ext}"
     }
-  }
+  },
+  "homepage": "https://github.com/YobieBenjamin/llm-battle-arena#readme",
+  "bugs": {
+    "url": "https://github.com/YobieBenjamin/llm-battle-arena/issues"
+  },
+  "productName": "LLM Battle Arena"
 }

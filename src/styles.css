@@ -2,3 +2,28 @@
 
 /* Keep the prompt and three perspectives visible on laptop displays. */
 header{height:70px}main{padding-top:28px}.intro h1{font-size:36px;letter-spacing:-1.4px}.intro p{margin:8px 0 22px}.composer{padding:16px}textarea{font-size:16px;padding:10px 0;min-height:85px}.results-heading{margin:24px 0 16px}
+
+.header-actions{display:flex;gap:10px}.help-steps{padding-left:22px;line-height:1.7;font-size:14px}.help-steps li{padding:9px 0}.help-steps strong{color:var(--accent)}
+
+/* Fixed reading areas: long prompts and answers scroll independently. */
+#prompt{height:72px;min-height:72px;max-height:72px;overflow-y:auto;resize:none;padding:8px 0;line-height:1.5}
+.card{height:clamp(330px,48vh,540px);min-height:0}
+.card-top,.card-actions,.status{flex-shrink:0}
+.answer{min-height:0;max-height:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.manual-answer{flex:1;min-height:0;max-height:none;resize:none;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;margin:10px;width:calc(100% - 20px)}
+#prompt{overscroll-behavior:contain;scrollbar-gutter:stable}
+/* Compact desktop typography; reserve the space for questions and answers. */
+:root{font-size:13px}
+header{height:58px}.brand{font-size:15px;gap:8px}.brand-icon{font-size:27px}.tag{font-size:8px;padding:4px}
+button,select{font-size:12px;padding:8px 11px}
+main{padding-top:20px}.eyebrow{font-size:9px;letter-spacing:1.4px}
+.intro h1{font-size:22px;line-height:1.2;letter-spacing:-.5px;margin:9px 0 5px}
+.intro p{font-size:12px;margin:5px 0 16px}
+.composer{padding:13px}.toolbar label,select{font-size:11px}.note{font-size:11px;margin:8px 0}
+#prompt{font-size:14px;height:64px;min-height:64px;max-height:64px;padding:6px 0}
+.composer-bottom{padding-top:10px;gap:9px}.subtle{font-size:11px}.muted{font-size:10px}
+.results-heading{margin:20px 0 12px}h2{font-size:17px}.results-heading p{font-size:11px}
+.card-top{padding:14px}.card h3{font-size:13px}.avatar{width:28px;height:28px;font-size:13px}
+.answer{font-size:12px;line-height:1.65;padding:12px 14px}.status{font-size:10px;padding:11px 14px 0}
+.card-actions{padding:9px 14px}.manual-answer{font-size:12px}
+.dialog-title h2{font-size:21px}.help-steps{font-size:13px}
