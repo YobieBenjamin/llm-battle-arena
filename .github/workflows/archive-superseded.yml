@@ -34,7 +34,11 @@ jobs:
           while IFS= read -r tag; do
             if [[ "$tag" != "$VERIFIED_TAG" ]]; then
               gh release view "$tag" --json body --jq .body > previous-notes.md
-              { printf '%s\n\n' '**OLD (DO NOT USE) — historical code and installers. Use the current release linked from README.**'; cat previous-notes.md; } > archived-notes.md
+              if head -n 1 previous-notes.md | grep -Fq '**OLD (DO NOT USE)'; then
+                cp previous-notes.md archived-notes.md
+              else
+                { printf '%s\n\n' '**OLD (DO NOT USE) — historical code and installers. Use the current release linked from README.**'; cat previous-notes.md; } > archived-notes.md
+              fi
               gh release edit "$tag" --draft --title "OLD (DO NOT USE) — LLM Battle Arena $tag" --notes-file archived-notes.md
             fi
           done < public-tags.txt

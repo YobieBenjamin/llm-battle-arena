@@ -272,7 +272,7 @@ In Connections, enable **Check GitHub for updates on launch** if wanted. It is o
 An initial HTTP 503 or 529 gets one retry after two seconds, with a visible retrying status. Stop cancels the wait. The app does not automatically retry rate limits, network failures, or failures after streaming begins. This is a limited response to an explicit busy-server rejection, not a promise about a provider's billing.
 
 
-## If something goes wrong (v2.4.3)
+## If something goes wrong
 
 - **Text too small?** Use View → Zoom In or Zoom Out. On Windows press Ctrl and + or −; on Mac press Command and + or −. Ctrl/Command+0 resets zoom. On Windows, Alt reveals the menu.
 - **Credit or billing message?** Open the provider’s API website, check billing, add credit if needed, then return and Retry. A working key alone does not mean the account has API credit.

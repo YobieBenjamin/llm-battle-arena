@@ -1,3 +1,5 @@
+> Historical audit evidence for **OLD (DO NOT USE)** code. See [the current follow-up](AUDIT-RESPONSE-2.4.5.md) and use only the latest public installer.
+
 # Follow-up to the independent v2.4.3 verification
 
 Reviewed the supplied `llm-battle-arena-v2.4.3-verification.zip`, including its report, result files and the harness assertions behind conflicting results. The verifier independently reproduced all ten original fixes, checked the published release, and found the four low-priority observations below. No supplied harness was executed automatically.

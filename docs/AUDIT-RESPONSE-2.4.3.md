@@ -1,3 +1,5 @@
+> Historical audit evidence for **OLD (DO NOT USE)** code. See [the current follow-up](AUDIT-RESPONSE-2.4.5.md) and use only the latest public installer.
+
 # Response to the independent v2.4.0 audit
 
 The external audit examined tag `v2.4.0` (`792e2e5`). This response tracks the patch in v2.4.3. It distinguishes code fixes and fixture evidence from installation or live-provider checks that have not been performed.
