@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),asse
 const {hash,archivePath}=require('./compare-builds.cjs');
 const {runReleaseSmoke}=require('./release-smoke.cjs');
 async function verifyInstaller(installer,reference){
- const temp=fs.mkdtempSync(path.join(os.tmpdir(),'arena-installer-'));let mounted=false;
+ const temp=fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(),'arena-installer-')));let mounted=false;
  try{
   let bundle;
   if(installer.endsWith('.dmg')){
@@ -19,7 +19,9 @@ async function verifyInstaller(installer,reference){
     for(const archive of archives){const dest=archive+'.extracted';fs.mkdirSync(dest);execFileSync(seven,['x',archive,`-o${dest}`,'-y'],{stdio:'ignore'});}
    }
    const candidates=walk(temp).filter(f=>path.basename(f)==='LLM Battle Arena.exe'&&fs.existsSync(path.join(path.dirname(f),'resources/app.asar')));
-   assert.equal(candidates.length,1,'Expected exactly one installer application payload');bundle=candidates[0];
+   assert.equal(candidates.length,1,'Expected exactly one installer application payload');const application=path.join(temp,'application');
+   // Recreate the runtime application folder, outside NSIS's internal $PLUGINSDIR envelope.
+   fs.cpSync(path.dirname(candidates[0]),application,{recursive:true});bundle=path.join(application,'LLM Battle Arena.exe');
   }
   const proof=JSON.parse(fs.readFileSync(reference,'utf8'));
   assert.equal(hash(archivePath(bundle)),proof.appAsarSha256,'Installer code differs from tested application');

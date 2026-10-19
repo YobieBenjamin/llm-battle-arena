@@ -66,7 +66,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   const result={version:require('../package.json').version,platform:process.platform,arch:process.arch,appAsarSha256:archiveHash,executableSha256:executableHash,inspector:false,credentialBackend:process.platform==='darwin'&&process.env.CI?'ci-mock-keychain':'native',ui:['launch','sample','history','native-markdown-export','native-json-export','quit','restart-history'],rejectedInspectorFlags:['--inspect','--inspect-brk']};
   if(reportFile){fs.mkdirSync(path.dirname(path.resolve(reportFile)),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(result,null,2)+'\n');}
   console.log('PASS: hardened release UI, native exports, quit/restart/history; main inspector flags ignored; bundle unchanged.');return result;
- }catch(error){if(page)await page.screenshot({path:path.join(dir,'failure.png'),timeout:5000}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}
+ }catch(error){if(page)console.error('Visible failure:',page.url(),await page.locator('#notice').textContent({timeout:3000}).catch(()=>''),await page.locator('#history-message').textContent({timeout:3000}).catch(()=>''));if(page)await page.screenshot({path:path.join(dir,'failure.png'),timeout:5000}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}
  finally{clearTimeout(watchdog);if(child&&child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(500);}if(browser)await browser.close().catch(()=>{});if(!errors.length && !child)fs.rmSync(dir,{recursive:true,force:true});}
 }
 module.exports={runReleaseSmoke,portOpen};

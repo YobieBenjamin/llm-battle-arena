@@ -3,7 +3,7 @@
 module.exports=async function uiReady(page,timeout=60000){
  const end=Date.now()+timeout;
  while(Date.now()<end){
-  if(await page.evaluate(()=>Boolean(document.getElementById('claude-answer')&&window.arena)).catch(()=>false))return;
+  if(await page.evaluate(()=>Boolean(document.getElementById('claude-answer')&&window.arena&&document.getElementById('mode-note')?.textContent)).catch(()=>false))return;
   await new Promise(resolve=>setTimeout(resolve,100));
  }
  throw new Error(`Application UI did not initialize: ${page.url()}`);
