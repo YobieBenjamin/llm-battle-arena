@@ -24,12 +24,14 @@ try{
  await page.locator('#claude-key').fill('replacement');await page.locator('#settings-form button[type=submit]').click();assert.ok(await page.locator('#close-settings').isDisabled());await page.keyboard.press('Escape');assert.ok(await page.locator('#settings').isVisible());await page.locator('#settings').waitFor({state:'hidden'});
  await app.evaluate(async({app,dialog,BrowserWindow})=>{
   dialog.showMessageBox=async options=>{globalThis.recoveryTitle=options.title;return {response:0};};
+  globalThis.recoveryLostAllWindows=false;app.once('window-all-closed',()=>{globalThis.recoveryLostAllWindows=true;});
   const wc=BrowserWindow.getAllWindows()[0].webContents;
   const loaded=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Recovery did not create a fresh display')),15000);app.once('browser-window-created',(_event,window)=>window.webContents.once('did-finish-load',()=>{clearTimeout(timer);resolve();}));});
   // Kill the renderer process directly; forcefullyCrashRenderer can stall Linux core dumps under CDP.
   process.kill(wc.getOSProcessId(),'SIGKILL');await loaded;
  });
  assert.equal(await app.evaluate(()=>globalThis.recoveryTitle),'Arena needs to reload');
+ assert.equal(await app.evaluate(()=>globalThis.recoveryLostAllWindows),false,'Recovery must not trigger quit-on-last-window on Windows/Linux');
  console.log('PASS: renderer crash offers recovery; unchanged keys survive provider outage; named key errors; vote/history partial failure is idempotent and recoverable; failed preference reverts checkbox; Save cannot be dismissed mid-flight.');
 }finally{if(app)await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,4 +1,4 @@
-## v2.4.2 — independent audit fixes
+## v2.4.3 — independent audit fixes
 
 - Responsive streaming: coalesce updates, show plain text while streaming, then render safe Markdown and artifact badges once the answer stops.
 - Raw HTML examples remain readable; a second app launch focuses the existing window instead of racing to overwrite saved data.

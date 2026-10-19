@@ -25,13 +25,14 @@ function createWindow() {
   const width = Math.min(1440, Math.max(400, area.width - 32));
   const height = Math.min(980, Math.max(400, area.height - 32));
   window = new BrowserWindow({ width, height, minWidth: Math.min(880, width), minHeight: Math.min(650, height), backgroundColor: '#101319', title: 'LLM Battle Arena', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
+  const createdWindow=window;
   window.setMenuBarVisibility(false);
   window.webContents.on('render-process-gone',async()=>{
     if(quitting)return;
     cancel();
     const failedWindow=window;
     const result=await dialog.showMessageBox({type:'warning',title:'Arena needs to reload',message:'The display stopped responding. Saved comparisons are still in History.',buttons:['Reload','Quit'],defaultId:0,cancelId:1});
-    if(result.response===0 && window===failedWindow && !failedWindow.isDestroyed()){failedWindow.destroy();createWindow();}
+    if(result.response===0 && window===failedWindow && !failedWindow.isDestroyed()){createWindow();failedWindow.destroy();}
     else if(result.response!==0)app.quit();
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -47,7 +48,7 @@ function createWindow() {
     closeTimer=setTimeout(()=>quitting ? app.quit() : window?.close(),2000);
   });
   window.on('closed', () => clearTimeout(closeTimer));
-  window.on('closed', () => { cancel(); window = null; });
+  window.on('closed', () => { cancel(); if(window===createdWindow)window = null; });
   window.loadFile(path.join(__dirname, '..', 'index.html'));
 }
 if(ownsProfile) app.whenReady().then(async () => {
