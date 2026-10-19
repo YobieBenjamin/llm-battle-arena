@@ -29,8 +29,10 @@ function createWindow() {
   window.webContents.on('render-process-gone',async()=>{
     if(quitting)return;
     cancel();
+    const failedWindow=window;
     const result=await dialog.showMessageBox({type:'warning',title:'Arena needs to reload',message:'The display stopped responding. Saved comparisons are still in History.',buttons:['Reload','Quit'],defaultId:0,cancelId:1});
-    if(result.response===0 && window)window.webContents.reload();else app.quit();
+    if(result.response===0 && window===failedWindow && !failedWindow.isDestroyed()){failedWindow.destroy();createWindow();}
+    else if(result.response!==0)app.quit();
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
@@ -75,6 +77,8 @@ if(ownsProfile) app.whenReady().then(async () => {
       store = createStore(dataDirectory, safeStorage);
     } catch { dialog.showErrorBox('Could not reset connections', `Close the app and rename the settings file manually:\n${file}`); app.quit(); return; }
   }
+  // Provider calls use main-process fetch; rendered content never needs network access.
+  session.defaultSession.webRequest.onBeforeRequest({urls:['http://*/*','https://*/*']},(_details,callback)=>callback({cancel:true}));
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   session.defaultSession.setPermissionCheckHandler(() => false);
   Menu.setApplicationMenu(Menu.buildFromTemplate([

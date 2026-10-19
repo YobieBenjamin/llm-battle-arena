@@ -1,4 +1,4 @@
-## v2.4.1 — independent audit fixes
+## v2.4.2 — independent audit fixes
 
 - Responsive streaming: coalesce updates, show plain text while streaming, then render safe Markdown and artifact badges once the answer stops.
 - Raw HTML examples remain readable; a second app launch focuses the existing window instead of racing to overwrite saved data.
@@ -7,7 +7,7 @@
 - Thinking models retain the longer initial grace period until visible text; weekly budget-only outcomes are inconclusive, and unconfigured live jobs are skipped.
 - Regression tests cover three 24 KB streams, single-instance behavior, raw HTML prose, disk-write failures, saved votes and setup errors. Packaged Mac CI runs the same UI gates.
 
-This patch includes the v2.4.0 features below. The v2.4.0 tag did not produce a public installer release because hosted macOS build runners were unavailable. Signing/notarization remains unchanged.
+This patch includes the v2.4.0 features below. It also adds renderer-level HTTP/HTTPS blocking and a loopback test that measures actual preview traffic. The unpublished v2.4.1 tag was held by its Mac UI test gate. All earlier installer releases are archived, with their tags retained for history. The v2.4.0 tag did not produce a public installer release because hosted macOS build runners were unavailable. Signing/notarization remains unchanged.
 
 ## v2.4.0 — blind battles, simpler setup and maintenance
 

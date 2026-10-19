@@ -30,5 +30,5 @@ const fs=require('node:fs');const os=require('node:os');const path=require('node
   const p95=latencies.sort((a,b)=>a-b)[Math.floor(latencies.length*.95)];
   assert.ok(elapsed<1.5*(timing.end-timing.start),`Renderer finished too slowly: ${elapsed}ms`);assert.ok(p95<250,`UI p95 ${p95}ms exceeds 250ms`);
   console.log(`PASS: three 24KB streams; elapsed ${elapsed}ms; stream ${timing.end-timing.start}ms; UI p95 ${p95}ms; second instance exited.`);
- }finally{if(app)await app.close();fs.rmSync(dir,{recursive:true,force:true});}
+ }finally{if(app)await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

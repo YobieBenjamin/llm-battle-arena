@@ -5,6 +5,9 @@ const path = require('node:path');
 const os = require('node:os');
 const appRoot=path.resolve(__dirname,'..');
 (async()=>{
+ const networkHits=[];const probe=require('node:http').createServer((req,res)=>{networkHits.push(req.url);res.end('unexpected');});
+ await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));
+ const probeUrl=`http://127.0.0.1:${probe.address().port}/should-not-load.png`;
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'arena-smoke-'));
  let app=await electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH || require('electron'),args:[appRoot,`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});
  let page;
@@ -75,9 +78,9 @@ const appRoot=path.resolve(__dirname,'..');
  assert.ok(manualScroll);
 
  // Artifact detection, hover peek, click-to-pin, click-to-hide, source and native save.
- await page.locator('#claude-manual').fill('```html\n<h1 id="test-preview">Local artifact</h1><script>document.body.dataset.executed="yes"</script><img src="https://example.com/should-not-load.png">\n```\n```json\n{"ok":true}\n```');
+ await page.locator('#claude-manual').fill(('```html\n<h1 id="test-preview">Local artifact</h1><script>document.body.dataset.executed="yes"</script><img src="https://example.com/should-not-load.png">\n```\n```json\n{"ok":true}\n```').replace('https://example.com/should-not-load.png',probeUrl));
  const artifactRequests=[];
- page.on('request',r=>{if(r.url().includes('should-not-load'))artifactRequests.push(r.url());});
+ page.on('requestfinished',r=>{if(r.url().includes('should-not-load'))artifactRequests.push(r.url());});
  await page.locator('#claude-artifact').hover();
  await page.locator('#artifact-panel').waitFor({state:'visible'});
  const frame=page.frameLocator('#artifact-body iframe');
@@ -138,7 +141,7 @@ const appRoot=path.resolve(__dirname,'..');
  if(process.platform==='darwin') for(const role of ['about','hide','hideothers']) assert.ok(roles.includes(role));
  assert.ok(!roles.some(role=>['reload','forcereload','toggledevtools'].includes(role)));
  // Markdown is rendered only through the production sanitizer; no passive requests.
- const markdownRequests=[]; page.on('request',r=>{if(r.url().startsWith('https://markdown.invalid'))markdownRequests.push(r.url());});
+ const markdownRequests=[]; page.on('requestfinished',r=>{if(r.url().startsWith('https://markdown.invalid'))markdownRequests.push(r.url());});
  await page.evaluate(async()=>{
   const {renderMarkdown}=await import('./src/markdown.js');
   document.getElementById('claude-answer').replaceChildren(renderMarkdown('## Heading\n\n**Bold**\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n[Safe](https://example.com) [Bad](javascript:alert(1))\n<img src="https://markdown.invalid/x" onerror="window.markdownPwned=1"><script>window.markdownPwned=1</script><iframe src="https://markdown.invalid/frame"></iframe><style>body{display:none}</style>'));
@@ -221,7 +224,8 @@ const appRoot=path.resolve(__dirname,'..');
  assert.equal((await page.evaluate(()=>window.arena.preferences())).checkUpdates,true);
  await page.locator('#check-updates').uncheck();
  await page.locator('#close-settings').click();
+ assert.deepEqual(networkHits,[],'Artifact preview must send zero requests to the loopback server');
  assert.deepEqual(errors,[]);
  console.log('PASS: manual paste shortcuts preserve answers; pinned preview stays readable at three laptop sizes and scrolls; pinned Compare shortcut and standard menus; friendly IPC errors; blind voting and persistent tally; model menus; update controls; sanitized Markdown; history deletion and full quit/restart persistence; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
- } catch(error) {console.error('Failure URL:',page?.url(),error); throw error;} finally {await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
+ } catch(error) {console.error('Failure URL:',page?.url(),error); throw error;} finally {probe.closeAllConnections();await new Promise(resolve=>probe.close(resolve));await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});
