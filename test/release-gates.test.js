@@ -22,3 +22,18 @@ test('inspector endpoint probe detects a listener and its closure',async()=>{
  try{assert.equal(await smoke.portOpen(port),true);}finally{await new Promise(resolve=>server.close(resolve));}
  assert.equal(await smoke.portOpen(port),false);
 });
+
+test('public asset gate rejects replacing both installer and its public proof',async()=>{
+ const {default:compareDownloads}=await import('../scripts/compare-downloads.cjs');
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'arena-public-gate-'));
+ try{
+  const reference=path.join(root,'ci'),download=path.join(root,'public');
+  for(const dir of [reference,download]){fs.mkdirSync(dir);fs.writeFileSync(path.join(dir,'app.exe'),'tested installer');fs.writeFileSync(path.join(dir,'proof-win-x64.json'),'original proof');}
+  compareDownloads(download,reference);
+  fs.writeFileSync(path.join(download,'app.exe'),'replacement installer');fs.writeFileSync(path.join(download,'proof-win-x64.json'),'replacement proof');
+  assert.throws(()=>compareDownloads(download,reference),/differs from tested CI artifact/);
+  for(const file of fs.readdirSync(reference))fs.copyFileSync(path.join(reference,file),path.join(download,file));
+  fs.writeFileSync(path.join(download,'extra-installer.exe'),'untested');
+  assert.throws(()=>compareDownloads(download,reference),/download set differs/);
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});

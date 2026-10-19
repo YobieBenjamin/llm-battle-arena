@@ -153,6 +153,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Retrieve the original tested build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}-${{ matrix.arch }}
+          path: tested-build
       - name: Download published installers and proof
         shell: bash
         env:
@@ -163,6 +168,7 @@ jobs:
         shell: bash
         run: |
           node scripts/check-downloads.cjs verify-ui
+          node scripts/compare-downloads.cjs verify-ui tested-build
           for installer in verify-ui/*.${{ matrix.platform == 'mac' && 'dmg' || 'exe' }}; do
             node scripts/verify-installer.cjs "$installer" "verify-ui/proof-${{ matrix.platform }}-${{ matrix.arch }}.json"
           done
