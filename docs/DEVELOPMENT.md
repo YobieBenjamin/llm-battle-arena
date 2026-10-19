@@ -86,7 +86,7 @@ The default branch is `main` in **YobieBenjamin/llm-battle-arena**. This reposit
 1. Update the version in `package.json` and the root/package entries in `package-lock.json`.
 2. Update `docs/RELEASE_NOTES.md` and the user guide for changed behavior.
 3. Run tests and manual checks. Commit and push to main.
-4. Tag the reviewed commit with the matching version, for example `git tag v2.1.0`, then push the tag.
+4. Tag the reviewed commit with the matching version, for example `git tag v2.1.1`, then push the tag.
 5. The **Desktop installers** workflow builds Windows x64, Windows ARM64, macOS ARM64, and macOS x64. All four build jobs must pass before publishing.
 6. The release job combines artifacts, produces `SHA256SUMS.txt`, and publishes GitHub Release downloads using the workflow token.
 7. Check the public release and README links. The download filenames remain stable across versions, so `/releases/latest/download/...` always selects the newest release.

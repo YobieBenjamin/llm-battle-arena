@@ -27,3 +27,16 @@ main{padding-top:20px}.eyebrow{font-size:9px;letter-spacing:1.4px}
 .answer{font-size:12px;line-height:1.65;padding:12px 14px}.status{font-size:10px;padding:11px 14px 0}
 .card-actions{padding:9px 14px}.manual-answer{font-size:12px}
 .dialog-title h2{font-size:21px}.help-steps{font-size:13px}
+
+/* Workspace layout: no hero section; answers fill the remaining window. */
+body{height:100vh;overflow:hidden}header{height:46px;padding:0 20px}.brand{font-size:14px}.brand-icon{font-size:23px}.tag{font-size:7px}
+main{height:calc(100vh - 46px);max-width:none;padding:10px 20px 8px;display:flex;flex-direction:column;min-height:0}
+.composer{padding:10px 12px;flex-shrink:0;border-radius:10px;box-shadow:none}.toolbar{gap:10px}.toolbar select{padding:6px 9px}
+#mode-note{margin:5px 0;font-size:10px;line-height:1.35}
+#prompt{height:48px;min-height:48px;max-height:48px;font-size:13px;line-height:1.4;padding:4px 0}
+.composer-bottom{padding-top:7px;gap:8px}.composer-bottom button{padding-top:6px;padding-bottom:6px}
+.results-heading{margin:11px 0 9px;flex-shrink:0}h2{font-size:14px}.results-heading p{display:none}.results-heading button{padding:6px 9px;font-size:10px}
+.cards{flex:1;min-height:140px;gap:12px}.card{height:100%;min-height:0}.card-top{padding:10px 12px}.avatar{height:24px;width:24px}.card h3{font-size:12px}.card-actions{padding:7px 12px}
+#notice{flex-shrink:0;min-height:15px;margin:5px 0 0;font-size:10px;line-height:1.4}
+footer{flex-shrink:0;margin-top:6px;padding:5px 0 0;font-size:9px;line-height:1.4}
+@media(max-width:700px){body{height:auto;overflow:auto}main{height:auto}.cards{display:grid;flex:auto}.card{height:400px}footer{display:block}}

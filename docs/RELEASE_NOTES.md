@@ -22,7 +22,7 @@ API usage may be billed by your providers. Chat website subscriptions and API ac
 ## Included
 
 - Standalone Mac/Windows app; no Git, Node, Python, or terminal needed for users.
-- Compact prompt box and independently scrolling question/answer areas.
+- Slim toolbar with no oversized title block; compact scrolling prompt and answer cards that fill the remaining window.
 - Side-by-side streamed answers, Stop, per-provider Retry, Copy, Markdown/JSON export.
 - OS-encrypted local keys, editable model IDs, and built-in How to play.
 - Plain-language installation, troubleshooting, privacy, and uninstall instructions.
