@@ -1,3 +1,5 @@
+> Historical evidence for **OLD (DO NOT USE)** code. See [the current audit response](AUDIT-RESPONSE-2.4.6.md).
+
 # v2.4.5 — archive and Mac validation follow-up
 
 ## Changes

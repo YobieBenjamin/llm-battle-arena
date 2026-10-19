@@ -1,4 +1,4 @@
-> Historical audit evidence for **OLD (DO NOT USE)** code. See [the current follow-up](AUDIT-RESPONSE-2.4.5.md) and use only the latest public installer.
+> Historical audit evidence for **OLD (DO NOT USE)** code. See [the current follow-up](AUDIT-RESPONSE-2.4.6.md) and use only the latest public installer.
 
 # Follow-up to the independent v2.4.3 verification
 

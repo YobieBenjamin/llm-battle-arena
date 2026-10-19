@@ -21,4 +21,5 @@ No paid provider calls, real credential changes, Apple notarization or Windows s
 - 68 unit tests pass, including bad-key variants, unrelated/malformed HTTP 400 bodies, bounded reads, cancellation of oversized bodies, split UTF-8, and existing billing behavior.
 - The locally signed ARM64 Mac package passes the complete smoke, fault/crash, and performance suites. The three 24 KB streams completed in 62.4 s with UI p95 16 ms.
 - Mac signature verification, actual fuse bits, absent unused privacy descriptions, and exact custom icon bytes pass.
-- Final public-release verification will be recorded after publication.
+- [Release run 39329949174](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39329949174) passed every gate: four installers, Linux UI, both native packaged Mac suites, all package fuse checks, and downloaded public-asset verification. Mac checks include signatures, exact tagged source, fuse bits, metadata and icon bytes; all six installers have verified checksums.
+- [Archive run 39330617385](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39330617385) passed. v2.4.6 is the only public installer release; v2.4.5 is a private OLD (DO NOT USE) draft. Its local source and build are preserved in the historical archive.
