@@ -47,3 +47,13 @@ The 2.2.1 non-overlap check missed an actual readability regression: stacking th
 The first-byte wait is now 120 seconds, followed by 45-second inactivity windows after bytes arrive; the total remains five minutes. New unit fixtures distinguish silent initial thinking from a stalled stream. All 36 unit tests and the local Electron regression passed without real keys or paid calls. The earlier Mac first-launch limitations still apply.
 
 Release verification: all four GitHub installer builds, the Linux UI gate, and download publication passed. The local 2.2.2 Apple Silicon bundle passed strict deep signature verification and the packaged Electron UI harness. One initial packaged run failed with its cause obscured by a harness error-reporting scope bug; the reporter was fixed, and the rerun passed. This does not replace a quarantined Safari-download first launch test.
+
+## v2.3.0: formatted answers and local history
+
+Scope: Markdown rendering, the last 50 local comparisons, and packaged Mac smoke tests. Blind voting, OpenRouter, model catalogs, update checks and paid live CI checks are not part of this release.
+
+Answers use marked 18.1.1 and DOMPurify 3.4.17 with a narrow tag/attribute allowlist. Passive images, styles, scripts, SVG and embedded objects are excluded; only clicked HTTP/HTTPS links can open through validated main-process IPC. Copy/export/artifacts retain original source. This follows [Marked's sanitization guidance](https://marked.js.org/using_advanced) and [DOMPurify's allowlist configuration](https://github.com/cure53/DOMPurify).
+
+History is local plaintext, atomically replaced and capped at 50 entries. Saved fields are allowlisted so credentials cannot be included as extra fields. Users can reopen without requests, delete one entry or confirm deleting all. Corrupt history is backed up with a visible path. Partial saves run roughly every 500ms and normal shutdown requests a final flush; abrupt termination can lose the newest fragment. Sensitive content deliberately typed into a prompt is still saved.
+
+Local verification: 39 unit tests passed. The Electron source and signed packaged Apple Silicon app passed Markdown heading/table/emphasis and hostile-content checks, full quit/restart history recovery, deletion, and the earlier token/artifact/layout regressions. Cold packaged startup initially stalled in the harness; it now explicitly waits for renderer initialization, and failure cleanup is bounded. No live paid API requests were made. Mac ARM64 CI now tests the packaged app before upload; other CPU variants are built but not runtime-tested by that step. Existing notarization/first-download limitations still apply.
