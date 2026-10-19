@@ -1,6 +1,6 @@
 # LLM Battle Arena
 
-**Download status:** The new release is being verified. Older releases are archived and are not installation options. Use only the current release once it is published on the [Downloads page](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).
+**Current download: [v2.4.3](https://github.com/YobieBenjamin/llm-battle-arena/releases/tag/v2.4.3).** Older installer releases are archived and unavailable to the public; source tags remain for history.
 
 
 

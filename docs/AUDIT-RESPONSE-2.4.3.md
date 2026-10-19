@@ -59,3 +59,14 @@ These measurements used the v2.4.1 candidate before the release-gate follow-up b
 The v2.4.1 tag was held by its Mac UI gate: Playwright observed an artifact resource request event. That event alone does not establish that a request reached the network, so it is not recorded here as confirmed exfiltration. v2.4.3 also blocks HTTP/HTTPS in the renderer session, independently of CSP; provider calls remain in the main process. The preview regression now uses a loopback HTTP server and requires zero server hits and zero completed resource requests. The Linux gate also exposed unreliable renderer reload after termination; recovery now creates a fresh display window. Its test terminates the renderer process and waits for the replacement window to load. Test-process shutdown is bounded to avoid leaving a failed Electron test hanging in CI. Older installer releases are private drafts, not public installation options.
 
 The v2.4.2 candidate was held during final review to correct recovery ordering: create the replacement window before destroying the crashed one, so Windows/Linux never see a last-window-close event. The regression checks that invariant. No v2.4.0, v2.4.1 or v2.4.2 installer was published.
+
+
+## Published release verification
+
+[v2.4.3](https://github.com/YobieBenjamin/llm-battle-arena/releases/tag/v2.4.3) is published from tag commit `9eb4d58`. The [release workflow](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39306830093) completed successfully: all four platform builds, Linux UI regressions, packaged Apple Silicon regressions, publication and verification of the downloaded public files.
+
+The published Apple Silicon build's streaming fixture finished in 64.053 seconds against 63.720 seconds of streaming; UI p95 was 35 ms. Its crash-recovery, fault-injection, single-instance and preview isolation checks passed. Post-publication verification checked all six installer checksums, both Mac bundle seals, bundled source against the tag and packaged Markdown dependencies. The [weekly check](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39305937925) also demonstrated an actually skipped live job when no dedicated keys were configured.
+
+A separately built local fallback under `/private/tmp` timed out during startup on this Mac. It was not published. Its cause remains unconfirmed; the CI-built package passed its full suite. This local result reinforces the remaining requirement for real Safari/Windows first-launch and credential-store testing; CI is not certification of every local OS environment.
+
+All five earlier installer releases were converted to private drafts at the owner's request. Their source tags remain as history. Beginner instructions now point only to the current public release.
