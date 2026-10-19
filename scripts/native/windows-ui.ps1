@@ -1,13 +1,14 @@
 param([int]$TargetPid,[ValidateSet('save','quit')][string]$Action,[string]$Destination)
 $ErrorActionPreference='Stop'
-Add-Type -AssemblyName UIAutomationClient
-Add-Type -AssemblyName UIAutomationTypes
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type @'
 using System;
 using System.Text;
 using System.Runtime.InteropServices;
 public static class ArenaWindows {
  public delegate bool Callback(IntPtr hwnd, IntPtr param);
+ [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
+ [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
  [DllImport("user32.dll")] public static extern bool EnumWindows(Callback callback, IntPtr param);
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd, StringBuilder text, int count);
@@ -18,7 +19,7 @@ if($Action -eq 'quit') {
  if(-not (Get-Process -Id $TargetPid).CloseMainWindow()){throw 'Could not close test window'}
  exit
 }
-$edit=$null;$save=$null
+$dialog=[IntPtr]::Zero
 for($i=0;$i -lt 100;$i++) {
  $script:dialogs=@()
  [ArenaWindows]::EnumWindows({param($handle,$unused)
@@ -31,19 +32,23 @@ for($i=0;$i -lt 100;$i++) {
   }
   return $true
  },[IntPtr]::Zero) | Out-Null
- foreach($handle in $script:dialogs) {
-  $window=[System.Windows.Automation.AutomationElement]::FromHandle($handle)
-  if($i -eq 0){Write-Output "Native dialog found: $($window.Current.Name)"}
-  $all=$window.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)
-  foreach($element in $all) {
-   if($i -eq 0){Write-Output "Control $($element.Current.ControlType.ProgrammaticName) name=[$($element.Current.Name)] id=[$($element.Current.AutomationId)]"}
-   if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit -and ($element.Current.Name -match '^File name' -or $element.Current.AutomationId -in @('1001','1148'))){$edit=$element}
-   if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and ($element.Current.Name -match '^&?Save' -or $element.Current.AutomationId -eq '1')){$save=$element}
-  }
- }
- if($null -ne $edit -and $null -ne $save){break}
+ if($script:dialogs.Count -eq 1){$dialog=$script:dialogs[0];break}
  Start-Sleep -Milliseconds 100
 }
-if($null -eq $edit -or $null -eq $save){throw 'Native Save dialog controls not found'}
-$edit.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($Destination)
-$save.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+if($dialog -eq [IntPtr]::Zero){throw 'Native Save dialog not found'}
+[void][ArenaWindows]::SetForegroundWindow($dialog)
+Start-Sleep -Milliseconds 200
+if([ArenaWindows]::GetForegroundWindow() -ne $dialog){throw 'Test Save dialog could not take keyboard focus'}
+# Native dialog keyboard commands: Alt+N selects File name, then Enter saves.
+[System.Windows.Forms.SendKeys]::SendWait('%n')
+[System.Windows.Forms.SendKeys]::SendWait('^a')
+$escaped=''
+foreach($character in $Destination.ToCharArray()) {
+ if($character -eq '{'){$escaped+='{{}'}
+ elseif($character -eq '}'){$escaped+='{}}'}
+ elseif('+^%~()[]'.Contains([string]$character)){$escaped+='{'+$character+'}'}
+ else{$escaped+=$character}
+}
+[System.Windows.Forms.SendKeys]::SendWait($escaped)
+[System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
+Write-Output 'Native Save dialog submitted through keyboard controls.'
