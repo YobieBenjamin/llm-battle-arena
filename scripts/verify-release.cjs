@@ -6,11 +6,13 @@ const sums=new Map(fs.readFileSync(path.join(dir,'SHA256SUMS.txt'),'utf8').trim(
 for(const file of expected){const actual=crypto.createHash('sha256').update(fs.readFileSync(path.join(dir,file))).digest('hex');if(actual!==sums.get(file))throw new Error(`Checksum mismatch: ${file}`);}
 function sourceFiles(folder){return fs.readdirSync(path.join(root,folder),{withFileTypes:true}).flatMap(item=>item.isDirectory()?sourceFiles(`${folder}/${item.name}`):[`${folder}/${item.name}`]);}
 const files=['index.html','package.json',...sourceFiles('src'),...sourceFiles('desktop')];
+(async()=>{
 for(const arch of ['arm64','x64']){
  const mount=path.join(dir,`mounted-${arch}`);fs.mkdirSync(mount,{recursive:true});
  execFileSync('hdiutil',['attach',path.join(dir,`LLM-Battle-Arena-macOS-${arch}.dmg`),'-readonly','-nobrowse','-mountpoint',mount],{stdio:'inherit'});
  try{
   const app=path.join(mount,'LLM Battle Arena.app');execFileSync('codesign',['--verify','--deep','--strict',app],{stdio:'inherit'});
+  await require('./verify-bundle.cjs')(app);
   const archive=path.join(app,'Contents/Resources/app.asar');
   const bundled=asar.listPackage(archive).map(p=>p.replace(/^\//,'')).filter(p=>/^(src|desktop)\//.test(p) && !asar.statFile(archive,p).files).sort();
   if(JSON.stringify(bundled)!==JSON.stringify(files.filter(p=>/^(src|desktop)\//.test(p)).sort()))throw new Error('Bundled source file set differs from tag');
@@ -19,3 +21,5 @@ for(const arch of ['arm64','x64']){
   console.log(`Verified ${arch}: public checksum, sealed signature, source matches tag, Markdown dependencies match lockfile install.`);
  }finally{execFileSync('hdiutil',['detach',mount],{stdio:'inherit'});}
 }
+
+})().catch(error=>{console.error(error);process.exitCode=1;});

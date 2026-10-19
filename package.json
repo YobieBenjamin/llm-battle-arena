@@ -1,6 +1,6 @@
 {
   "name": "llm-battle-arena",
-  "version": "2.4.5",
+  "version": "2.4.6",
   "description": "One prompt. Three perspectives. A private desktop LLM comparison app.",
   "main": "desktop/main.cjs",
   "type": "module",
@@ -39,7 +39,8 @@
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": true,
@@ -51,17 +52,26 @@
     "mac": {
       "target": "dmg",
       "category": "public.app-category.productivity",
-      "identity": "-"
+      "identity": "-",
+      "icon": "assets/icon.icns"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "assets/icon.png"
     },
     "portable": {
       "artifactName": "LLM-Battle-Arena-Windows-${arch}-Portable.${ext}"
     },
     "dmg": {
       "artifactName": "LLM-Battle-Arena-macOS-${arch}.${ext}"
-    }
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "onlyLoadAppFromAsar": true,
+      "enableEmbeddedAsarIntegrityValidation": true
+    },
+    "afterPack": "scripts/after-pack.cjs"
   },
   "homepage": "https://github.com/YobieBenjamin/llm-battle-arena#readme",
   "bugs": {

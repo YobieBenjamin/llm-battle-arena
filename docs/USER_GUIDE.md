@@ -290,3 +290,12 @@ Opening the app again brings the existing window forward. Only one instance may 
 When you paste a new key, Save first checks that this computer can encrypt it. If encryption is unavailable, Save refuses before contacting any provider. Nothing is stored; Website assist remains available.
 
 Save checks newly supplied keys and changed active-provider settings. It intentionally does not recheck unchanged saved keys, so another provider's outage cannot block an unrelated change. A successful Save does not prove those unchanged keys are still valid. To check one now, click **Check key & load models** beside it. A revoked key will otherwise be reported on its next comparison. A successful model-list check still does not guarantee billing credit or generation access.
+
+
+### “API key rejected” for Gemini
+
+Open **Connections**, replace the Gemini key with the full key copied from Google AI Studio, and choose **Check key & load models**, then **Save**. A mistyped Gemini key can return HTTP 400; the app now identifies it as a key problem. Never post the key in an issue or screenshot.
+
+### A file could not be saved
+
+Choose a writable folder such as Documents and try again. If the message says the disk is full, free space first. Canceling the save dialog leaves the comparison or artifact in the app.

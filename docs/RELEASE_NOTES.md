@@ -1,3 +1,13 @@
+## v2.4.6 — pre-install audit follow-up
+
+- Explain invalid Gemini keys correctly during Save, Check key, and Compare, including Google's HTTP 400 response. Provider bodies are size-limited and never shown verbatim.
+- Give friendly file-save and export errors for unwritable destinations and full disks.
+- Disable Electron RunAsNode and NODE_OPTIONS, require ASAR loading, and enable embedded ASAR integrity checks. CI verifies the actual packaged fuse bits.
+- Add an original Arena Y icon and remove unused Mac camera/microphone permission descriptions before signing.
+- Skip existing draft releases during automatic archival.
+
+See [the audit response](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/AUDIT-RESPONSE-2.4.6.md) for validation and limitations.
+
 ## v2.4.5 — Mac build reliability and historical archives
 
 - Includes the v2.4.4 audit fixes listed below (v2.4.4 was never published).

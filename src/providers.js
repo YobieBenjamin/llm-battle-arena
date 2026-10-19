@@ -1,3 +1,4 @@
+import {readProviderError,invalidGeminiKey,billingError} from './provider-errors.js';
 import { validTokenCount } from './tokens.js';
 export const PROVIDERS = {
   claude: { name: 'Claude', model: 'claude-sonnet-4-6', website: 'https://claude.ai/', keys: 'https://platform.claude.com/settings/keys' },
@@ -83,11 +84,9 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
       response=await request();
     }
     if (!response.ok) {
-      let billing=response.status===402;
-      if(response.status===400 && response.body){
-        const reader=response.body.getReader();let raw='',bytes=0,oversize=false;try{while(bytes<=8192){const {done,value}=await reader.read();if(done)break;bytes+=value.byteLength;if(bytes>8192){oversize=true;break;}raw+=new TextDecoder().decode(value);}if(!oversize){const error=JSON.parse(raw).error;billing=/credit balance.*(low|insufficient)|insufficient[_ ](credit|fund)|billing|payment.required/i.test(String(error?.type||'')+' '+String(error?.message||''));}}catch{}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
-      }else await response.body?.cancel();
-      if(billing)throw new Error('Insufficient credit or billing setup. Add credit or enable billing on the provider’s website, then retry.');
+      const error=response.status===400 ? await readProviderError(response) : (await response.body?.cancel(),null);
+      if(id==='gemini' && route!=='openrouter' && response.status===400 && invalidGeminiKey(error)) throw new Error('API key rejected. Paste a valid Gemini API key in Connections.');
+      if(response.status===402 || billingError(error))throw new Error('Insufficient credit or billing setup. Add credit or enable billing on the provider’s website, then retry.');
       throw new Error(({ 400:'The provider rejected this request (HTTP 400). Check the model and account settings.', 401: 'API key rejected. Check Connections.', 403: 'Access denied. Check your account and model access.', 404: 'Model unavailable. Update the model ID in Connections.', 429: 'Rate limit or billing quota reached. Check your provider account and retry later.' })[response.status] || `Provider returned HTTP ${response.status}. Try again later.`);
     }
     for await (const event of readSSE(response.body, touch)) {

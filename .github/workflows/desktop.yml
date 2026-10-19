@@ -34,6 +34,14 @@ jobs:
       - name: Verify sealed Mac bundle
         if: matrix.platform == 'mac'
         run: codesign --verify --deep --strict --verbose=2 "dist/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/LLM Battle Arena.app"
+      - name: Verify packaged fuses and metadata
+        shell: bash
+        run: |
+          if [[ "${{ matrix.platform }}" == "mac" ]]; then
+            node scripts/verify-bundle.cjs "dist/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/LLM Battle Arena.app"
+          else
+            node scripts/verify-bundle.cjs "dist/win${{ matrix.arch == 'arm64' && '-arm64' || '' }}-unpacked/LLM Battle Arena.exe"
+          fi
       - name: Test packaged Mac app
         if: matrix.platform == 'mac'
         env:

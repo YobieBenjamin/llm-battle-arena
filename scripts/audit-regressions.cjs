@@ -6,7 +6,7 @@ try{
  app=await _electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH||require('electron'),args:[path.resolve(__dirname,'..'),`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'),null,{timeout:30000,polling:100});
  await app.evaluate(({safeStorage})=>{
   Object.defineProperty(safeStorage,'isEncryptionAvailable',{value:()=>globalThis.testEncryptionAvailable!==false});Object.defineProperty(safeStorage,'getSelectedStorageBackend',{value:()=>globalThis.testStorageBackend||'test'});Object.defineProperty(safeStorage,'encryptString',{value:key=>Buffer.from(key)});Object.defineProperty(safeStorage,'decryptString',{value:buffer=>buffer.toString()});
-  globalThis.catalogCalls=[];globalThis.fetch=async url=>{globalThis.catalogCalls.push(url);if(globalThis.catalogOffline)throw new Error('offline');return new Response(JSON.stringify({data:[{id:'test-model'}],models:[{name:'models/test-model',supportedGenerationMethods:['generateContent']}]}));};
+  globalThis.catalogCalls=[];globalThis.fetch=async url=>{globalThis.catalogCalls.push(url);if(globalThis.catalogOffline)throw new Error('offline');if(globalThis.badGemini && url.includes('googleapis.com'))return new Response(JSON.stringify({error:{message:'API key not valid SECRET',details:[{reason:'API_KEY_INVALID'}]}}),{status:400});return new Response(JSON.stringify({data:[{id:'test-model'}],models:[{name:'models/test-model',supportedGenerationMethods:['generateContent']}]}));};
  });
  // Save must reject new secrets before checking any provider, including later fields and router keys.
  const settingsBefore=await page.evaluate(()=>window.arena.connections());
@@ -24,6 +24,24 @@ try{
  }
  await app.evaluate(()=>{globalThis.testEncryptionAvailable=true;globalThis.testStorageBackend='test';});
  assert.deepEqual(await page.evaluate(()=>window.arena.connections()),settingsBefore,'Rejected saves must preserve connections');
+ // Both Save and explicit Check must explain an invalid Gemini key, without saving it.
+ await app.evaluate(()=>{globalThis.badGemini=true;});
+ for(const action of ['save','check']) {
+  const message=await page.evaluate(async action=>{try{if(action==='check')await window.arena.listModels('gemini','bad');else{const c=await window.arena.connections();const value=Object.fromEntries(Object.entries(c.providers).map(([id,p])=>[id,{model:p.model,key:id==='gemini'?'bad':'',remove:false}]));await window.arena.saveConnections(value);}return 'unexpected success';}catch(e){return e.message;}},action);
+  assert.match(message,/API key rejected/);assert.ok(!message.includes('SECRET'));
+ }
+ assert.deepEqual(await page.evaluate(()=>window.arena.connections()),settingsBefore);
+ await app.evaluate(()=>{globalThis.badGemini=false;globalThis.catalogCalls=[];});
+ // Real IPC save/export handlers must not expose native filesystem errors or paths.
+ await app.evaluate(({dialog})=>{globalThis.originalSaveDialog=dialog.showSaveDialog;dialog.showSaveDialog=async()=>({canceled:false,filePath:'/synthetic/private-path'});const fs=process.getBuiltinModule('fs/promises');globalThis.originalAsyncWrite=fs.writeFile;fs.writeFile=async()=>{throw Object.assign(new Error('EACCES /synthetic/private-path'),{code:globalThis.saveErrorCode||'EACCES'});};});
+ for(const code of ['EACCES','ENOSPC']) {
+  await app.evaluate((_electron,code)=>{globalThis.saveErrorCode=code;},code);
+  for(const kind of ['export','artifact']) {
+   const message=await page.evaluate(async kind=>{try{if(kind==='export')await window.arena.export('test','md');else await window.arena.saveArtifact({name:'test.txt',content:'test'});}catch(e){return e.message;}},kind);
+   assert.match(message,code==='ENOSPC'?/disk space/:/writable folder/);assert.ok(!/EACCES|ENOSPC|private-path/.test(message));
+  }
+ }
+ await app.evaluate(({dialog})=>{dialog.showSaveDialog=globalThis.originalSaveDialog;process.getBuiltinModule('fs/promises').writeFile=globalThis.originalAsyncWrite;});
  await page.evaluate(async()=>{const c=await window.arena.connections();globalThis.testSettings=Object.fromEntries(Object.entries(c.providers).map(([id,p])=>[id,{model:p.model,key:'synthetic-key',remove:false}]));await window.arena.saveConnections(globalThis.testSettings);for(const entry of Object.values(globalThis.testSettings))entry.key='';});
  assert.equal((await app.evaluate(()=>globalThis.catalogCalls)).length,3);
  await app.evaluate(()=>{globalThis.catalogCalls=[];globalThis.catalogOffline=true;});

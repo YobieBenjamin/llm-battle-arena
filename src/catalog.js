@@ -1,3 +1,4 @@
+import {readProviderError,invalidGeminiKey} from './provider-errors.js';
 export const ROUTER_MODELS = {claude:'anthropic/claude-sonnet-4.6',openai:'openai/gpt-5-mini',gemini:'google/gemini-2.5-flash'};
 export const MODEL_ID = /^[a-zA-Z0-9._:/-]{1,160}$/;
 export async function listModels(id,key,{fetchImpl=fetch,signal=AbortSignal.timeout(15000)}={}) {
@@ -6,7 +7,11 @@ export async function listModels(id,key,{fetchImpl=fetch,signal=AbortSignal.time
   async function get(url) {
     let response;
     try { response=await fetchImpl(url,{headers,signal,redirect:'error'}); } catch { throw new Error('Could not check the key. Check your internet connection and try again.'); }
-    if(!response.ok) { await response.body?.cancel(); throw new Error(response.status===401||response.status===403?'Key rejected or model-list access denied. Check the key and its permissions.':`Model check unavailable (HTTP ${response.status}). Try again later.`); }
+    if(!response.ok) {
+      const error=id==='gemini' && response.status===400 ? await readProviderError(response) : (await response.body?.cancel(),null);
+      if(id==='gemini' && response.status===400 && invalidGeminiKey(error)) throw new Error('API key rejected. Paste a valid Gemini API key in Connections.');
+      throw new Error(response.status===401||response.status===403?'Key rejected or model-list access denied. Check the key and its permissions.':`Model check unavailable (HTTP ${response.status}). Try again later.`);
+    }
     try { return await response.json(); } catch { throw new Error('The model list could not be read. Try again later.'); }
   }
   if(id==='openrouter') await get('https://openrouter.ai/api/v1/key'); // The public catalog alone does not validate credentials.

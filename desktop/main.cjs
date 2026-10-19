@@ -19,6 +19,13 @@ function handle(name, fn) {
     catch (error) { return { ok: false, error: error.message || 'The action could not be completed.' }; }
   });
 }
+async function saveUserFile(file, content) {
+  try { await fs.writeFile(file, content, 'utf8'); }
+  catch (error) {
+    if(error.code==='ENOSPC') throw new Error('Could not save the file. Free some disk space and try again.');
+    throw new Error('Could not save the file. Choose a writable folder, such as Documents, and try again.');
+  }
+}
 function cancel() { for (const controller of running.values()) controller.abort(); }
 function createWindow() {
   const area = screen.getPrimaryDisplay().workAreaSize;
@@ -167,14 +174,14 @@ if(ownsProfile) app.whenReady().then(async () => {
     const extension = value.name.split('.').pop();
     const result = await dialog.showSaveDialog(window, { defaultPath: value.name, filters: [{ name: 'Artifact file', extensions: [extension] }] });
     if (result.canceled) return false;
-    await fs.writeFile(result.filePath, value.content, 'utf8');
+    await saveUserFile(result.filePath, value.content);
     return true;
   });
   handle('export', async (text, format) => {
     if (!['md', 'json'].includes(format) || typeof text !== 'string' || text.length > 4000000) throw new Error('Invalid export.');
     const result = await dialog.showSaveDialog(window, { defaultPath: `comparison-${new Date().toISOString().slice(0, 10)}.${format}`, filters: [{ name: format === 'md' ? 'Markdown' : 'JSON', extensions: [format] }] });
     if (result.canceled) return false;
-    await fs.writeFile(result.filePath, text, 'utf8');
+    await saveUserFile(result.filePath, text);
     return true;
   });
   createWindow();
