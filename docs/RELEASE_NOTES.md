@@ -7,7 +7,7 @@
 - Check both `--inspect` and `--inspect-brk`: the app must start normally and no Node debugging endpoint may open.
 - Repeat fuse, payload identity, and UI checks on installer payloads and public downloads, on native Mac and Windows runners.
 
-See [release verification](RELEASE-VERIFICATION.md) for the test boundary and reproduction steps. Mac signing remains ad-hoc; Windows installers remain unsigned.
+See [release verification](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/RELEASE-VERIFICATION.md) for the test boundary and reproduction steps. Mac signing remains ad-hoc; Windows installers remain unsigned.
 
 ## v2.4.6 — pre-install audit follow-up
 
