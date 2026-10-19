@@ -1,20 +1,23 @@
 param([int]$TargetPid,[ValidateSet('save','quit')][string]$Action,[string]$Destination)
 $ErrorActionPreference='Stop'
-Add-Type -AssemblyName System.Windows.Forms
+Write-Output "Native helper starting: $Action for PID $TargetPid"
 Add-Type @'
 using System;
 using System.Text;
 using System.Runtime.InteropServices;
 public static class ArenaWindows {
  public delegate bool Callback(IntPtr hwnd, IntPtr param);
- [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
- [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
  [DllImport("user32.dll")] public static extern bool EnumWindows(Callback callback, IntPtr param);
+ [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr parent, Callback callback, IntPtr param);
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+ [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr hwnd);
  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd, StringBuilder text, int count);
  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int count);
+ [DllImport("user32.dll", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint message, IntPtr wparam, string text, uint flags, uint timeout, out IntPtr result);
+ [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr hwnd, uint message, IntPtr wparam, IntPtr lparam);
 }
 '@
+Write-Output 'Native control APIs ready.'
 if($Action -eq 'quit') {
  if(-not (Get-Process -Id $TargetPid).CloseMainWindow()){throw 'Could not close test window'}
  exit
@@ -36,19 +39,23 @@ for($i=0;$i -lt 100;$i++) {
  Start-Sleep -Milliseconds 100
 }
 if($dialog -eq [IntPtr]::Zero){throw 'Native Save dialog not found'}
-[void][ArenaWindows]::SetForegroundWindow($dialog)
-Start-Sleep -Milliseconds 200
-if([ArenaWindows]::GetForegroundWindow() -ne $dialog){throw 'Test Save dialog could not take keyboard focus'}
-# Native dialog keyboard commands: Alt+N selects File name, then Enter saves.
-[System.Windows.Forms.SendKeys]::SendWait('%n')
-[System.Windows.Forms.SendKeys]::SendWait('^a')
-$escaped=''
-foreach($character in $Destination.ToCharArray()) {
- if($character -eq '{'){$escaped+='{{}'}
- elseif($character -eq '}'){$escaped+='{}}'}
- elseif('+^%~()[]'.Contains([string]$character)){$escaped+='{'+$character+'}'}
- else{$escaped+=$character}
-}
-[System.Windows.Forms.SendKeys]::SendWait($escaped)
-[System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-Write-Output 'Native Save dialog submitted through keyboard controls.'
+$script:filename=[IntPtr]::Zero;$script:save=[IntPtr]::Zero
+$expected=[System.IO.Path]::GetFileName($Destination)
+$stem=[System.IO.Path]::GetFileNameWithoutExtension($Destination)
+[ArenaWindows]::EnumChildWindows($dialog,{param($handle,$unused)
+ $class=New-Object System.Text.StringBuilder 256
+ $text=New-Object System.Text.StringBuilder 2048
+ [void][ArenaWindows]::GetClassName($handle,$class,256)
+ [void][ArenaWindows]::GetWindowText($handle,$text,2048)
+ $id=[ArenaWindows]::GetDlgCtrlID($handle)
+ if($class.ToString() -eq 'Edit' -and $text.ToString() -in @($expected,$stem)){$script:filename=$handle}
+ if($class.ToString() -eq 'Button' -and $id -eq 1 -and $text.ToString() -match '^&?Save'){$script:save=$handle}
+ if($class.ToString() -in @('Edit','Button')){Write-Host "Native $class id=$id text=[$text]"}
+ return $true
+},[IntPtr]::Zero) | Out-Null
+if($script:filename -eq [IntPtr]::Zero -or $script:save -eq [IntPtr]::Zero){throw 'Native filename or Save control not found'}
+# Operate the visible native edit/button controls; never invoke application IPC.
+[IntPtr]$result=[IntPtr]::Zero
+if([ArenaWindows]::SendMessageTimeout($script:filename,0x000C,[IntPtr]::Zero,$Destination,2,3000,[ref]$result) -eq [IntPtr]::Zero){throw 'Native filename edit did not respond'}
+if(-not [ArenaWindows]::PostMessage($script:save,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)){throw 'Native Save button could not be clicked'}
+Write-Output 'Native Save submitted.'

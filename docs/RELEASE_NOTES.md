@@ -1,5 +1,6 @@
-## v2.4.7 — hardened release, separate regression build
+## v2.4.8 — hardened release, separate regression build
 
+- v2.4.7 was an unpublished verification candidate; v2.4.8 includes the corrected Windows ARM native test helper.
 - Disable the Node command-line inspector in published applications before signing and packaging.
 - Keep deep fault-injection regressions on an ephemeral private build that is never uploaded.
 - Compare the entire application archive byte-for-byte between the private and release builds.

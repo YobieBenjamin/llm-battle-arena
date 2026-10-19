@@ -19,7 +19,7 @@ async function nativeAction(child,action,folder,expectedFile) {
  }
  if(!process.env.CI)throw new Error('Use ARENA_MANUAL_NATIVE=1 outside CI to handle native Save/Quit through the app UI.');
  if(process.platform==='darwin')await promisify(execFile)('/usr/bin/osascript',[path.join(__dirname,'native/mac-ui.applescript'),String(child.pid),action,folder],{timeout:20000});
- else if(process.platform==='win32')await promisify(execFile)('powershell.exe',['-NoProfile','-File',path.join(__dirname,'native/windows-ui.ps1'),'-TargetPid',String(child.pid),'-Action',action,'-Destination',expectedFile||''],{timeout:20000});
+ else if(process.platform==='win32')await promisify(execFile)('pwsh.exe',['-NoProfile','-File',path.join(__dirname,'native/windows-ui.ps1'),'-TargetPid',String(child.pid),'-Action',action,'-Destination',expectedFile||''],{timeout:60000});
  else throw new Error('Native release smoke supports macOS and Windows.');
 }
 async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPORT}={}){
@@ -28,7 +28,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'arena-hardened-')),profile=path.join(dir,'profile'),exports=path.join(dir,'exports');fs.mkdirSync(exports);
  const archiveHash=hash(archivePath(bundle));const executableHash=hash(executable);
  let child,browser,stderr='',page;const errors=[];
- const watchdog=setTimeout(()=>{console.error(`Hardened UI deadline exceeded. Last stderr: ${stderr}`);if(child&&child.exitCode===null)child.kill('SIGKILL');process.exit(1);},process.env.ARENA_MANUAL_NATIVE==='1'?600000:150000);
+ const watchdog=setTimeout(()=>{console.error(`Hardened UI deadline exceeded. Last stderr: ${stderr}`);if(child&&child.exitCode===null)child.kill('SIGKILL');process.exit(1);},process.env.ARENA_MANUAL_NATIVE==='1'?600000:240000);
  async function launch(flag){
   const inspectorPort=await freePort();stderr='';
   child=spawn(executable,[`--user-data-dir=${profile}`,...(process.platform==='darwin'&&process.env.CI?['--use-mock-keychain']:[]),'--disable-backgrounding-occluded-windows','--disable-renderer-backgrounding','--disable-background-timer-throttling','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`${flag}=127.0.0.1:${inspectorPort}`],{stdio:['ignore','pipe','pipe']});

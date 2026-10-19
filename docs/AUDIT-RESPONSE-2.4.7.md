@@ -1,4 +1,6 @@
-# v2.4.7 — disable the shipped Node inspector
+# v2.4.7 — unpublished hardening candidate
+
+This tag was never released as an installer. Its Windows ARM native test helper timed out, so publication stayed blocked. See the subsequent v2.4.8 work for the corrected helper.
 
 The release configuration sets `enableNodeCliInspectArguments: false` before signing and packaging. Deep regressions run against a separate ephemeral build with that fuse enabled. That private application is never uploaded. Each native build job compares the entire private and release `app.asar` byte-for-byte after the deep tests.
 
