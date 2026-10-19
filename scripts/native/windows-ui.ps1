@@ -33,11 +33,12 @@ for($i=0;$i -lt 100;$i++) {
  },[IntPtr]::Zero) | Out-Null
  foreach($handle in $script:dialogs) {
   $window=[System.Windows.Automation.AutomationElement]::FromHandle($handle)
-  Write-Output "Native dialog found: $($window.Current.Name)"
+  if($i -eq 0){Write-Output "Native dialog found: $($window.Current.Name)"}
   $all=$window.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)
   foreach($element in $all) {
-   if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit -and $element.Current.Name -match '^File name:?$'){$edit=$element}
-   if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and $element.Current.Name -match '^&?Save$'){$save=$element}
+   if($i -eq 0){Write-Output "Control $($element.Current.ControlType.ProgrammaticName) name=[$($element.Current.Name)] id=[$($element.Current.AutomationId)]"}
+   if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit -and ($element.Current.Name -match '^File name' -or $element.Current.AutomationId -in @('1001','1148'))){$edit=$element}
+   if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button -and ($element.Current.Name -match '^&?Save' -or $element.Current.AutomationId -eq '1')){$save=$element}
   }
  }
  if($null -ne $edit -and $null -ne $save){break}
