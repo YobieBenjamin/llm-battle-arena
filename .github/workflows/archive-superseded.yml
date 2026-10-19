@@ -5,6 +5,7 @@ on:
     types: [completed]
 permissions:
   contents: write
+  actions: read
 jobs:
   archive:
     # No checkout or artifact execution: only a successful tag run from this repository may archive releases.
@@ -15,9 +16,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          VERIFIED_RUN_ID: ${{ github.event.workflow_run.id }}
           VERIFIED_TAG: ${{ github.event.workflow_run.head_branch }}
         shell: bash
         run: |
+          verified=$(gh api "repos/$GH_REPO/actions/runs/$VERIFIED_RUN_ID/jobs" --jq 'any(.jobs[]; .name == "Verify public release downloads" and .conclusion == "success")')
+          if [[ "$verified" != "true" ]]; then
+            echo 'Public asset verification did not pass; no releases changed.'
+            exit 0
+          fi
           latest=$(gh release view --json tagName --jq .tagName)
           if [[ "$latest" != "$VERIFIED_TAG" ]]; then
             echo 'A different release is current; no releases changed.'
