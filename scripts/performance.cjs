@@ -8,7 +8,7 @@ const fs=require('node:fs');const os=require('node:os');const path=require('node
  const args=[path.resolve(__dirname,'..'),`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])];
  let app;
  try{
-  app=await _electron.launch({executablePath,args});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'),null,{timeout:30000,polling:100});
+  app=await _electron.launch({executablePath,args});const page=await app.firstWindow();await require('./ui-ready.cjs')(page);
   // A second process must exit without acquiring a separate writable profile snapshot.
   const second=spawn(executablePath,args,{stdio:'ignore'});
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{second.kill();reject(new Error('Second instance did not exit'));},10000);second.on('error',reject);second.on('exit',()=>{clearTimeout(timer);resolve();});});

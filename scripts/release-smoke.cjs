@@ -34,7 +34,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   const endpoint=await eventually(()=>{if(errors.length)throw new Error(errors.join('; '));if(child.exitCode!==null)throw new Error(`Release exited early: ${stderr}`);return stderr.match(/DevTools listening on (ws:\/\/127\.0\.0\.1:\d+\/devtools\/browser\/[^\s]+)/)?.[1];});
   browser=await chromium.connectOverCDP(endpoint);const context=browser.contexts()[0];
   page=await eventually(()=>context.pages().find(p=>p.url().startsWith('file:')));page.setDefaultTimeout(20000);page.on('pageerror',error=>errors.push(error.message));
-  await page.waitForFunction(()=>!!document.getElementById('claude-answer'),null,{timeout:60000,polling:100});
+  await require('./ui-ready.cjs')(page);
   // A live, initialized UI proves --inspect-brk did not pause startup.
   for(let i=0;i<10;i++){assert.equal(await portOpen(inspectorPort),false,`${flag} opened a main-process inspector endpoint`);await pause(100);}
   assert.ok(!stderr.includes('Debugger listening on'),'Node inspector unexpectedly started');
