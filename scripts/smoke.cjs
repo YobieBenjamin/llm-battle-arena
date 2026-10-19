@@ -179,7 +179,43 @@ const appRoot=path.resolve(__dirname,'..');
  assert.equal(await page.locator('#claude-manual').inputValue(),'**Saved across restart**');
  await page.locator('#claude-format').click();
  assert.equal(await page.locator('#claude-answer strong').textContent(),'Saved across restart');
+ // Mock generation, not the voting/history handlers: exercise the real blind workflow without keys.
+ await app.evaluate(({ipcMain,BrowserWindow})=>{ipcMain.removeHandler('compare');ipcMain.handle('compare',(_event,value)=>{
+  setTimeout(()=>{for(const id of value.providers) BrowserWindow.getAllWindows()[0].webContents.send('answer',{id,runId:value.runId,model:'secret-model-'+id,status:'done',text:'A useful anonymous answer.',elapsed:100,tokens:10});},30);return {ok:true,value:{started:true}};
+ });});
+ await page.locator('#mode').selectOption('live');
+ await page.locator('#prompt').fill('Blind test question');
+ await page.locator('#blind-mode').check();
+ await page.locator('#compare').click();
+ await page.locator('#claude-vote:not([disabled])').waitFor();
+ assert.equal(await page.locator('.card:not([hidden]) h3').first().textContent(),'Answer A');
+ for(const id of ['claude','openai','gemini']) {assert.equal(await page.locator(`#${id}-model`).textContent(),'Hidden until reveal');assert.equal(await page.locator(`#${id}-tokens`).isVisible(),false);assert.equal(await page.locator(`#${id}-artifact`).isVisible(),false);}
+ assert.equal(await page.locator('#export-json').isDisabled(),true);
+ await page.locator('#claude-vote').click();
+ await page.locator('#battle-note').filter({hasText:'Winner: Claude'}).waitFor();
+ assert.equal(await page.locator('.claude h3').textContent(),'Claude');
+ assert.equal(await page.locator('#export-json').isEnabled(),true);
+ const tally=await page.evaluate(()=>window.arena.preferences());assert.equal(tally.tally.claude,1);
+ await page.locator('#history').click();await page.locator('.history-row button').filter({hasText:'Blind test question'}).first().click();
+ assert.equal(await page.locator('#claude-vote').isVisible(),false);
+ assert.equal((await page.evaluate(()=>window.arena.preferences())).tally.claude,1);
+ // Catalog UI with a fake model response; native setup still validates independently on Save.
+ await app.evaluate(({ipcMain})=>{ipcMain.removeHandler('list-models');ipcMain.handle('list-models',(_event,id)=>({ok:true,value:id==='openrouter'?['anthropic/test-model','openai/test-model','google/test-model']:['gpt-test-model']}));ipcMain.removeHandler('check-update');ipcMain.handle('check-update',()=>({ok:true,value:{version:'v99.0.0'}}));});
+ await page.locator('#connections').click();
+ await page.locator('#openai-load-models').click();
+ await page.locator('#openai-check-result').filter({hasText:'Key accepted'}).waitFor();
+ assert.ok((await page.locator('#openai-config-model option').allTextContents()).includes('gpt-test-model'));
+ await page.locator('#connection-route').selectOption('openrouter');
+ await page.locator('#openrouter-load-models').click();
+ await page.locator('#openrouter-check-result').filter({hasText:'Key accepted'}).waitFor();
+ assert.ok((await page.locator('#router-claude-model option').allTextContents()).includes('anthropic/test-model'));
+ await page.locator('#check-update-now').click();
+ await page.locator('#update-message').filter({hasText:'v99.0.0'}).waitFor({state:'attached'});
+ await page.locator('#check-updates').check();
+ assert.equal((await page.evaluate(()=>window.arena.preferences())).checkUpdates,true);
+ await page.locator('#check-updates').uncheck();
+ await page.locator('#close-settings').click();
  assert.deepEqual(errors,[]);
- console.log('PASS: manual paste shortcuts preserve answers; pinned preview stays readable at three laptop sizes and scrolls; pinned Compare shortcut and standard menus; friendly IPC errors; sanitized Markdown; history deletion and full quit/restart persistence; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
+ console.log('PASS: manual paste shortcuts preserve answers; pinned preview stays readable at three laptop sizes and scrolls; pinned Compare shortcut and standard menus; friendly IPC errors; blind voting and persistent tally; model menus; update controls; sanitized Markdown; history deletion and full quit/restart persistence; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
  } catch(error) {console.error('Failure URL:',page?.url(),error); throw error;} finally {await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

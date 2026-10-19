@@ -30,3 +30,8 @@ test('malformed saved settings are rejected at load with a recovery path',t=>{
   assert.throws(()=>createStore(dir,fakeCrypto),/Invalid saved/);
  }
 });
+test('OpenRouter is opt-in, encrypted, persistent and cannot replace direct keys',t=>{
+ const {dir,store}=setup(t);const value=input();value.claude.key='direct-secret';value.openrouter={key:'router-secret',enabled:true,models:{claude:'anthropic/claude-test',openai:'openai/gpt-test',gemini:'google/gemini-test'}};
+ store.save(value);const reloaded=createStore(dir,fakeCrypto);assert.equal(reloaded.snapshot().route,'openrouter');assert.equal(reloaded.key('openrouter'),'router-secret');assert.equal(reloaded.key('claude'),'direct-secret');assert.ok(!JSON.stringify(reloaded.snapshot()).includes('secret'));assert.ok(!fs.readFileSync(path.join(dir,'connections.json'),'utf8').includes('router-secret'));
+ const invalid={...value,openrouter:{...value.openrouter,models:{...value.openrouter.models,claude:'openai/wrong'}}};assert.throws(()=>store.save(invalid),/matching/);assert.equal(store.key('openrouter'),'router-secret');
+});

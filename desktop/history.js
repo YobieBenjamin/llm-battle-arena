@@ -13,7 +13,7 @@ function clean(value) {
     for (const key of ['tokens','inputTokens','reasoningTokens','elapsed']) if (Number.isFinite(r[key]) && r[key] >= 0) results[id][key] = r[key];
     results[id].truncated = r.truncated === true;
   }
-  return { id:value.id, prompt:value.prompt, mode:value.mode, timestamp:value.timestamp, maxTokens:[2048,4096,8192].includes(value.maxTokens)?value.maxTokens:4096, results };
+  return { id:value.id, prompt:value.prompt, mode:value.mode, timestamp:value.timestamp, route:value.route==='openrouter'?'openrouter':'direct', blind:value.blind && value.mode==='live' && Array.isArray(value.blind.order) && value.blind.order.length>=2 && value.blind.order.length<=3 && new Set(value.blind.order).size===value.blind.order.length && value.blind.order.every(id=>ids.includes(id)) ? {order:value.blind.order,revealed:value.blind.revealed===true,winner:ids.includes(value.blind.winner)?value.blind.winner:null} : null, maxTokens:[2048,4096,8192].includes(value.maxTokens)?value.maxTokens:4096, results };
 }
 export function createHistory(directory) {
   fs.mkdirSync(directory,{recursive:true});

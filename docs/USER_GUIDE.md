@@ -78,13 +78,13 @@ API keys are like access passes for software. They are not your chat website use
 2. For each provider, click **Get API key** to open its official developer site in your browser.
 3. Sign in there and create or find an API key. Providers may ask you to create a project or enable billing. Their screens and account requirements change over time.
 4. Copy the key and paste it into the matching Arena field. You can use the normal keyboard paste shortcut.
-5. Leave the **Model ID** unchanged to start. Availability depends on your provider account; you can edit it later.
+5. Click **Check key & load models**, then choose a model from the menu. Availability depends on your provider account.
 6. Repeat for the other providers, then click **Save connections**.
 7. With at least one saved key, the app selects **Live API · automatic**.
 
 Official key pages: [Anthropic](https://platform.claude.com/settings/keys), [OpenAI](https://platform.openai.com/api-keys), [Google AI Studio](https://aistudio.google.com/api-keys).
 
-You can start with one key. Uncheck **Include** on cards you have not connected. Three automatic answers require all three keys and working provider accounts. Saving a key does not contact the provider to validate billing or model access; the first live comparison tests whether it works.
+You can start with one key. Uncheck **Include** on cards you have not connected. For the direct route, three automatic answers require all three keys and working provider accounts. Alternatively, choose OpenRouter to use one key. Saving checks credentials through model-list requests, but does not validate generation access or billing credit.
 
 **Cost:** the Arena is free. Providers control API charges, credits, and quotas. Gemini has free tiers for some API models, but a free allowance is not guaranteed for every model or account. A comparison can make three paid requests, and Retry makes another request to that provider. Start with short questions and the default output limit. Set spending controls in the provider dashboards if desired.
 
@@ -205,7 +205,7 @@ Connection settings normally survive because they are stored in your user profil
 | Add an API key | Open Connections, save that provider's key, or uncheck Include for that card. |
 | API key rejected | Replace the matching key. Check that it is an API key, not a website password, and has not been revoked. |
 | Access denied | Check your provider account's access to the selected model. |
-| Model unavailable / HTTP 404 | Open Connections and change the Model ID to a currently available model for your provider account. |
+| Model unavailable / HTTP 404 | Open Connections, use Check key & load models, and select an available model. |
 | Rate limit or billing quota reached | Check the provider dashboard for credits, billing, or limits. Wait before retrying. |
 | Timed out | No first response data arrived within two minutes, no further data arrived for 45 seconds after streaming started, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
 | Saved key could not be unlocked | Unlock your OS keychain/credential store, or open Connections and paste a replacement key. A saved-key indicator does not guarantee the OS can decrypt it. |
@@ -221,7 +221,7 @@ If you report a bug, include the app version (the release you downloaded), OS, p
 
 Keys are encrypted with Electron's OS-backed `safeStorage`. They are used in the desktop process for fixed official API endpoints and are not sent to the interface. The app has no analytics, app login, shared key, or hosted backend. Live prompts are processed by the selected providers under their terms. Website assist uses your existing system browser.
 
-The app-data folder contains `connections.json` (encrypted keys and model IDs):
+The app-data folder contains `connections.json` (encrypted keys and model selections), `history.json` (plain-text comparisons), and `preferences.json` (update preference and local votes):
 
 - **Mac:** `~/Library/Application Support/LLM Battle Arena/`
 - **Windows:** `%APPDATA%\LLM Battle Arena\`
@@ -235,3 +235,34 @@ Finder → Go → Go to Folder on Mac, or File Explorer's address bar on Windows
 **Mac:** close the app, then move LLM Battle Arena from Applications to Trash.
 
 Uninstalling may leave the app-data folder and encrypted connection settings behind. To remove those too, delete only the Arena's app-data folder listed above after closing the app. Exported comparisons and clipboard contents are separate; remove/clear those yourself if desired. Revoke API keys in each provider dashboard if you want to invalidate them beyond this app.
+
+## Blind battles and local wins
+
+1. Choose **Live API** and include at least two providers.
+2. Check **Blind battle**, enter your question, and click **Compare**.
+3. Read Answer A, B and C. The order is shuffled each round. Provider names, models, icons, timing and token counts are hidden; artifacts and exports wait until reveal.
+4. Once every included answer finishes successfully, click **Pick winner** on your favorite. The providers are revealed and a local win tally appears. Each comparison gets one vote, even if reopened from History.
+5. If an answer fails or you prefer not to vote, click **Reveal without voting** after the requests finish. Start a new comparison to play again. Retries are disabled for blind rounds so the answers cannot change after a vote.
+
+Blind battles are casual: answer wording may identify the provider. The app does not conceal identities from someone inspecting local files. Wins persist separately from the last 50 comparisons; deleting History does not reset the tally.
+
+## Easier setup: model menus and one-key OpenRouter
+
+**Direct keys:** Open Connections, paste a provider key, then click **Check key & load models**. Choose a model from its dropdown. Save connections checks supplied keys and active saved keys using model-list requests, without generating answers. A successful list check does not prove that generation, billing credit or every listed model is available. Restricted keys may lack model-list permission; network or permission errors leave saved connections unchanged. A saved model missing from the returned list is labeled so you can select a replacement. OpenAI's text-model menu uses a name filter because its list API does not expose endpoint compatibility.
+
+**One key instead of three:**
+
+1. Open **Connections** and choose **OpenRouter · one key** under Connection route.
+2. Read the disclosure: OpenRouter receives prompts and answers and routes them to model hosts. Its billing and privacy policies apply.
+3. Click **Get API key**, create an OpenRouter account, configure credit/spending limits there, and copy a key.
+4. Paste it into the OpenRouter key box. Click **Check key & load models**.
+5. Choose an Anthropic model for Claude, an OpenAI model for OpenAI, and a Google model for Gemini. Click **Save connections**.
+6. Choose Live API and compare as usual. The mode note identifies the OpenRouter route. Direct provider keys remain saved if you switch back.
+
+OpenRouter authentication is checked with its key endpoint before its public model catalog is loaded. The router key uses the same OS encryption as direct keys. API access is separate from website subscriptions. This app does not promise free calls or account credits.
+
+## Updates and busy providers
+
+In Connections, enable **Check GitHub for updates on launch** if wanted. It is off initially. When enabled, the app makes one request per launch to this repository's latest-release endpoint. GitHub receives normal connection information such as your IP address; the request includes no API keys, prompts or answers. **Check now** is an explicit request and shares the same once-per-launch result. A banner opens the project's download page; installation stays manual. Disable the checkbox to stop future automatic checks.
+
+An initial HTTP 503 or 529 gets one retry after two seconds, with a visible retrying status. Stop cancels the wait. The app does not automatically retry rate limits, network failures, or failures after streaming begins. This is a limited response to an explicit busy-server rejection, not a promise about a provider's billing.

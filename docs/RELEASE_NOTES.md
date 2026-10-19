@@ -1,3 +1,11 @@
+## v2.4.0 — blind battles, simpler setup and maintenance
+
+- Blind battles shuffle cards, hide identities until a vote or reveal, and keep local win tallies.
+- Connections adds model dropdowns and key checks without generation, plus an optional one-key OpenRouter route with a clear privacy disclosure.
+- Optional GitHub update notices (off initially), and one cancellable retry for initial HTTP 503/529 busy responses.
+- CI verifies published checksums, both Mac bundle signatures and source correspondence; Dependabot and a weekly live-check workflow are included. Live checks skip unconfigured dedicated secrets.
+- Novice setup and maintainer instructions are expanded. Existing signing/notarization remains unchanged.
+
 ## v2.3.0 — formatted answers and local history
 
 - Read headings, tables, lists and code as formatted Markdown. Copy and exports keep the original text. Website assist has Read formatted / Edit pasted answer controls.

@@ -57,3 +57,16 @@ Answers use marked 18.1.1 and DOMPurify 3.4.17 with a narrow tag/attribute allow
 History is local plaintext, atomically replaced and capped at 50 entries. Saved fields are allowlisted so credentials cannot be included as extra fields. Users can reopen without requests, delete one entry or confirm deleting all. Corrupt history is backed up with a visible path. Partial saves run roughly every 500ms and normal shutdown requests a final flush; abrupt termination can lose the newest fragment. Sensitive content deliberately typed into a prompt is still saved.
 
 Local verification: 39 unit tests passed. The Electron source and signed packaged Apple Silicon app passed Markdown heading/table/emphasis and hostile-content checks, full quit/restart history recovery, deletion, and the earlier token/artifact/layout regressions. Cold packaged startup initially stalled in the harness; it now explicitly waits for renderer initialization, and failure cleanup is bounded. No live paid API requests were made. Mac ARM64 CI now tests the packaged app before upload; other CPU variants are built but not runtime-tested by that step. Existing notarization/first-download limitations still apply.
+
+## v2.4.0 implementation audit
+
+Added the remaining requested features except signing/notarization: blind voting, OpenRouter routing, key checks, model menus, opt-in update notices, initial-overload retry, public-release verification, weekly secret-gated live checks, and Dependabot.
+
+- Blind identities, models, timing, tokens and artifacts are hidden until reveal; order is randomized. Main-process votes require completed nonempty answers from every participant and persist once per comparison. History reload reconciles the recorded winner. This is casual anonymity, not protection against inspection of local files or self-identifying model text.
+- Direct and router credentials remain OS-encrypted; route changes never silently send direct keys to OpenRouter. Its public model list is preceded by authenticated /key verification. Model-list success is not a billing/generation guarantee.
+- Update checks are off by default, once per launch when enabled, time-bounded and fixed to the canonical repo. Download navigation ignores arbitrary API-supplied URLs.
+- Only initial HTTP 503/529 gets one retry; rate limits, network exceptions, and stream errors do not. Stop cancels backoff.
+- Public-release verification checks all six hashes, both mounted read-only Mac bundles, source file sets/content against the tag and packaged Markdown dependencies against the lockfile install. It does not certify Windows installation or Apple notarization.
+- Weekly live checks print status only, use dedicated GitHub secrets, and skip unconfigured providers. No dedicated secrets were present during implementation, so no paid live check was run. Dependabot PRs cannot run the paid workflow.
+
+Verification before packaging: 51 unit tests passed, including routing/key persistence, catalog pagination, retry boundaries/cancellation, version comparison, and duplicate-vote prevention. The Electron UI suite passed simulated blind voting/history reopening, model dropdowns, update controls, and all existing Markdown/artifact/layout/restart checks. Provider generation and catalog responses in these UI checks were fixtures; they are not a claim of live account compatibility.

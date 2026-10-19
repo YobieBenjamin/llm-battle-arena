@@ -1,10 +1,30 @@
+import { connectionFields, readConnections } from './settings-view.js';
+import { shuffled, canVote } from './blind.js';
 import { renderMarkdown } from './markdown.js';
 import { createArtifactViewer } from './artifact-view.js';
 import { PROVIDERS } from './providers.js';
 import { tokenSummary, formatTokenSummary, estimateTokens } from './tokens.js';
 const $ = id => document.getElementById(id);
 const api = window.arena;
-let artifacts;
+let savingConnections=false;
+let artifacts, preferences={checkUpdates:false,tally:{}};
+function hiddenBattle() { return Boolean(comparison?.blind && !comparison.blind.revealed); }
+function battleUI() {
+  const hidden=hiddenBattle(),order=comparison?.blind?.order || Object.keys(PROVIDERS);
+  document.body.classList.toggle('blind-battle',hidden);
+  for(const id of [...order,...Object.keys(PROVIDERS).filter(id=>!order.includes(id))]) {
+    const card=$(`${id}-answer`).closest('.card'); $('cards').append(card); card.hidden=Boolean(comparison?.blind && !order.includes(id));
+    card.classList.toggle('blinded',hidden);
+    card.querySelector('h3').textContent=hidden?`Answer ${String.fromCharCode(65+order.indexOf(id))}`:PROVIDERS[id].name;
+    card.querySelector('.avatar').textContent=hidden?'?':{claude:'✳',openai:'◎',gemini:'✦'}[id];
+    card.querySelector('.enabled-label').hidden=hidden;
+    $(`${id}-answer`).setAttribute('aria-label',hidden?`Answer ${String.fromCharCode(65+order.indexOf(id))}`:`${PROVIDERS[id].name} answer`);
+    $(`${id}-vote`).hidden=!hidden; $(`${id}-vote`).disabled=!canVote(comparison,results,pending.size);
+  }
+  $('export-md').disabled=hidden; $('export-json').disabled=hidden; $('reveal-blind').hidden=!hidden; $('reveal-blind').disabled=Boolean(pending.size);
+  $('battle-note').textContent=hidden?'Pick your favorite when all answers finish. Answers may identify themselves; this is a casual blind vote.':comparison?.blind?.winner?`Winner: ${PROVIDERS[comparison.blind.winner].name}. Local wins: ${Object.entries(PROVIDERS).map(([id,p])=>`${p.name} ${preferences.tally[id]||0}`).join(' · ')}`:'';
+}
+async function updateNotice() { const result=await api.checkUpdate(); $('update-status').textContent=result.error || (result.version?'A new version is available.':'You have the latest stable version.'); if(result.version) { $('update-message').textContent=`${result.version} is available.`; $('update-banner').hidden=false; } }
 let saveTimer;
 const renderedText = new WeakMap();
 async function saveHistory() {
@@ -25,7 +45,7 @@ async function showHistory() {
       $('prompt').value=saved.prompt; $('limit').value=String(saved.maxTokens);
       for(const id of Object.keys(PROVIDERS)) {
         const result=saved.results[id];
-        if(result) { results[id]=result; if(['queued','connecting','streaming'].includes(result.status)) result.status='interrupted'; }
+        if(result) { results[id]=result; if(['queued','connecting','streaming','retrying'].includes(result.status)) result.status='interrupted'; }
         $(`${id}-enabled`).checked=Boolean(result);
         if(saved.mode==='manual' && result) { $(`${id}-manual`).value=result.text; $(`${id}-manual`).hidden=false; $(`${id}-answer`).hidden=true; }
         render(id);
@@ -59,13 +79,16 @@ function busy() {
   $('limit').disabled = active;
   $('stop').hidden = !active;
   $('connections').disabled = active;
+  $('blind-mode').disabled=active || mode()!=='live' || hiddenBattle();
+  battleUI();
   $('history').disabled = active || !api;
   for (const id of Object.keys(PROVIDERS)) { $(`${id}-retry`).disabled = active; $(`${id}-enabled`).disabled = active; }
 }
 function render(id) {
   const result = results[id];
   renderTokens(id);
-  artifacts?.update(id, result?.text || '');
+  if(!hiddenBattle()) artifacts?.update(id, result?.text || '');
+  else $(`${id}-artifact`).hidden=true;
   const answer = $(`${id}-answer`);
   const nextText = result?.text || '';
   if (renderedText.get(answer) !== nextText) {
@@ -80,8 +103,9 @@ function render(id) {
   state.textContent = result ? `${result.status}${result.elapsed != null ? ` · ${(result.elapsed / 1000).toFixed(1)}s` : ''}${result.truncated ? ' · output limit reached' : ''}${result.error ? ` · ${result.error}` : ''}` : 'Ready';
   $(`${id}-copy`).disabled = !result?.text;
   $(`${id}-format`).hidden = comparison?.mode !== 'manual' || !result;
-  $(`${id}-retry`).hidden = comparison?.mode !== 'live' || !result || !['done','error','cancelled'].includes(result.status);
-  $(`${id}-model`).textContent = result?.model || connections?.providers[id].model || PROVIDERS[id].model;
+  $(`${id}-retry`).hidden = Boolean(comparison?.blind) || comparison?.mode !== 'live' || !result || !['done','error','cancelled'].includes(result.status);
+  if(hiddenBattle()) { state.textContent=result?.status==='done'?'Ready to judge':result?.status==='error'?'Answer unavailable. Reveal to see details.':result?.status || 'Ready'; }
+  $(`${id}-model`).textContent = hiddenBattle()?'Hidden until reveal':result?.model || connections?.providers[id].model || PROVIDERS[id].model;
 }
 function cardTokenSummary(id) {
   const result = results[id];
@@ -89,6 +113,7 @@ function cardTokenSummary(id) {
 }
 function renderTokens(id) {
   const counter = $(`${id}-tokens`);
+  counter.hidden=hiddenBattle();
   counter.textContent = formatTokenSummary(cardTokenSummary(id));
   const summary = cardTokenSummary(id);
   counter.title = `Q = question input. A = visible answer estimated the same way for every model (~4 English characters/token). R = provider-reported reasoning, or — when unknown. Provider output usage: ${summary.providerOutput.value ?? 'not reported'} (may include reasoning/formatting). Not a price estimate.`;
@@ -98,8 +123,9 @@ function createCards() {
   for (const [id, provider] of Object.entries(PROVIDERS)) {
     const card = document.createElement('article'); card.className = `card ${id}`;
     // Only fixed application strings and fixed provider IDs enter this template.
-    card.innerHTML = `<div class="card-top"><div class="avatar">${id === 'claude' ? '✳' : id === 'openai' ? '◎' : '✦'}</div><div class="card-title"><h3>${provider.name}</h3><div id="${id}-model" class="model"></div><div id="${id}-tokens" class="token-counts"></div></div><button id="${id}-artifact" class="artifact-trigger" aria-expanded="false" aria-controls="artifact-panel" hidden>Y</button><label class="enabled-label"><input id="${id}-enabled" type="checkbox" checked> Include</label></div><div id="${id}-status" class="status" role="status"></div><div id="${id}-answer" class="answer" tabindex="0" aria-label="${provider.name} answer"></div><textarea id="${id}-manual" class="manual-answer" aria-label="Paste ${provider.name} website answer" placeholder="Paste the answer from the official website here…" hidden maxlength="200000"></textarea><div class="card-actions"><button id="${id}-copy">Copy answer</button><button id="${id}-format" hidden>Read formatted</button><button id="${id}-retry" hidden>Retry</button><button id="${id}-website" hidden>Open ${provider.name}</button></div>`;
+    card.innerHTML = `<div class="card-top"><div class="avatar">${id === 'claude' ? '✳' : id === 'openai' ? '◎' : '✦'}</div><div class="card-title"><h3>${provider.name}</h3><div id="${id}-model" class="model"></div><div id="${id}-tokens" class="token-counts"></div></div><button id="${id}-artifact" class="artifact-trigger" aria-expanded="false" aria-controls="artifact-panel" hidden>Y</button><label class="enabled-label"><input id="${id}-enabled" type="checkbox" checked> Include</label></div><div id="${id}-status" class="status" role="status"></div><div id="${id}-answer" class="answer" tabindex="0" aria-label="${provider.name} answer"></div><textarea id="${id}-manual" class="manual-answer" aria-label="Paste ${provider.name} website answer" placeholder="Paste the answer from the official website here…" hidden maxlength="200000"></textarea><div class="card-actions"><button id="${id}-vote" hidden>Pick winner</button><button id="${id}-copy">Copy answer</button><button id="${id}-format" hidden>Read formatted</button><button id="${id}-retry" hidden>Retry</button><button id="${id}-website" hidden>Open ${provider.name}</button></div>`;
     $('cards').append(card);
+    $(`${id}-vote`).onclick=()=>guarded(async()=>{await saveHistory(); preferences=await api.vote(runId,id); comparison.blind={...comparison.blind,revealed:true,winner:id}; for(const provider of Object.keys(PROVIDERS))render(provider); battleUI(); await saveHistory();});
     $(`${id}-format`).onclick = () => { const input=$(`${id}-manual`); input.hidden=!input.hidden; $(`${id}-answer`).hidden=!input.hidden; $(`${id}-format`).textContent=input.hidden?'Edit pasted answer':'Read formatted'; };
     $(`${id}-copy`).onclick = () => guarded(async () => { await copy(results[id]?.text || ''); notice('Answer copied.'); });
     $(`${id}-retry`).onclick = () => guarded(() => launch([id], true));
@@ -137,6 +163,7 @@ function changeMode() {
   $('compare').textContent = mode() === 'sample' ? 'Show sample →' : mode() === 'manual' ? 'Prepare comparison →' : 'Compare →';
   $('limit-label').hidden = mode() !== 'live';
   $('prompt').value = mode() === 'sample' ? samplePrompt : '';
+  if(mode()==='live' && connections?.route==='openrouter') $('mode-note').textContent='OpenRouter route: prompts and answers pass through OpenRouter and model hosts. OpenRouter billing and privacy policies apply.';
   count(); busy(); notice('');
 }
 function count() {
@@ -144,12 +171,15 @@ function count() {
   for (const id of Object.keys(PROVIDERS)) renderTokens(id);
 }
 async function launch(ids = selected(), retry = false) {
+  if(retry && comparison.route !== (connections?.route || 'direct')) throw new Error('Start a new comparison after changing the connection route.');
   const prompt = retry ? comparison.prompt : $('prompt').value;
   if (!prompt.trim()) throw new Error('Enter a question first.');
   if (!ids.length) throw new Error('Include at least one provider.');
   if (!retry) {
+    if(mode()==='live' && $('blind-mode').checked && ids.length<2) throw new Error('Include at least two providers for a blind battle.');
     reset();
-    comparison = { prompt, mode: mode(), timestamp: new Date().toISOString(), maxTokens: Number($('limit').value) };
+    comparison = { prompt, mode: mode(), timestamp: new Date().toISOString(), maxTokens: Number($('limit').value), route:connections?.route || 'direct', blind:mode()==='live' && $('blind-mode').checked?{order:shuffled(ids),revealed:false,winner:null}:null };
+    battleUI();
     runId = crypto.randomUUID();
   }
   if (comparison.mode === 'sample') {
@@ -167,7 +197,7 @@ async function launch(ids = selected(), retry = false) {
   }
   if (!api) throw new Error('Launch the desktop app with npm start to connect providers.');
   pending = new Set(ids); busy();
-  for (const id of ids) { results[id] = { id, prompt, model: connections.providers[id].model, text: '', status: 'queued' }; render(id); }
+  for (const id of ids) { results[id] = { id, prompt, model: connections.route==='openrouter'?connections.openrouter.models[id]:connections.providers[id].model, text: '', status: 'queued' }; render(id); }
   await guarded(saveHistory);
   try { await api.compare({ runId, prompt, providers: ids, maxTokens: comparison.maxTokens }); }
   catch (error) { for (const id of ids) { results[id].status = 'error'; results[id].error = error.message; render(id); } pending.clear(); busy(); throw error; }
@@ -175,18 +205,13 @@ async function launch(ids = selected(), retry = false) {
 function openSettings() {
   $('settings-error').textContent = '';
   $('storage-note').textContent = connections.canPersist ? 'Keys are encrypted using this computer’s OS credential protection. Saved keys are never returned to the interface.' : 'OS credential encryption is unavailable. You can still use Website assist or Sample mode.';
-  $('connection-fields').replaceChildren();
-  for (const [id, p] of Object.entries(PROVIDERS)) {
-    const section = document.createElement('section'); section.className = 'connection';
-    section.innerHTML = `<button type="button" id="${id}-get-key">Get API key ↗</button><strong>${p.name}</strong><label for="${id}-key">API key · ${connections.providers[id].connected ? 'saved' : 'not connected'}</label><input id="${id}-key" type="password" autocomplete="off" spellcheck="false" placeholder="${connections.providers[id].connected ? 'Leave blank to keep saved key' : 'Paste API key'}"><label for="${id}-config-model">Model ID</label><input id="${id}-config-model" type="text" required pattern="[a-zA-Z0-9._:-]{1,120}"><label><input id="${id}-remove" type="checkbox"> Remove saved key</label>`;
-    $('connection-fields').append(section);
-    $(`${id}-config-model`).value = connections.providers[id].model;
-    $(`${id}-get-key`).onclick = () => guarded(() => api.open(id, 'keys'));
-  }
+  $('check-updates').checked=preferences.checkUpdates;
+  connectionFields(connections,api);
   $('settings').showModal();
 }
 function exportData(format) {
   if (!comparison) throw new Error('Run or prepare a comparison first.');
+  if(hiddenBattle()) throw new Error('Vote or reveal before exporting.');
   const exportedResults = Object.fromEntries(Object.entries(results).map(([id, result]) => [id, { ...result, tokenCounts: cardTokenSummary(id) }]));
   const payload = { ...comparison, results: exportedResults };
   const text = format === 'json' ? JSON.stringify(payload, null, 2) : `# LLM Battle Arena\n\nMode: ${comparison.mode}\nDate: ${comparison.timestamp}\n\n## Prompt\n\n${comparison.prompt}\n\n` + Object.entries(results).map(([id, r]) => `## ${PROVIDERS[id].name}\n\nModel: ${r.model}\nTokens: ${formatTokenSummary(cardTokenSummary(id))} (~ = estimate; R = reasoning, — = unknown)\nProvider output usage: ${r.tokens ?? 'not reported'} tokens (may include reasoning/formatting)\nStatus: ${r.status}${r.error ? ` — ${r.error}` : ''}${r.truncated ? ' — output limit reached' : ''}\n\n${r.text}\n`).join('\n');
@@ -201,6 +226,10 @@ $('clear-history').onclick = () => { $('confirm-clear-history').hidden=false; };
 $('confirm-clear-history').onclick = () => guarded(async()=>{ clearTimeout(saveTimer); await api.historyClear(); comparison=null; for(const id of Object.keys(PROVIDERS)) render(id); await showHistory(); });
 $('cards').addEventListener('click', event=>{ const link=event.target.closest('.answer a'); if(link) { event.preventDefault(); if(link.hasAttribute('href')) guarded(()=>api.openAnswerLink(link.href)); } });
 if(api) api.onClosing(async()=>{ try { await saveHistory(); } finally { await api.finishClose(); } });
+$('reveal-blind').onclick=()=>guarded(async()=>{comparison.blind.revealed=true;for(const id of Object.keys(PROVIDERS))render(id);battleUI();await saveHistory();});
+$('download-update').onclick=()=>guarded(()=>api.openUpdate());
+$('check-update-now').onclick=()=>guarded(updateNotice);
+$('check-updates').onchange=()=>guarded(async()=>{await api.setUpdates($('check-updates').checked);preferences.checkUpdates=$('check-updates').checked;});
 $('help').onclick = () => $('help-dialog').showModal();
 $('close-help').onclick = () => $('help-dialog').close();
 $('mode').onchange = changeMode;
@@ -215,13 +244,18 @@ $('close-settings').onclick = () => { $('settings').close(); $('connection-field
 $('settings').addEventListener('close', () => $('connection-fields').replaceChildren());
 $('settings-form').onsubmit = async event => {
   event.preventDefault();
+  if(savingConnections)return;
+  savingConnections=true; $('settings-form').querySelector('button[type=submit]').disabled=true;
   try {
-    const value = Object.fromEntries(Object.keys(PROVIDERS).map(id => [id, { key: $(`${id}-key`).value, model: $(`${id}-config-model`).value.trim(), remove: $(`${id}-remove`).checked }]));
+    const value = readConnections();
+    $('settings-error').textContent='Checking keys (no answer generation)…';
     connections = await api.saveConnections(value); $('settings').close();
-    if (mode() === 'sample' && Object.values(connections.providers).some(p => p.connected)) { $('mode').value = 'live'; changeMode(); }
+    if (mode() === 'sample' && (connections.route==='openrouter' || Object.values(connections.providers).some(p => p.connected))) { $('mode').value = 'live'; changeMode(); }
     for (const id of Object.keys(PROVIDERS)) render(id);
+    if(mode()==='live') $('mode-note').textContent=connections.route==='openrouter'?'OpenRouter route: prompts and answers pass through OpenRouter and model hosts. OpenRouter billing and privacy policies apply.':'Direct route: send the same prompt to selected providers. Each provider may charge for usage.';
     notice('Connections saved on this computer.');
   } catch (error) { $('settings-error').textContent = error.message; }
+  finally { savingConnections=false; $('settings-form').querySelector('button[type=submit]').disabled=false; }
 };
 document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && !$('history-dialog').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
 if (api) {
@@ -233,7 +267,7 @@ if (api) {
     if(pending.size) scheduleHistory(); else guarded(saveHistory);
     if (!pending.size) notice('Comparison finished. Each card shows its own outcome.');
   });
-  try { connections = await api.connections(); } catch (error) { notice(error.message); }
+  try { connections = await api.connections(); preferences=await api.preferences(); if(preferences.checkUpdates) guarded(updateNotice); } catch (error) { notice(error.message); }
 }
-if (connections && Object.values(connections.providers).some(p => p.connected)) $('mode').value = 'live';
+if (connections && (connections.route==='openrouter' || Object.values(connections.providers).some(p => p.connected))) $('mode').value = 'live';
 changeMode();

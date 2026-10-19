@@ -45,7 +45,7 @@ Samples are fixed, human-written examples, not actual model answers. For your ow
 
 1. Click **Connections** in the top right.
 2. Paste your **Claude API key**, **OpenAI API key**, and **Gemini API key** into their matching fields. The **Get API key** buttons open each provider's official site.
-3. Leave the model IDs as they are to start. You can change them later.
+3. Click **Check key & load models** and choose from the model menu.
 4. Click **Save connections**. The app switches to **Live API · automatic** after the first key is saved.
 
 You can start with one provider and uncheck **Include** on the others. For three real answers, connect all three.
@@ -95,8 +95,14 @@ This mode is manual. Each website controls signup, models, and free limits; no u
 - [Release notes](docs/RELEASE_NOTES.md)
 - [One-time code and documentation audit](docs/AUDIT.md)
 
-Your keys are encrypted on your computer. Live prompts go to the selected providers; the app has no hosted server or analytics. Answers display formatted Markdown, with scripts, images and embedded content removed. Prompt and answer history is saved as plain text on this computer; use History to delete it. Models can be wrong; don't treat three similar answers as proof.
+Your keys are encrypted on your computer. Live prompts go directly to selected providers, or through OpenRouter when enabled; the app has no hosted server or analytics. Answers display formatted Markdown, with scripts, images and embedded content removed. Prompt and answer history is saved as plain text on this computer; use History to delete it. Models can be wrong; don't treat three similar answers as proof.
 
 A fun little project by Yobie Benjamin. MIT licensed. The public home for code, downloads, and support is **YobieBenjamin/llm-battle-arena**.
 
 [Claude review response and 2.2.1 fixes](docs/CLAUDE-REVIEW.md)
+
+### More fun in 2.4
+
+Blind battles shuffle and hide provider identities until you vote, with a local win tally. Connections offers model dropdowns, key checks without generation, and an optional OpenRouter route using one encrypted key. OpenRouter receives and routes your prompts and answers. Optional update notices make one GitHub request per launch and are off initially.
+
+Busy-server HTTP 503/529 responses get one cancellable retry before streaming starts. CI tests the packaged Mac app, then independently downloads each published release to check all installer checksums, both Mac signatures and bundled source against the tag. Dependabot checks npm and Actions weekly. A weekly live API probe skips providers until dedicated secrets are configured; see [Maintainer setup](docs/MAINTENANCE.md).

@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, safeStorage, shell, clipboard, dialog, scre
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
-let window, store, history, providers, runProvider, validateRequest;
+let window, store, history, preferences, checkUpdate, listModels, providers, runProvider, validateRequest;
 let quitting = false;
 app.on('before-quit', () => { quitting=true; });
 const running = new Map();
@@ -45,6 +45,9 @@ app.whenReady().then(async () => {
   const dataDirectory = app.getPath('userData');
   const { createHistory } = await import('./history.js');
   history = createHistory(dataDirectory);
+  ({ listModels } = await import('../src/catalog.js'));
+  const {createPreferences,createUpdateCheck}=await import('./preferences.js');
+  preferences=createPreferences(dataDirectory); checkUpdate=createUpdateCheck(app.getVersion());
   try { store = createStore(dataDirectory, safeStorage); }
   catch {
     const file = path.join(dataDirectory, 'connections.json');
@@ -65,7 +68,7 @@ app.whenReady().then(async () => {
   ]));
   handle('finish-close', () => { setImmediate(()=>quitting ? app.quit() : window?.close()); });
   handle('history-list', () => history.list());
-  handle('history-get', id => history.get(id));
+  handle('history-get', id => { const entry=history.get(id); const winner=preferences.winner(id); if(entry?.blind && winner) entry.blind={...entry.blind,revealed:true,winner}; return entry; });
   handle('history-save', value => history.save(value));
   handle('history-remove', id => history.remove(id));
   handle('history-clear', () => history.clear());
@@ -75,8 +78,37 @@ app.whenReady().then(async () => {
     if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Only ordinary web links can be opened.');
     return shell.openExternal(url.href);
   });
+  handle('preferences', () => preferences.snapshot());
+  handle('set-updates', value => preferences.setUpdates(value));
+  handle('check-update', () => checkUpdate());
+  handle('open-update', () => shell.openExternal('https://github.com/YobieBenjamin/llm-battle-arena/releases/latest'));
+  handle('vote', (id,winner) => {
+    const entry=history.get(id);
+    if(!entry?.blind || entry.blind.revealed || !entry.blind.order.includes(winner) || !entry.blind.order.every(provider=>entry.results[provider]?.status==='done' && entry.results[provider]?.text)) throw new Error('Finish all blind answers before picking a winner.');
+    preferences.vote(id,winner); entry.blind.revealed=true; entry.blind.winner=winner; history.save(entry);
+    return preferences.snapshot();
+  });
   handle('connections', () => store.snapshot());
-  handle('save-connections', value => { if (running.size) throw new Error('Wait for the comparison to finish before changing connections.'); return store.save(value); });
+  handle('list-models', async (id,key) => {
+    if(!['claude','openai','gemini','openrouter'].includes(id) || typeof key!=='string') throw new Error('Invalid provider.');
+    return listModels(id,key.trim() || store.key(id));
+  });
+  handle('save-connections', async value => {
+    if(running.size) throw new Error('Wait for the comparison to finish before changing connections.');
+    if(!value || typeof value!=='object') throw new Error('Invalid settings.');
+    for(const id of ['claude','openai','gemini','openrouter']) {
+      const entry=value[id]; if(!entry || entry.remove) continue;
+      if(typeof entry.key!=='string')throw new Error('Invalid API key.');
+      // Check new keys, and the saved keys on the active route. Never generate text here.
+      const active=id==='openrouter'?value.openrouter?.enabled:!value.openrouter?.enabled;
+      if(entry.key.trim() || active) {
+        const key=entry.key.trim() || store.key(id); if(!key) continue;
+        try { await listModels(id,key); } catch(error) { throw new Error(`${id}: ${error.message}`); }
+      }
+    }
+    if(running.size) throw new Error('Wait for the comparison to finish before changing connections.');
+    return store.save(value);
+  });
   handle('compare', value => {
     validateRequest(value);
     if (typeof value.runId !== 'string' || !/^[\w-]{1,100}$/.test(value.runId)) throw new Error('Invalid comparison ID.');
@@ -87,8 +119,8 @@ app.whenReady().then(async () => {
       running.set(id, controller);
       // Capture key before launch so a decryption error cannot strand the run.
       let key = '', keyError = '';
-      try { key = store.key(id); } catch { keyError = 'Saved key could not be unlocked. Open Connections and paste it again, or unlock your OS credential store.'; }
-      runProvider({ id, prompt: value.prompt, model: config.providers[id].model, maxTokens: value.maxTokens, key, keyError, signal: controller.signal, emit: update => {
+      try { key = store.key(config.route==='openrouter'?'openrouter':id); } catch { keyError = 'Saved key could not be unlocked. Open Connections and paste it again, or unlock your OS credential store.'; }
+      runProvider({ id, prompt: value.prompt, model: config.route==='openrouter'?config.openrouter.models[id]:config.providers[id].model, route:config.route, maxTokens: value.maxTokens, key, keyError, signal: controller.signal, emit: update => {
         if (window && !window.isDestroyed()) window.webContents.send('answer', { ...update, runId: value.runId });
       } }).finally(() => running.delete(id));
     }
@@ -96,6 +128,7 @@ app.whenReady().then(async () => {
   });
   handle('cancel', () => cancel());
   handle('open-provider', (id, kind) => {
+    if(id==='openrouter' && kind==='keys') return shell.openExternal('https://openrouter.ai/settings/keys');
     if (!Object.hasOwn(providers, id) || !['website', 'keys'].includes(kind)) throw new Error('Invalid provider link.');
     return shell.openExternal(providers[id][kind]);
   });

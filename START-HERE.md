@@ -59,12 +59,12 @@ An **API key** is a private access code from an AI provider that lets this app a
 3. Sign in there and create an API key. The provider may ask you to set up billing. Check its prices and limits before proceeding.
 4. Copy that key and paste it into the matching field in LLM Battle Arena.
 5. Repeat for the other providers. You can start with just one if you prefer.
-6. Leave the **Model ID** fields as they are at first.
+6. Click **Check key & load models** and select a model from its menu.
 7. Click **Save connections**.
 
 The app saves keys encrypted on your computer. Never post keys in a bug report or send them to someone else.
 
-If you have only one or two keys, uncheck **Include** on the cards you have not connected. To get three automatic answers, connect all three providers.
+If you have only one or two keys, uncheck **Include** on the cards you have not connected. For three direct answers, connect all three providers; OpenRouter is an optional one-key alternative.
 
 ## Step 5 — Ask something fun
 
@@ -104,3 +104,10 @@ Choose **Website assist**, enter your question, and click **Prepare comparison**
 [Full user guide and troubleshooting](docs/USER_GUIDE.md) · [Download page](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Report a problem](https://github.com/YobieBenjamin/llm-battle-arena/issues)
 
 If you report a problem, describe what you clicked and what happened. Include your Mac/Windows version and the app release you downloaded. Do not include keys or private questions. GitHub asks you to sign in to post an issue; you do not need an account just to download and use the app.
+
+## New ways to play
+
+- **Blind battle:** in Live API mode, include two or three cards, check Blind battle, and compare. Pick a winner after all answers finish to reveal the providers and add a local win.
+- **Model menus:** in Connections, use Check key & load models, then choose a model. Save checks keys without generating answers.
+- **One key:** choose OpenRouter in Connections. It routes all three answers through a third party, with its own billing and privacy policies. Read the [step-by-step setup](docs/USER_GUIDE.md#easier-setup-model-menus-and-one-key-openrouter).
+- **Update notices:** optionally enable Check GitHub for updates on launch in Connections. Downloading and installing are still your choice.

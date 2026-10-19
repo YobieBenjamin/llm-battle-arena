@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { ROUTER_MODELS, MODEL_ID } from '../src/catalog.js';
 import { PROVIDERS } from '../src/providers.js';
 
 export function createStore(directory, crypto) {
@@ -9,12 +10,13 @@ export function createStore(directory, crypto) {
     settings = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw new Error('Invalid saved connections.');
     for (const [id, entry] of Object.entries(settings)) {
-      if (!Object.hasOwn(PROVIDERS, id) || !entry || typeof entry !== 'object' || Array.isArray(entry) || typeof entry.model !== 'string' || !/^[a-zA-Z0-9._:-]{1,120}$/.test(entry.model) || (entry.secret !== undefined && (typeof entry.secret !== 'string' || !/^[A-Za-z0-9+/]+=*$/.test(entry.secret)))) throw new Error('Invalid saved connection.');
+      if ((!Object.hasOwn(PROVIDERS, id) && id !== 'openrouter') || !entry || typeof entry !== 'object' || Array.isArray(entry) || typeof entry.model !== 'string' || !/^[a-zA-Z0-9._:-]{1,120}$/.test(entry.model) || (entry.secret !== undefined && (typeof entry.secret !== 'string' || !/^[A-Za-z0-9+/]+=*$/.test(entry.secret)))) throw new Error('Invalid saved connection.');
+      if(id==='openrouter' && (typeof entry.enabled!=='boolean' || !entry.models || !Object.keys(PROVIDERS).every(provider=>typeof entry.models[provider]==='string' && MODEL_ID.test(entry.models[provider]) && entry.models[provider].startsWith({claude:'anthropic/',openai:'openai/',gemini:'google/'}[provider])))) throw new Error('Invalid saved OpenRouter settings.');
     }
   }
   function canPersist() { return crypto.isEncryptionAvailable() && crypto.getSelectedStorageBackend?.() !== 'basic_text'; }
   function snapshot() {
-    return { canPersist: canPersist(), providers: Object.fromEntries(Object.entries(PROVIDERS).map(([id, p]) => [id, { model: settings[id]?.model || p.model, connected: Boolean(settings[id]?.secret) }])) };
+    return { canPersist: canPersist(), route:settings.openrouter?.enabled?'openrouter':'direct', openrouter:{connected:Boolean(settings.openrouter?.secret),models:{...ROUTER_MODELS,...settings.openrouter?.models}}, providers: Object.fromEntries(Object.entries(PROVIDERS).map(([id, p]) => [id, { model: settings[id]?.model || p.model, connected: Boolean(settings[id]?.secret) }])) };
   }
   return {
     snapshot,
@@ -32,6 +34,23 @@ export function createStore(directory, crypto) {
           if (!canPersist()) throw new Error('OS credential encryption is unavailable. Use Website assist on this machine.');
           next[id].secret = crypto.encryptString(entry.key.trim()).toString('base64');
         }
+      }
+      if(input.openrouter) {
+        const r=input.openrouter;
+        if(typeof r.key!=='string' || r.key.length>4096 || /[\r\n]/.test(r.key) || typeof r.enabled!=='boolean') throw new Error('Invalid OpenRouter settings.');
+        const models={};
+        for(const id of Object.keys(PROVIDERS)) {
+          const model=r.models?.[id], prefix={claude:'anthropic/',openai:'openai/',gemini:'google/'}[id];
+          if(typeof model!=='string' || !MODEL_ID.test(model) || !model.startsWith(prefix)) throw new Error('Choose a matching OpenRouter model for each card.');
+          models[id]=model;
+        }
+        next.openrouter={...next.openrouter,model:'openrouter',models,enabled:r.enabled};
+        if(r.remove) delete next.openrouter.secret;
+        else if(r.key.trim()) {
+          if(!canPersist()) throw new Error('OS credential encryption is unavailable.');
+          next.openrouter.secret=crypto.encryptString(r.key.trim()).toString('base64');
+        }
+        if(r.enabled && !next.openrouter.secret) throw new Error('Add an OpenRouter key before enabling it.');
       }
       fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(file + '.tmp', JSON.stringify(next), { mode: 0o600 });

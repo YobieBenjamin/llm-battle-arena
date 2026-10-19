@@ -42,15 +42,16 @@ export async function* readSSE(body, onData = () => {}) {
   } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
 }
 
-export function buildRequest(id, prompt, model, maxTokens, key) {
+export function buildRequest(id, prompt, model, maxTokens, key, route = 'direct') {
   const headers = { 'Content-Type': 'application/json' };
+  if (route === 'openrouter') return { url:'https://openrouter.ai/api/v1/chat/completions', headers:{...headers,Authorization:`Bearer ${key}`}, body:{model,max_tokens:maxTokens,stream:true,stream_options:{include_usage:true},messages:[{role:'user',content:prompt}],provider:{allow_fallbacks:false}} };
   if (id === 'claude') return { url: 'https://api.anthropic.com/v1/messages', headers: { ...headers, 'x-api-key': key, 'anthropic-version': '2023-06-01' }, body: { model, max_tokens: maxTokens, stream: true, messages: [{ role: 'user', content: prompt }] } };
   if (id === 'openai') return { url: 'https://api.openai.com/v1/responses', headers: { ...headers, Authorization: `Bearer ${key}` }, body: { model, input: prompt, max_output_tokens: maxTokens, stream: true, store: false } };
   if (id === 'gemini') return { url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, headers: { ...headers, 'x-goog-api-key': key }, body: { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: maxTokens } } };
   throw new Error('Unknown provider.');
 }
 
-export async function runProvider({ id, prompt, model, maxTokens, key, keyError, signal, emit, fetchImpl = fetch, timeoutMs = 300000, idleMs = 45000, firstByteMs = 120000 }) {
+export async function runProvider({ id, prompt, model, maxTokens, key, keyError, signal, emit, fetchImpl = fetch, timeoutMs = 300000, idleMs = 45000, firstByteMs = 120000, route = 'direct', retryDelayMs = 2000 }) {
   const started = Date.now();
   let text = '', tokens = null, inputTokens = null, reasoningTokens = null, finished = false, truncated = false;
   const deadline = new AbortController();
@@ -67,16 +68,34 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
   try {
     if (keyError) throw new Error(keyError);
     if (!key) throw new Error('Add an API key in Connections, or use Website assist.');
-    const req = buildRequest(id, prompt, model, maxTokens, key);
+    const req = buildRequest(id, prompt, model, maxTokens, key, route);
     send('connecting');
-    const response = await fetchImpl(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: combined });
+    const request=()=>fetchImpl(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: combined });
+    let response = await request();
+    if([503,529].includes(response.status)) {
+      await response.body?.cancel(); send('retrying', {error:'Provider busy. Retrying once…'});
+      await new Promise((resolve,reject)=>{
+        if(combined.aborted) {reject(combined.reason);return;}
+        const abort=()=>{clearTimeout(timer);reject(combined.reason);};
+        const timer=setTimeout(()=>{combined.removeEventListener('abort',abort);resolve();},retryDelayMs);
+        combined.addEventListener('abort',abort,{once:true});
+      });
+      response=await request();
+    }
     if (!response.ok) {
       await response.body?.cancel();
       throw new Error(({ 401: 'API key rejected. Check Connections.', 403: 'Access denied. Check your account and model access.', 404: 'Model unavailable. Update the model ID in Connections.', 429: 'Rate limit or billing quota reached. Check your provider account and retry later.' })[response.status] || `Provider returned HTTP ${response.status}. Try again later.`);
     }
     for await (const event of readSSE(response.body, touch)) {
       if (event.error || event.type === 'error' || event.type === 'response.failed') throw new Error('The provider reported an error during generation. Retry or check your account.');
-      if (id === 'claude') {
+      if (route === 'openrouter') {
+        const choice=event.choices?.[0];
+        if(typeof choice?.delta?.content==='string') text+=choice.delta.content;
+        if(choice?.finish_reason) { finished=true; truncated=choice.finish_reason==='length'; if(!['stop','length'].includes(choice.finish_reason)) throw new Error('The provider stopped or filtered this answer. Partial answer preserved.'); }
+        inputTokens=validTokenCount(event.usage?.prompt_tokens) ?? inputTokens;
+        tokens=validTokenCount(event.usage?.completion_tokens) ?? tokens;
+        reasoningTokens=validTokenCount(event.usage?.completion_tokens_details?.reasoning_tokens) ?? reasoningTokens;
+      } else if (id === 'claude') {
         if (event.type === 'message_start' && event.message?.usage) {
           const usage = event.message.usage;
           if (validTokenCount(usage.input_tokens) !== null) inputTokens = usage.input_tokens + (validTokenCount(usage.cache_creation_input_tokens) ?? 0) + (validTokenCount(usage.cache_read_input_tokens) ?? 0);

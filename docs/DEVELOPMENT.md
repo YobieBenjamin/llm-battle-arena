@@ -31,7 +31,7 @@ Electron downloads its development runtime on first use if it is not already cac
 | `test/` | Behavioral tests with provider fixtures and a fake encryption adapter. |
 | `.github/workflows/desktop.yml` | Four architecture-specific installer builds and tag-triggered release publishing. |
 
-Live mode uses Anthropic Messages streaming, OpenAI Responses streaming (`store: false`), and Gemini `streamGenerateContent`. Every selected adapter receives the unchanged prompt. Requests have separate cancellation/error outcomes, a two-minute first-byte allowance followed by a 45-second idle deadline refreshed by stream bytes, and a five-minute overall cap. API errors are simplified for users; the app does not display raw provider error bodies. Partial text is retained. Retries are explicit rather than automatic to avoid surprise repeat charges.
+Live mode uses Anthropic Messages streaming, OpenAI Responses streaming (`store: false`), and Gemini `streamGenerateContent`. Every selected adapter receives the unchanged prompt. Requests have separate cancellation/error outcomes, a two-minute first-byte allowance followed by a 45-second idle deadline refreshed by stream bytes, and a five-minute overall cap. API errors are simplified for users; the app does not display raw provider error bodies. Partial text is retained. Initial HTTP 503/529 rejections get one cancellable two-second retry. No network errors, rate limits, or stream failures are automatically retried.
 
 The last 50 comparisons persist locally in history.json; no analytics is implemented. History is not conversation context. Sample answers are fixed written fixtures. Website assist opens fixed official URLs and lets the user paste answers manually. Model IDs are editable because account access and provider catalogs change; defaults are not a guarantee of equal capabilities or current availability.
 
@@ -101,7 +101,7 @@ The default branch is `main` in **YobieBenjamin/llm-battle-arena**. This reposit
 1. Update the version in `package.json` and the root/package entries in `package-lock.json`.
 2. Update `docs/RELEASE_NOTES.md` and the user guide for changed behavior.
 3. Run tests and manual checks. Commit and push to main.
-4. Tag the reviewed commit with the matching version, for example `git tag v2.3.0`, then push the tag.
+4. Tag the reviewed commit with the matching version, for example `git tag v2.4.0`, then push the tag.
 5. The **Desktop installers** workflow builds Windows x64, Windows ARM64, macOS ARM64, and macOS x64. All four build jobs and the UI regression job must pass before publishing.
 6. The release job combines artifacts, produces `SHA256SUMS.txt`, and publishes GitHub Release downloads using the workflow token.
 7. Check the public release and README links. The download filenames remain stable across versions, so `/releases/latest/download/...` always selects the newest release.
@@ -119,3 +119,13 @@ Compatible security fixes have been applied. Moderate advisories remain in the d
 `desktop/history.js` validates and allowlists saved fields, keeps at most 50 entries, and atomically replaces history.json through a temporary file. No API keys or connection objects enter history. Raw model text is retained so reopening goes through the same Markdown sanitizer and artifact detection. Save errors are reported to the user. Streaming and manual edits are throttled to roughly 500ms, terminal results save immediately, and normal window close requests a final renderer flush with a two-second shutdown fallback. Abrupt crashes may lose the latest unsaved fragment. Corrupt history is backed up, not silently discarded.
 
 Mac ARM64 CI runs `scripts/smoke.cjs` with ARENA_ELECTRON_PATH pointing inside the signed app bundle before uploading the installer. The Linux source test remains. Other architectures are built and Mac signatures verified, but are not runtime-certified by this job.
+
+## 2.4 integrations
+
+`src/catalog.js` lists models with a shared bounded deadline and pagination; OpenRouter authenticates through /key before reading /models. Main-process Save validates new and active saved keys before an atomic encrypted settings write. Dropdowns preserve an unlisted saved value for compatibility; list access does not prove generation access. `src/settings-view.js` handles the direct/router setup UI.
+
+`src/blind.js` shuffles participants. History stores order/reveal state, while preferences.json stores one vote per comparison and update opt-in. Voting requires completed nonempty answers from all participants and is checked in the main process. Renderer masking is a casual UX feature, not cryptographic anonymity; files and model wording can reveal identities. Unrevealed rounds cannot export or show artifacts.
+
+Update checks are opt-in, cached once per app launch, bounded to eight seconds and restricted to the canonical GitHub latest-release endpoint. Stable numeric versions are compared numerically. Download navigation uses a fixed canonical URL, never the API-supplied URL.
+
+See [MAINTENANCE.md](MAINTENANCE.md) for CI, secrets and verification scope.
