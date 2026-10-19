@@ -119,7 +119,7 @@ const appRoot=path.resolve(__dirname,'..');
  await page.locator('#settings-form button[type=submit]').click();
  await page.locator('#settings').waitFor({state:'hidden'});
  for(const [width,height] of [[880,650],[1280,720],[1440,900]]) {
-  await app.evaluate(({BrowserWindow},{width,height})=>BrowserWindow.getAllWindows()[0].setBounds({width,height}),{width,height});
+  await app.evaluate(({BrowserWindow},{width,height})=>BrowserWindow.getAllWindows()[0].setContentSize(width,height),{width,height});
   await page.waitForFunction(width=>innerWidth===width,width,{timeout:15000,polling:100});
   await page.locator('#mode').selectOption('sample');
   await page.locator('#compare').click();

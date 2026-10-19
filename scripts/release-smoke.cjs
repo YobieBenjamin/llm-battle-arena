@@ -10,6 +10,7 @@ async function eventually(fn,timeout=30000) {const end=Date.now()+timeout;while(
 async function freePort(){const server=net.createServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));const port=server.address().port;await new Promise(r=>server.close(r));return port;}
 function portOpen(port){return new Promise(resolve=>{const socket=net.connect({host:'127.0.0.1',port});const finish=value=>{socket.destroy();resolve(value);};socket.once('connect',()=>finish(true));socket.once('error',()=>finish(false));socket.setTimeout(300,()=>finish(false));});}
 async function nativeAction(child,action,folder,expectedFile) {
+ console.log(`Native UI ${action}, PID ${child.pid}`);
  if(process.env.ARENA_MANUAL_NATIVE==='1'){
   console.log(`NATIVE ${action}: PID ${child.pid}; ${expectedFile||''}`);
   if(action==='save')await eventually(()=>fs.existsSync(expectedFile),180000);
@@ -34,7 +35,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   const endpoint=await eventually(()=>{if(errors.length)throw new Error(errors.join('; '));if(child.exitCode!==null)throw new Error(`Release exited early: ${stderr}`);return stderr.match(/DevTools listening on (ws:\/\/127\.0\.0\.1:\d+\/devtools\/browser\/[^\s]+)/)?.[1];});
   browser=await chromium.connectOverCDP(endpoint);const context=browser.contexts()[0];
   page=await eventually(()=>context.pages().find(p=>p.url().startsWith('file:')));page.setDefaultTimeout(20000);page.on('pageerror',error=>errors.push(error.message));
-  await require('./ui-ready.cjs')(page);
+  console.log('Release renderer connected');await require('./ui-ready.cjs')(page);console.log('Release UI ready');
   // A live, initialized UI proves --inspect-brk did not pause startup.
   for(let i=0;i<10;i++){assert.equal(await portOpen(inspectorPort),false,`${flag} opened a main-process inspector endpoint`);await pause(100);}
   assert.ok(!stderr.includes('Debugger listening on'),'Node inspector unexpectedly started');
@@ -63,8 +64,8 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   const result={version:require('../package.json').version,platform:process.platform,arch:process.arch,appAsarSha256:archiveHash,executableSha256:executableHash,inspector:false,ui:['launch','sample','history','native-markdown-export','native-json-export','quit','restart-history'],rejectedInspectorFlags:['--inspect','--inspect-brk']};
   if(reportFile){fs.mkdirSync(path.dirname(path.resolve(reportFile)),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(result,null,2)+'\n');}
   console.log('PASS: hardened release UI, native exports, quit/restart/history; main inspector flags ignored; bundle unchanged.');return result;
- }catch(error){if(page)await page.screenshot({path:path.join(dir,'failure.png')}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}
- finally{if(browser)await browser.close().catch(()=>{});if(child&&child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(500);}if(!errors.length && !child)fs.rmSync(dir,{recursive:true,force:true});}
+ }catch(error){if(page)await page.screenshot({path:path.join(dir,'failure.png'),timeout:5000}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}
+ finally{if(child&&child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(500);}if(browser)await browser.close().catch(()=>{});if(!errors.length && !child)fs.rmSync(dir,{recursive:true,force:true});}
 }
 module.exports={runReleaseSmoke,portOpen};
 if(require.main===module){require('./packaged-preflight.cjs').assertPackagedAppClosed();runReleaseSmoke(path.resolve(process.argv[2]||process.env.ARENA_RELEASE_BUNDLE||'')).catch(error=>{console.error(error);process.exitCode=1;});}
