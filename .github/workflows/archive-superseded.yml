@@ -1,0 +1,31 @@
+name: Archive superseded installers
+on:
+  workflow_run:
+    workflows: ['Desktop installers']
+    types: [completed]
+permissions:
+  contents: write
+jobs:
+  archive:
+    # No checkout or artifact execution: only a successful tag run from this repository may archive releases.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && startsWith(github.event.workflow_run.head_branch, 'v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep only the verified current installer release public
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERIFIED_TAG: ${{ github.event.workflow_run.head_branch }}
+        shell: bash
+        run: |
+          latest=$(gh release view --json tagName --jq .tagName)
+          if [[ "$latest" != "$VERIFIED_TAG" ]]; then
+            echo 'A different release is current; no releases changed.'
+            exit 0
+          fi
+          gh release list --limit 100 --json tagName,isDraft,isPrerelease --jq '.[] | select(.isDraft == false and .isPrerelease == false) | .tagName' > public-tags.txt
+          while IFS= read -r tag; do
+            if [[ "$tag" != "$VERIFIED_TAG" ]]; then
+              gh release edit "$tag" --draft
+            fi
+          done < public-tags.txt

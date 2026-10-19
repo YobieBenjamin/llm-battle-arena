@@ -1,6 +1,6 @@
 # LLM Battle Arena: the friendly user guide
 
-**Current download: [v2.4.3](https://github.com/YobieBenjamin/llm-battle-arena/releases/tag/v2.4.3).** Older installer releases are archived and unavailable to the public; source tags remain for history.
+**Current download: [latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).** Older installer releases are archived and unavailable to the public; source tags remain for history.
 
 
 
@@ -285,7 +285,7 @@ An initial HTTP 503 or 529 gets one retry after two seconds, with a visible retr
 Opening the app again brings the existing window forward. Only one instance may write a profile at a time. Markdown and JSON exports identify whether a live comparison used direct providers or OpenRouter.
 
 
-### What Save connections checks
+### What Save connections checks (v2.4.4 and later)
 
 When you paste a new key, Save first checks that this computer can encrypt it. If encryption is unavailable, Save refuses before contacting any provider. Nothing is stored; Website assist remains available.
 

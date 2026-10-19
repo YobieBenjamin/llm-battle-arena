@@ -18,3 +18,12 @@ The artifact cap fixture marked Y1 as failed because it expected no Python artif
 ## Limits unchanged
 
 The report did not verify real Safari first launch, Windows installation/upgrade/uninstall and security prompts, real Keychain/DPAPI denial, paid provider calls, or the earlier unpublished local `/private/tmp` fallback startup timeout. Fixture checks and bundle verification do not establish those outcomes. Signing and notarization remain outside the requested scope.
+
+
+## Validation and publication status
+
+The 62 unit tests, source UI smoke suite, updated fault-injection suite and three-stream performance test passed locally. The streaming test completed in 62.375 seconds against 62.213 seconds of streaming, with UI p95 17 ms. A checkout with `core.autocrlf=true` retained LF in all 15 checked app-source files.
+
+The [v2.4.4 release workflow](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39319614074) has passed Windows builds and Linux UI regressions; Mac runner allocation was still pending when this note was written. The local packaged Mac attempt reproduced the earlier startup timeout and is not counted as a pass. Its HTML and bridge load, but answer cards do not initialize. Removing the extra session request hook in a disposable diagnostic process did not resolve the timeout. No changes were made to the user's older running app windows.
+
+Publication remains behind the release gates. A follow-up workflow archives older installers only after the tagged release workflow succeeds, preserving the owner's current-release-only policy. The beginner guides use the latest-release link, so they do not promise an unpublished installer.

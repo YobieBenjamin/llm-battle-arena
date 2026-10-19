@@ -1,6 +1,6 @@
 # Start here: download, open, play
 
-**Current download: [v2.4.3](https://github.com/YobieBenjamin/llm-battle-arena/releases/tag/v2.4.3).** Older installer releases are archived and unavailable to the public; source tags remain for history.
+**Current download: [latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).** Older installer releases are archived and unavailable to the public; source tags remain for history.
 
 
 
