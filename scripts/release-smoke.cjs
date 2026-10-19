@@ -31,7 +31,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
  const watchdog=setTimeout(()=>{console.error(`Hardened UI deadline exceeded. Last stderr: ${stderr}`);if(child&&child.exitCode===null)child.kill('SIGKILL');process.exit(1);},process.env.ARENA_MANUAL_NATIVE==='1'?600000:150000);
  async function launch(flag){
   const inspectorPort=await freePort();stderr='';
-  child=spawn(executable,[`--user-data-dir=${profile}`,'--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`${flag}=127.0.0.1:${inspectorPort}`],{stdio:['ignore','pipe','pipe']});
+  child=spawn(executable,[`--user-data-dir=${profile}`,'--disable-backgrounding-occluded-windows','--disable-renderer-backgrounding','--disable-background-timer-throttling','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`${flag}=127.0.0.1:${inspectorPort}`],{stdio:['ignore','pipe','pipe']});
   child.on('error',error=>errors.push(error.message));child.stderr.on('data',data=>{stderr=(stderr+data).slice(-64000);});
   const endpoint=await eventually(()=>{if(errors.length)throw new Error(errors.join('; '));if(child.exitCode!==null)throw new Error(`Release exited early: ${stderr}`);return stderr.match(/DevTools listening on (ws:\/\/127\.0\.0\.1:\d+\/devtools\/browser\/[^\s]+)/)?.[1];});
   browser=await chromium.connectOverCDP(endpoint);const context=browser.contexts()[0];
