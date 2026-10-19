@@ -29,6 +29,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - name: Build private regression application (never uploaded)
+        shell: bash
         run: npm exec electron-builder -- --${{ matrix.platform }} --${{ matrix.arch }} --dir --publish never -c.directories.output=dist/private -c.electronFuses.enableNodeCliInspectArguments=true
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -45,6 +46,7 @@ jobs:
           node scripts/verify-bundle.cjs "$private" --private-test-build
           ARENA_ELECTRON_PATH="$PWD/$executable" npm run test:ui
       - name: Build hardened release
+        shell: bash
         run: npm exec electron-builder -- --${{ matrix.platform }} --${{ matrix.arch }} --publish never -c.directories.output=dist/release
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
