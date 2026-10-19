@@ -10,14 +10,15 @@ permissions:
 jobs:
   build:
     name: ${{ matrix.platform }}-${{ matrix.arch }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
           - {os: windows-latest, platform: win, arch: x64}
           - {os: windows-latest, platform: win, arch: arm64}
-          - {os: macos-latest, platform: mac, arch: arm64}
-          - {os: macos-latest, platform: mac, arch: x64}
+          - {os: macos-15, platform: mac, arch: arm64}
+          - {os: macos-15-intel, platform: mac, arch: x64}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -34,9 +35,9 @@ jobs:
         if: matrix.platform == 'mac'
         run: codesign --verify --deep --strict --verbose=2 "dist/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/LLM Battle Arena.app"
       - name: Test packaged Mac app
-        if: matrix.platform == 'mac' && matrix.arch == 'arm64'
+        if: matrix.platform == 'mac'
         env:
-          ARENA_ELECTRON_PATH: ${{ github.workspace }}/dist/mac-arm64/LLM Battle Arena.app/Contents/MacOS/LLM Battle Arena
+          ARENA_ELECTRON_PATH: ${{ github.workspace }}/dist/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/LLM Battle Arena.app/Contents/MacOS/LLM Battle Arena
         run: npm run test:ui
       - uses: actions/upload-artifact@v4
         with:
@@ -84,7 +85,7 @@ jobs:
     name: Verify public release downloads
     needs: release
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4

@@ -30,9 +30,11 @@ jobs:
             echo 'A different release is current; no releases changed.'
             exit 0
           fi
-          gh release list --limit 100 --json tagName,isDraft,isPrerelease --jq '.[] | select(.isDraft == false and .isPrerelease == false) | .tagName' > public-tags.txt
+          gh release list --limit 100 --json tagName,isDraft,isPrerelease --jq '.[] | select(.isPrerelease == false) | .tagName' > public-tags.txt
           while IFS= read -r tag; do
             if [[ "$tag" != "$VERIFIED_TAG" ]]; then
-              gh release edit "$tag" --draft
+              gh release view "$tag" --json body --jq .body > previous-notes.md
+              { printf '%s\n\n' '**OLD (DO NOT USE) — historical code and installers. Use the current release linked from README.**'; cat previous-notes.md; } > archived-notes.md
+              gh release edit "$tag" --draft --title "OLD (DO NOT USE) — LLM Battle Arena $tag" --notes-file archived-notes.md
             fi
           done < public-tags.txt

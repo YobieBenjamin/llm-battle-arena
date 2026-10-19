@@ -1,5 +1,7 @@
 # LLM Battle Arena
 
+Historical versions: **[OLD (DO NOT USE)](archive/README.md)**. Use only the current download below.
+
 **Current download: [latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).** Older installer releases are archived and unavailable to the public; source tags remain for history.
 
 
