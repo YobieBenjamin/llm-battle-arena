@@ -34,3 +34,5 @@ When the last command prints `NATIVE save`, save in the temporary path it prints
 Use `--x64` and `mac` instead of `--arm64` and `mac-arm64` on Intel Macs. Windows CI runs natively on x64 and ARM64. The installer tests exercise the recovered application payload, not every interactive installer/SmartScreen/Gatekeeper prompt. Real browser download and first-launch checks remain a useful human check. Mac builds are ad-hoc signed, not notarized; no paid signing service has been added.
 
 Do not share `dist/private`. Remove that temporary build after testing, or archive it clearly as `OLD (DO NOT USE) — private test build` outside download/install locations.
+
+On hosted Mac runners the Sample-only UI test uses Chromium’s `--use-mock-keychain` launch switch, as Playwright’s private Electron driver already does. This avoids a hosted runner Keychain prompt blocking the main loop. No real credentials are saved or used. Reports identify this backend explicitly; these CI checks do not validate real Keychain integration. Local manual-native tests omit the switch and exercise normal OS startup. The signed binary, ASAR and fuse bits are identical in both cases.
