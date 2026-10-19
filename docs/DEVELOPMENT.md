@@ -136,8 +136,8 @@ See [MAINTENANCE.md](MAINTENANCE.md) for CI, secrets and verification scope.
 Before testing or replacing a packaged Mac bundle, save/export any work and quit **all** running LLM Battle Arena versions with Cmd+Q. Closing a window alone may leave a Mac app running. Never rebuild over a running `.app`. Use a fresh output folder for each version, for example:
 
 ```sh
-npm exec electron-builder -- --mac --arm64 --dir --publish never -c.directories.output=dist/v2.4.6
-ARENA_ELECTRON_PATH="$PWD/dist/v2.4.6/mac-arm64/LLM Battle Arena.app/Contents/MacOS/LLM Battle Arena" npm run test:ui
+npm exec electron-builder -- --mac --arm64 --dir --publish never -c.directories.output=dist/private -c.electronFuses.enableNodeCliInspectArguments=true
+ARENA_ELECTRON_PATH="$PWD/dist/private/mac-arm64/LLM Battle Arena.app/Contents/MacOS/LLM Battle Arena" npm run test:ui
 ```
 
 The packaged-test preflight checks for running Arena executables and stops with their PIDs. It never kills a user's app or reads their saved keys. Historical processes were found running from a subsequently overwritten build folder; they were inspected and closed before archiving.
@@ -145,3 +145,5 @@ The packaged-test preflight checks for running Arena executables and stops with 
 Startup readiness checks use `polling:100` instead of Playwright's default animation-frame polling. On the local Mac, animation-frame readiness could stall while timer-based polling detected the initialized cards immediately. Obscured/background Mac windows must not make a functional startup test depend on repaint scheduling. ASAR, hardened runtime, signatures, sandboxing, and the production bundle identifier are unchanged. Changing those settings in disposable diagnostic builds was unnecessary.
 
 GitHub uses explicit `macos-15` (ARM) and `macos-15-intel` runners. Each architecture runs the packaged suite; public asset verification uses Intel. This avoids sending Intel jobs into the capacity-constrained ARM pool, but cannot guarantee GitHub runner availability.
+
+Release builds disable the Node inspector. See [Release verification](RELEASE-VERIFICATION.md) for the separate private regression build and hardened UI checks. Never distribute the private build.

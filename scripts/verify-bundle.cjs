@@ -1,8 +1,8 @@
 const {getCurrentFuseWire,FuseV1Options}=require('@electron/fuses');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),plist=require('plist');
-async function verifyBundle(app) {
+async function verifyBundle(app, {inspector=false}={}) {
  const wire=await getCurrentFuseWire(app);
- for(const [name,enabled] of Object.entries({RunAsNode:false,EnableNodeOptionsEnvironmentVariable:false,OnlyLoadAppFromAsar:true,EnableEmbeddedAsarIntegrityValidation:true}))assert.equal(wire[FuseV1Options[name]],enabled?49:48,`Incorrect fuse: ${name}`);
+ for(const [name,enabled] of Object.entries({RunAsNode:false,EnableNodeOptionsEnvironmentVariable:false,EnableNodeCliInspectArguments:inspector,OnlyLoadAppFromAsar:true,EnableEmbeddedAsarIntegrityValidation:true}))assert.equal(wire[FuseV1Options[name]],enabled?49:48,`Incorrect fuse: ${name}`);
  if(app.endsWith('.app')) {
   const info=plist.parse(fs.readFileSync(path.join(app,'Contents/Info.plist'),'utf8'));
   for(const key of ['NSCameraUsageDescription','NSMicrophoneUsageDescription','NSAudioCaptureUsageDescription'])assert.ok(!(key in info),`Unused permission: ${key}`);
@@ -12,4 +12,4 @@ async function verifyBundle(app) {
  console.log('Verified packaged fuses and Mac metadata.');
 }
 module.exports=verifyBundle;
-if(require.main===module)verifyBundle(process.argv[2]).catch(error=>{console.error(error);process.exitCode=1;});
+if(require.main===module)verifyBundle(process.argv[2],{inspector:process.argv.includes('--private-test-build')}).catch(error=>{console.error(error);process.exitCode=1;});

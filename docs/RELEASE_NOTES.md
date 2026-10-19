@@ -1,3 +1,14 @@
+## v2.4.7 — hardened release, separate regression build
+
+- Disable the Node command-line inspector in published applications before signing and packaging.
+- Keep deep fault-injection regressions on an ephemeral private build that is never uploaded.
+- Compare the entire application archive byte-for-byte between the private and release builds.
+- Exercise the hardened app through its UI: Sample, history, native Markdown/JSON export, quit, and history after restart.
+- Check both `--inspect` and `--inspect-brk`: the app must start normally and no Node debugging endpoint may open.
+- Repeat fuse, payload identity, and UI checks on installer payloads and public downloads, on native Mac and Windows runners.
+
+See [release verification](RELEASE-VERIFICATION.md) for the test boundary and reproduction steps. Mac signing remains ad-hoc; Windows installers remain unsigned.
+
 ## v2.4.6 — pre-install audit follow-up
 
 - Explain invalid Gemini keys correctly during Save, Check key, and Compare, including Google's HTTP 400 response. Provider bodies are size-limited and never shown verbatim.
