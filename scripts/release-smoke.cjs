@@ -28,6 +28,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'arena-hardened-')),profile=path.join(dir,'profile'),exports=path.join(dir,'exports');fs.mkdirSync(exports);
  const archiveHash=hash(archivePath(bundle));const executableHash=hash(executable);
  let child,browser,stderr='',page;const errors=[];
+ const watchdog=setTimeout(()=>{console.error(`Hardened UI deadline exceeded. Last stderr: ${stderr}`);if(child&&child.exitCode===null)child.kill('SIGKILL');process.exit(1);},process.env.ARENA_MANUAL_NATIVE==='1'?600000:150000);
  async function launch(flag){
   const inspectorPort=await freePort();stderr='';
   child=spawn(executable,[`--user-data-dir=${profile}`,'--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`${flag}=127.0.0.1:${inspectorPort}`],{stdio:['ignore','pipe','pipe']});
@@ -65,7 +66,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   if(reportFile){fs.mkdirSync(path.dirname(path.resolve(reportFile)),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(result,null,2)+'\n');}
   console.log('PASS: hardened release UI, native exports, quit/restart/history; main inspector flags ignored; bundle unchanged.');return result;
  }catch(error){if(page)await page.screenshot({path:path.join(dir,'failure.png'),timeout:5000}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}
- finally{if(child&&child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(500);}if(browser)await browser.close().catch(()=>{});if(!errors.length && !child)fs.rmSync(dir,{recursive:true,force:true});}
+ finally{clearTimeout(watchdog);if(child&&child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(500);}if(browser)await browser.close().catch(()=>{});if(!errors.length && !child)fs.rmSync(dir,{recursive:true,force:true});}
 }
 module.exports={runReleaseSmoke,portOpen};
 if(require.main===module){require('./packaged-preflight.cjs').assertPackagedAppClosed();runReleaseSmoke(path.resolve(process.argv[2]||process.env.ARENA_RELEASE_BUNDLE||'')).catch(error=>{console.error(error);process.exitCode=1;});}

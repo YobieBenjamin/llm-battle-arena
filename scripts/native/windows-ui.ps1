@@ -14,6 +14,9 @@ $edit=$null;$save=$null
 for($i=0;$i -lt 100;$i++) {
  $windows=$root.FindAll([System.Windows.Automation.TreeScope]::Children,$condition)
  foreach($window in $windows) {
+  # Do not traverse Chromium accessibility trees while locating a native dialog.
+  if($window.Current.ClassName -ne "#32770"){continue}
+  Write-Output "Native dialog found: $($window.Current.Name)"
   $all=$window.FindAll([System.Windows.Automation.TreeScope]::Descendants,[System.Windows.Automation.Condition]::TrueCondition)
   foreach($element in $all) {
    if($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit -and $element.Current.Name -match '^File name:?$'){$edit=$element}
