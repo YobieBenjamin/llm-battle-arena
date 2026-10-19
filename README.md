@@ -106,3 +106,5 @@ A fun little project by Yobie Benjamin. MIT licensed. The public home for code, 
 Blind battles shuffle and hide provider identities until you vote, with a local win tally. Connections offers model dropdowns, key checks without generation, and an optional OpenRouter route using one encrypted key. OpenRouter receives and routes your prompts and answers. Optional update notices make one GitHub request per launch and are off initially.
 
 Busy-server HTTP 503/529 responses get one cancellable retry before streaming starts. CI tests the packaged Mac app, then independently downloads each published release to check all installer checksums, both Mac signatures and bundled source against the tag. Dependabot checks npm and Actions weekly. A weekly live API probe skips providers until dedicated secrets are configured; see [Maintainer setup](docs/MAINTENANCE.md).
+
+Independent reviewers: use the [adversarial audit brief](docs/INDEPENDENT-AUDIT.md) for the pinned 2.4.0 source, release binaries, privacy boundaries, and novice workflows.
