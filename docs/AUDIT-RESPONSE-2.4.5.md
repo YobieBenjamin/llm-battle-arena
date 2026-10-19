@@ -11,9 +11,10 @@ Local packaged startup was investigated using isolated profiles, without real ke
 - 63/63 unit tests pass, including process-preflight matching.
 - Fresh local v2.4.5 signed package passes the full UI, fault/crash, and streaming suite; three 24 KB answers completed in 62.3 s, UI p95 17 ms.
 - `codesign --verify --deep --strict` passes on the local v2.4.5 package.
-- Final tagged release validation is recorded below after publication.
+- [Tagged release workflow 39323605482](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39323605482) passed: all four installers, Linux UI, both native packaged Mac suites, and public download verification (all six checksums, both Mac signatures, and bundled code matching tag `96362c8`).
+- [Archive workflow 39324585441](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39324585441) passed. v2.4.5 is the only public release; all 11 historical release records are private drafts titled OLD (DO NOT USE).
 - No real API calls, credentials, Safari quarantine/first-install flow, or Windows interactive install were tested locally.
 
 ## Historical material
 
-Historical GitHub installer releases are private drafts marked **OLD (DO NOT USE)**. Source tags remain intact for reproducibility and are labeled historical in `archive/README.md`. They are not supported installation choices. Local old source snapshots, installers and test bundles are preserved in `Documents/LLM Battle Arena - OLD (DO NOT USE)`; the active build is in `dist/v2.4.5`. Audit attachments remain unchanged as evidence. The previous current public installer is retired only after the new public downloads pass verification.
+Historical GitHub installer releases are private drafts marked **OLD (DO NOT USE)**. Source tags remain intact for reproducibility and are labeled historical in `archive/README.md`. They are not supported installation choices. Local old source snapshots, installers and test bundles are preserved in `Documents/LLM Battle Arena - OLD (DO NOT USE)`; the active build is in `dist/v2.4.5`. Audit attachments remain unchanged as evidence. The previous v2.4.3 public installer was retired after v2.4.5 public downloads passed verification.
