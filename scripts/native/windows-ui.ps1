@@ -13,7 +13,7 @@ public static class ArenaWindows {
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
  [DllImport("user32.dll")] public static extern int GetDlgCtrlID(IntPtr hwnd);
  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetClassName(IntPtr hwnd, StringBuilder text, int count);
- [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int count);
+ [DllImport("user32.dll", EntryPoint="SendMessageTimeoutW", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr ReadTextTimeout(IntPtr hwnd, uint message, IntPtr capacity, StringBuilder text, uint flags, uint timeout, out IntPtr result);
  [DllImport("user32.dll", CharSet=CharSet.Unicode, SetLastError=true)] public static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint message, IntPtr wparam, string text, uint flags, uint timeout, out IntPtr result);
  [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr hwnd, uint message, IntPtr wparam, IntPtr lparam);
 }
@@ -47,7 +47,8 @@ $stem=[System.IO.Path]::GetFileNameWithoutExtension($Destination)
  $class=New-Object System.Text.StringBuilder 256
  $text=New-Object System.Text.StringBuilder 2048
  [void][ArenaWindows]::GetClassName($handle,$class,256)
- [void][ArenaWindows]::GetWindowText($handle,$text,2048)
+ [IntPtr]$readResult=[IntPtr]::Zero
+ [void][ArenaWindows]::ReadTextTimeout($handle,0x000D,[IntPtr]2048,$text,2,3000,[ref]$readResult)
  $id=[ArenaWindows]::GetDlgCtrlID($handle)
  if($class.ToString() -eq 'Edit' -and $text.ToString() -in @($expected,$stem)){$script:filename=$handle}
  if($class.ToString() -eq 'Button' -and $id -eq 1 -and $text.ToString() -match '^&?Save'){$script:save=$handle}
@@ -55,7 +56,7 @@ $stem=[System.IO.Path]::GetFileNameWithoutExtension($Destination)
  return $true
 },[IntPtr]::Zero) | Out-Null
 if($script:filename -eq [IntPtr]::Zero -or $script:save -eq [IntPtr]::Zero){throw 'Native filename or Save control not found'}
-# Operate the visible native edit/button controls; never invoke application IPC.
+# Operate the visible native edit/button controls; never invoke Electron IPC.
 [void][ArenaWindows]::SetForegroundWindow($dialog)
 [IntPtr]$result=[IntPtr]::Zero
 if([ArenaWindows]::SendMessageTimeout($script:filename,0x000C,[IntPtr]::Zero,$Destination,2,3000,[ref]$result) -eq [IntPtr]::Zero){throw 'Native filename edit did not respond'}
