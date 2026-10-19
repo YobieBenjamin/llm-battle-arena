@@ -7,6 +7,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 public static class ArenaWindows {
  public delegate bool Callback(IntPtr hwnd, IntPtr param);
+ [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hwnd);
  [DllImport("user32.dll")] public static extern bool EnumWindows(Callback callback, IntPtr param);
  [DllImport("user32.dll")] public static extern bool EnumChildWindows(IntPtr parent, Callback callback, IntPtr param);
  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
@@ -55,6 +56,7 @@ $stem=[System.IO.Path]::GetFileNameWithoutExtension($Destination)
 },[IntPtr]::Zero) | Out-Null
 if($script:filename -eq [IntPtr]::Zero -or $script:save -eq [IntPtr]::Zero){throw 'Native filename or Save control not found'}
 # Operate the visible native edit/button controls; never invoke application IPC.
+[void][ArenaWindows]::SetForegroundWindow($dialog)
 [IntPtr]$result=[IntPtr]::Zero
 if([ArenaWindows]::SendMessageTimeout($script:filename,0x000C,[IntPtr]::Zero,$Destination,2,3000,[ref]$result) -eq [IntPtr]::Zero){throw 'Native filename edit did not respond'}
 if(-not [ArenaWindows]::PostMessage($script:save,0x00F5,[IntPtr]::Zero,[IntPtr]::Zero)){throw 'Native Save button could not be clicked'}
