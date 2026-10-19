@@ -1,13 +1,18 @@
 const { contextBridge, ipcRenderer } = require('electron');
+async function invoke(channel, ...args) {
+  const result = await ipcRenderer.invoke(channel, ...args);
+  if (!result?.ok) throw new Error(result?.error || 'The action could not be completed.');
+  return result.value;
+}
 contextBridge.exposeInMainWorld('arena', {
-  connections: () => ipcRenderer.invoke('connections'),
-  saveConnections: value => ipcRenderer.invoke('save-connections', value),
-  compare: value => ipcRenderer.invoke('compare', value),
-  cancel: () => ipcRenderer.invoke('cancel'),
-  open: (id, kind) => ipcRenderer.invoke('open-provider', id, kind),
-  copy: text => ipcRenderer.invoke('copy', text),
-  saveArtifact: value => ipcRenderer.invoke('save-artifact', value),
-  export: (text, format) => ipcRenderer.invoke('export', text, format),
+  connections: () => invoke('connections'),
+  saveConnections: value => invoke('save-connections', value),
+  compare: value => invoke('compare', value),
+  cancel: () => invoke('cancel'),
+  open: (id, kind) => invoke('open-provider', id, kind),
+  copy: text => invoke('copy', text),
+  saveArtifact: value => invoke('save-artifact', value),
+  export: (text, format) => invoke('export', text, format),
   onUpdate: callback => {
     const listener = (_event, value) => callback(value);
     ipcRenderer.on('answer', listener);

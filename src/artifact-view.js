@@ -10,7 +10,7 @@ export function createArtifactViewer({ providers, api, notice }) {
     if (owner) $(`${owner}-artifact`).setAttribute('aria-expanded','false');
     panel.hidden = true;
     $('artifact-body').replaceChildren();
-    owner = null; pinned = false;
+    owner = null; pinned = false; panel.classList.remove('is-pinned');
   }
   function scheduleHide() { cancelHide(); if (!pinned) timer = setTimeout(hide, 180); }
   function place() {
@@ -23,6 +23,7 @@ export function createArtifactViewer({ providers, api, notice }) {
   }
   window.addEventListener('resize', place);
   function draw() {
+    panel.classList.toggle('is-pinned', pinned);
     const artifacts = records.get(owner) || [];
     const artifact = artifacts[index];
     if (!artifact) { hide(); return; }

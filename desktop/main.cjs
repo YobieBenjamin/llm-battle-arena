@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, safeStorage, shell, clipboard, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, safeStorage, shell, clipboard, dialog, screen, Menu, session } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
@@ -8,10 +8,18 @@ const entry = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
 function trusted(event) {
   if (!window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame || event.senderFrame.url !== entry) throw new Error('Untrusted caller.');
 }
-function handle(name, fn) { ipcMain.handle(name, (event, ...args) => { trusted(event); return fn(...args); }); }
+function handle(name, fn) {
+  ipcMain.handle(name, async (event, ...args) => {
+    try { trusted(event); return { ok: true, value: await fn(...args) }; }
+    catch (error) { return { ok: false, error: error.message || 'The action could not be completed.' }; }
+  });
+}
 function cancel() { for (const controller of running.values()) controller.abort(); }
 function createWindow() {
-  window = new BrowserWindow({ width: 1440, height: 980, minWidth: 880, minHeight: 650, backgroundColor: '#101319', title: 'LLM Battle Arena', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
+  const area = screen.getPrimaryDisplay().workAreaSize;
+  const width = Math.min(1440, Math.max(400, area.width - 32));
+  const height = Math.min(980, Math.max(400, area.height - 32));
+  window = new BrowserWindow({ width, height, minWidth: Math.min(880, width), minHeight: Math.min(650, height), backgroundColor: '#101319', title: 'LLM Battle Arena', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
   window.setMenuBarVisibility(false);
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
@@ -24,8 +32,24 @@ function createWindow() {
 app.whenReady().then(async () => {
   ({ PROVIDERS: providers, runProvider, validateRequest } = await import('../src/providers.js'));
   const { createStore } = await import('./store.js');
-  try { store = createStore(app.getPath('userData'), safeStorage); }
-  catch { dialog.showErrorBox('Connections could not be loaded', 'The saved connection file is damaged. Restore or remove connections.json in the app data directory.'); app.quit(); return; }
+  const dataDirectory = app.getPath('userData');
+  try { store = createStore(dataDirectory, safeStorage); }
+  catch {
+    const file = path.join(dataDirectory, 'connections.json');
+    const result = await dialog.showMessageBox({ type: 'warning', title: 'Connections could not be loaded', message: 'Saved connection settings are damaged.', detail: `Settings file: ${file}\n\nReset connections keeps a backup and starts fresh. You will need to paste your API keys again.`, buttons: ['Reset connections', 'Open settings folder', 'Quit'], defaultId: 2, cancelId: 2 });
+    if (result.response === 1) { await shell.openPath(dataDirectory); app.quit(); return; }
+    if (result.response !== 0) { app.quit(); return; }
+    try {
+      await fs.rename(file, `${file}.${Date.now()}.bak`);
+      store = createStore(dataDirectory, safeStorage);
+    } catch { dialog.showErrorBox('Could not reset connections', `Close the app and rename the settings file manually:\n${file}`); app.quit(); return; }
+  }
+  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  session.defaultSession.setPermissionCheckHandler(() => false);
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ label: app.name, submenu: [{ role: 'quit' }] }] : []),
+    { label: 'Edit', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] }
+  ]));
   handle('connections', () => store.snapshot());
   handle('save-connections', value => { if (running.size) throw new Error('Wait for the comparison to finish before changing connections.'); return store.save(value); });
   handle('compare', value => {
@@ -37,9 +61,9 @@ app.whenReady().then(async () => {
       const controller = new AbortController();
       running.set(id, controller);
       // Capture key before launch so a decryption error cannot strand the run.
-      let key = '';
-      try { key = store.key(id); } catch { /* Provider receives a useful setup error. */ }
-      runProvider({ id, prompt: value.prompt, model: config.providers[id].model, maxTokens: value.maxTokens, key, signal: controller.signal, emit: update => {
+      let key = '', keyError = '';
+      try { key = store.key(id); } catch { keyError = 'Saved key could not be unlocked. Open Connections and paste it again, or unlock your OS credential store.'; }
+      runProvider({ id, prompt: value.prompt, model: config.providers[id].model, maxTokens: value.maxTokens, key, keyError, signal: controller.signal, emit: update => {
         if (window && !window.isDestroyed()) window.webContents.send('answer', { ...update, runId: value.runId });
       } }).finally(() => running.delete(id));
     }

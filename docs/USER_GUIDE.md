@@ -52,9 +52,9 @@ Do not keep running the app from inside the disk image. Install it into Applicat
 
 ## First-launch security prompts
 
-This hobby release is not signed with a verified publisher certificate and is not notarized by Apple. A warning is expected; a warning alone is not proof that a download is safe. Use only this project's release page and decide whether you trust the source. Never turn off antivirus, Gatekeeper, or Smart App Control globally to run it.
+Mac releases from 2.2.1 onward have an ad-hoc bundle signature verified during the build. They still have no verified publisher certificate or Apple notarization. Windows builds remain unsigned. A warning is expected; a warning alone is not proof that a download is safe. Use only this project's release page and decide whether you trust the source. Never turn off antivirus, Gatekeeper, or Smart App Control globally to run it.
 
-**Mac:** after an attempted launch, macOS may offer a per-app approval in System Settings → Privacy & Security → Open Anyway. Follow the prompts only if you trust the downloaded app. Exact wording varies by macOS version. [Apple's official explanation](https://support.apple.com/en-us/102445).
+**Mac:** bundle verification is not Gatekeeper approval. An ad-hoc build can still be blocked as untrusted. After an attempted launch, macOS may offer a per-app approval in System Settings → Privacy & Security → Open Anyway. Follow the prompts only if you trust the downloaded app. Exact wording varies by macOS version. If macOS reports “damaged,” do not assume Open Anyway will appear: download the latest release and report the exact message. We have not certified a fresh Safari-download approval flow on every Mac. [Apple's official explanation](https://support.apple.com/en-us/102445).
 
 **Windows:** SmartScreen may say “Windows protected your PC.” Where Windows offers **More info → Run anyway**, that is a per-app choice you can make after checking the source. Smart App Control or an organization's policy may block it without offering that option. Do not disable those protections globally; on a managed machine, ask the administrator. [Microsoft's explanation of Smart App Control](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions).
 
@@ -124,18 +124,15 @@ An answer may show **output limit reached**. Try a shorter question or a higher 
 
 ## What do the tiny token counters mean?
 
-At the top of each answer card, **Q** means question and **A** means answer. For example, **Q ~24 · A 180 tokens** means the question is estimated at about 24 tokens and the provider reported 180 output tokens. The prompt box also shows its current estimated token count.
+- **Q**: question/input tokens, reported by the provider when available, otherwise estimated.
+- **A ~**: the visible answer text, always estimated using the same local rule for all three providers (about four Unicode characters per token). This is an approximate comparison of visible answer size, not an exact model-token count.
+- **R**: separately reported reasoning/thinking tokens. **—** means the provider did not report a separate count; it does not mean zero.
 
-A token is a piece of text a model processes—sometimes a word, sometimes part of one. It is not the same as a word or a character.
+A token is a piece of text, not necessarily a word. Estimates can be substantially wrong for languages other than English, code, or emoji. Counts are not prices. The draft question's estimate is shown above the prompt box. Existing result counters stay attached to their original question even when you type a new draft.
 
-- **~ before a number:** a rough local estimate using about four characters per token. It is mainly useful for ordinary English. Other languages, code, emoji, and model-specific tokenizers can differ substantially.
-- **No ~:** usage reported by the provider. Input counts may include message formatting or cached input. Some providers' output counts include hidden reasoning; Gemini reports candidate-answer tokens and exposes thinking separately in the JSON export. These counts are not a perfectly equal measurement across providers.
-- While an answer streams, its counter estimates the text received so far. When terminal usage arrives, the provider's number replaces the estimate. If a request is stopped or fails before usage arrives, the estimate remains.
-- Sample and Website assist counts are always estimates. They make no extra token-counting API requests.
-- Counters on an existing result stay attached to that comparison's original question, even if you start typing a different question in the prompt box. The prompt box shows the new draft's estimate.
-- Exports include token counts and whether each was estimated. These counters are not prices or a prediction of your bill; check your provider dashboard for actual charges.
+Provider output usage is shown in the hover explanation and both export formats. OpenAI output usage can include reasoning and non-visible formatting; Gemini reports answer candidates and thoughts separately. Even subtracting reasoning does not guarantee an exact visible-text count, so A consistently estimates only the displayed answer. JSON keeps the original usage fields plus the labeled summary. Markdown includes Q/A/R and raw provider output usage.
 
-Hover over a counter for a short explanation. You do not need to configure anything.
+While an answer streams, A grows with the visible text. Sample and Website assist make no extra token API calls. Use your provider dashboard to check actual charges.
 
 ## Have some fun
 
@@ -168,13 +165,13 @@ Changing the prompt or included providers in Website assist clears the pasted co
 The Arena recognizes complete, labeled fenced code blocks as files. A small gold **Y** appears at the top of the matching answer card. Examples include HTML, SVG, JSON, CSV, Markdown, JavaScript, TypeScript/JSX/TSX, Python, CSS, and text. An unfinished code block does not produce a badge until its closing fence arrives. Up to 12 files are shown per answer, each limited to one million characters.
 
 1. **Hover over Y** to reveal the preview. You can move your pointer into the preview to inspect it; moving away from both hides an unpinned peek.
-2. **Click Y** to pin the preview so it stays displayed while you read elsewhere.
+2. **Click Y** to pin the preview in a dock beside the cards on wide windows or below the cards on smaller windows. It stays displayed without covering the answer controls.
 3. **Click the same Y again** to hide it. The Close button also hides it.
 4. A pinned file stays put if you merely hover over another provider's badge. Clicking the other provider's Y deliberately switches the pinned preview.
 5. Use the filename tabs for multiple files. **Show source** toggles the source view for HTML, SVG, and JSON.
 6. **Save file** opens your computer's save dialog. Choose a folder and click Save. The app does not automatically open or execute the saved file.
 
-HTML/SVG are rendered in an isolated static frame: no JavaScript, outside images, network access, forms, or app controls. Inline styling and data-embedded images can display. JSON is prettified when valid; CSV, Markdown, and programming languages are displayed as source text. The preview will not run a React project or execute Python. A saved file may behave differently when you later open it in another program.
+HTML/SVG are rendered in an isolated static frame: no JavaScript, outside images, network access, forms, or app controls. Inline styling and data-embedded images can display. JSON is prettified when valid; CSV, Markdown, and programming languages are displayed as source text. The preview will not run a React project or execute Python. Saved HTML can run scripts and make network requests when you open it in a browser. The in-app preview restrictions do not follow the file into another program.
 
 This feature detects files embedded in the answer text. It does not retrieve Claude/ChatGPT/Gemini website artifacts, cloud documents, remote images, or private links. If no Y appears, try asking: **“Give me a complete self-contained HTML file in a fenced html code block.”**
 
@@ -208,11 +205,12 @@ Connection settings normally survive because they are stored in your user profil
 | Access denied | Check your provider account's access to the selected model. |
 | Model unavailable / HTTP 404 | Open Connections and change the Model ID to a currently available model for your provider account. |
 | Rate limit or billing quota reached | Check the provider dashboard for credits, billing, or limits. Wait before retrying. |
-| Timed out | Check the internet connection. Try a shorter prompt, a faster model, or Retry. Partial text is retained. |
+| Timed out | No stream data arrived for 45 seconds, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
+| Saved key could not be unlocked | Unlock your OS keychain/credential store, or open Connections and paste a replacement key. A saved-key indicator does not guarantee the OS can decrypt it. |
 | Only one or two answers | Read the other card's error, check its key/Include setting, and Retry just that provider. |
 | No text or output limit reached | Increase the output limit or shorten the task. Reasoning models may spend the budget before producing visible text. |
 | Can't save keys | OS credential encryption is unavailable. Use a normal logged-in user session with the OS keychain/credential store available, or use Website assist. |
-| A damaged connection file prevents launch | Close the app. Rename `connections.json` in its app-data folder (below), reopen, and re-enter keys. Keep the old file only if you need to investigate it. |
+| A damaged connection file prevents launch | Choose Reset connections to preserve a backup and start fresh, or Open settings folder to inspect the path shown. Paste your keys again after resetting. Quit leaves the file unchanged. |
 | Answer appears cut off in its card | Put your pointer over that card and scroll. The whole answer remains available to Copy answer or Export. |
 
 If you report a bug, include the app version (the release you downloaded), OS, processor type, selected model IDs, and error wording. **Never include API keys or private prompts.** Use [GitHub Issues](https://github.com/YobieBenjamin/llm-battle-arena/issues).

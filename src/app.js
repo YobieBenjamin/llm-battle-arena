@@ -53,8 +53,9 @@ function cardTokenSummary(id) {
 function renderTokens(id) {
   const counter = $(`${id}-tokens`);
   counter.textContent = formatTokenSummary(cardTokenSummary(id));
-  counter.title = 'Q = question; A = answer. ~ means a rough estimate (about 4 English characters per token). Counts without ~ are provider-reported usage. Provider counts can include message formatting or hidden reasoning, and are not directly comparable or a price estimate.';
-  counter.setAttribute('aria-label', counter.textContent.replace('Q ', 'Question ').replace('A ', 'Answer ').replaceAll('~', 'approximately '));
+  const summary = cardTokenSummary(id);
+  counter.title = `Q = question input. A = visible answer estimated the same way for every model (~4 English characters/token). R = provider-reported reasoning, or — when unknown. Provider output usage: ${summary.providerOutput.value ?? 'not reported'} (may include reasoning/formatting). Not a price estimate.`;
+  counter.setAttribute('aria-label', counter.textContent.replace('Q ', 'Question ').replace('A ', 'Answer ').replace('R ', 'Reasoning ').replaceAll('~', 'approximately '));
 }
 function createCards() {
   for (const [id, provider] of Object.entries(PROVIDERS)) {
@@ -146,7 +147,7 @@ function exportData(format) {
   if (!comparison) throw new Error('Run or prepare a comparison first.');
   const exportedResults = Object.fromEntries(Object.entries(results).map(([id, result]) => [id, { ...result, tokenCounts: cardTokenSummary(id) }]));
   const payload = { ...comparison, results: exportedResults };
-  const text = format === 'json' ? JSON.stringify(payload, null, 2) : `# LLM Battle Arena\n\nMode: ${comparison.mode}\nDate: ${comparison.timestamp}\n\n## Prompt\n\n${comparison.prompt}\n\n` + Object.entries(results).map(([id, r]) => `## ${PROVIDERS[id].name}\n\nModel: ${r.model}\nTokens: ${formatTokenSummary(cardTokenSummary(id))} (~ = estimate; provider usage may include non-visible tokens)\nStatus: ${r.status}${r.error ? ` — ${r.error}` : ''}${r.truncated ? ' — output limit reached' : ''}\n\n${r.text}\n`).join('\n');
+  const text = format === 'json' ? JSON.stringify(payload, null, 2) : `# LLM Battle Arena\n\nMode: ${comparison.mode}\nDate: ${comparison.timestamp}\n\n## Prompt\n\n${comparison.prompt}\n\n` + Object.entries(results).map(([id, r]) => `## ${PROVIDERS[id].name}\n\nModel: ${r.model}\nTokens: ${formatTokenSummary(cardTokenSummary(id))} (~ = estimate; R = reasoning, — = unknown)\nProvider output usage: ${r.tokens ?? 'not reported'} tokens (may include reasoning/formatting)\nStatus: ${r.status}${r.error ? ` — ${r.error}` : ''}${r.truncated ? ' — output limit reached' : ''}\n\n${r.text}\n`).join('\n');
   if (api) return api.export(text, format).then(saved => notice(saved ? 'Comparison exported.' : 'Export cancelled.'));
   const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); const a = document.createElement('a'); a.href = url; a.download = `comparison.${format}`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -174,7 +175,7 @@ $('settings-form').onsubmit = async event => {
     notice('Connections saved on this computer.');
   } catch (error) { $('settings-error').textContent = error.message; }
 };
-document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && $('artifact-panel').hidden && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
+document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && $('artifact-panel').hidden && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
 if (api) {
   api.onUpdate(update => {
     if (update.runId !== runId || !pending.has(update.id)) return;

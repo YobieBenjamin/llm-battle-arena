@@ -5,18 +5,19 @@ export function estimateTokens(text = '') {
 export function validTokenCount(value) {
   return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
-export function tokenSummary({ prompt = '', text = '', inputTokens, tokens, status } = {}) {
+export function tokenSummary({ prompt = '', text = '', inputTokens, tokens, reasoningTokens } = {}) {
   const input = validTokenCount(inputTokens);
-  // During streaming the last usage event may lag behind the visible text.
-  const output = ['queued', 'connecting', 'streaming'].includes(status) ? null : validTokenCount(tokens);
+  const reasoning = validTokenCount(reasoningTokens);
   return {
     question: { value: input ?? estimateTokens(prompt), estimated: input === null },
-    answer: { value: output ?? estimateTokens(text), estimated: output === null }
+    answer: { value: estimateTokens(text), estimated: true },
+    reasoning: { value: reasoning, estimated: false },
+    providerOutput: { value: validTokenCount(tokens), estimated: false }
   };
 }
 export function formatTokenCount(count) {
-  return `${count.estimated ? '~' : ''}${count.value.toLocaleString('en-US')}`;
+  return count.value === null ? '—' : `${count.estimated ? '~' : ''}${count.value.toLocaleString('en-US')}`;
 }
 export function formatTokenSummary(summary) {
-  return `Q ${formatTokenCount(summary.question)} · A ${formatTokenCount(summary.answer)} tokens`;
+  return `Q ${formatTokenCount(summary.question)} · A ${formatTokenCount(summary.answer)} · R ${formatTokenCount(summary.reasoning)} tokens`;
 }

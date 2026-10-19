@@ -13,7 +13,7 @@ export function validateRequest(value) {
 }
 
 // SSE frames can cross arbitrary network and UTF-8 boundaries.
-export async function* readSSE(body) {
+export async function* readSSE(body, onData = () => {}) {
   if (!body) throw new Error('The provider returned no stream.');
   const reader = body.getReader();
   const decoder = new TextDecoder();
@@ -21,6 +21,7 @@ export async function* readSSE(body) {
   try {
     while (true) {
       const { value, done } = await reader.read();
+      if (value?.length) onData();
       pending += decoder.decode(value, { stream: !done });
       pending = pending.replace(/\r\n/g, '\n');
       let boundary;
@@ -49,13 +50,21 @@ export function buildRequest(id, prompt, model, maxTokens, key) {
   throw new Error('Unknown provider.');
 }
 
-export async function runProvider({ id, prompt, model, maxTokens, key, signal, emit, fetchImpl = fetch, timeoutMs = 120000 }) {
+export async function runProvider({ id, prompt, model, maxTokens, key, keyError, signal, emit, fetchImpl = fetch, timeoutMs = 300000, idleMs = 45000 }) {
   const started = Date.now();
   let text = '', tokens = null, inputTokens = null, reasoningTokens = null, finished = false, truncated = false;
-  const timeout = AbortSignal.timeout(timeoutMs);
-  const combined = AbortSignal.any([signal, timeout]);
+  const deadline = new AbortController();
+  let timeoutKind = '', idleTimer;
+  const totalTimer = setTimeout(() => { timeoutKind = 'total'; deadline.abort(); }, timeoutMs);
+  const touch = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { timeoutKind = 'idle'; deadline.abort(); }, idleMs);
+  };
+  touch();
+  const combined = AbortSignal.any([signal, deadline.signal]);
   const send = (status, extra = {}) => emit({ id, model, status, text, tokens, inputTokens, reasoningTokens, elapsed: Date.now() - started, ...extra });
   try {
+    if (keyError) throw new Error(keyError);
     if (!key) throw new Error('Add an API key in Connections, or use Website assist.');
     const req = buildRequest(id, prompt, model, maxTokens, key);
     send('connecting');
@@ -64,7 +73,7 @@ export async function runProvider({ id, prompt, model, maxTokens, key, signal, e
       await response.body?.cancel();
       throw new Error(({ 401: 'API key rejected. Check Connections.', 403: 'Access denied. Check your account and model access.', 404: 'Model unavailable. Update the model ID in Connections.', 429: 'Rate limit or billing quota reached. Check your provider account and retry later.' })[response.status] || `Provider returned HTTP ${response.status}. Try again later.`);
     }
-    for await (const event of readSSE(response.body)) {
+    for await (const event of readSSE(response.body, touch)) {
       if (event.error || event.type === 'error' || event.type === 'response.failed') throw new Error('The provider reported an error during generation. Retry or check your account.');
       if (id === 'claude') {
         if (event.type === 'message_start' && event.message?.usage) {
@@ -106,6 +115,6 @@ export async function runProvider({ id, prompt, model, maxTokens, key, signal, e
     if (!text) throw new Error('No answer text returned. The output limit or safety settings may have stopped generation.');
     send('done', { truncated });
   } catch (error) {
-    send(signal.aborted ? 'cancelled' : 'error', { error: signal.aborted ? 'Stopped. Partial answer preserved.' : timeout.aborted ? 'Timed out after two minutes. Partial answer preserved.' : error.message });
-  }
+    send(signal.aborted ? 'cancelled' : 'error', { error: signal.aborted ? 'Stopped. Partial answer preserved.' : timeoutKind ? (timeoutKind === 'idle' ? 'Timed out waiting for provider data. Partial answer preserved.' : 'Timed out at the request time limit. Partial answer preserved.') : error.message });
+  } finally { clearTimeout(totalTimer); clearTimeout(idleTimer); }
 }

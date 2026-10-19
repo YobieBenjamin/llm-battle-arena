@@ -103,3 +103,21 @@ test('malformed SSE errors never echo raw provider content',async()=>{
  await runProvider({...base,id:'openai',emit:e=>updates.push(e),fetchImpl:async()=>stream('data: secret-test-key invalid JSON\n\n')});
  assert.equal(updates.at(-1).status,'error');assert.ok(!JSON.stringify(updates).includes(base.key));
 });
+test('an unreadable saved key reports unlocking failure, not a missing key',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'claude',key:'',keyError:'Saved key could not be unlocked. Paste it again.',emit:e=>updates.push(e),fetchImpl:()=>assert.fail('network called')});
+ assert.match(updates.at(-1).error,/could not be unlocked/);assert.ok(!updates.at(-1).error.includes('Add an API key'));
+});
+test('idle timeout fires while waiting for response data',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'openai',idleMs:10,timeoutMs:1000,emit:e=>updates.push(e),fetchImpl:async(_url,{signal})=>new Promise((_resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}))});
+ assert.match(updates.at(-1).error,/waiting for provider data/);
+});
+test('continuing stream chunks refresh the idle deadline',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'openai',idleMs:100,timeoutMs:2000,emit:e=>updates.push(e),fetchImpl:async()=>new Response(new ReadableStream({async start(controller){
+  for(let i=0;i<8;i++){await new Promise(r=>setTimeout(r,20));controller.enqueue(new TextEncoder().encode(': heartbeat\n\n'));}
+  controller.enqueue(new TextEncoder().encode(fixtures.openai.map(frame).join('')));controller.close();
+ }}))});
+ assert.equal(updates.at(-1).status,'done');
+});

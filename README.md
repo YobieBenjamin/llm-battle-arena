@@ -24,7 +24,7 @@ A small app for Mac and Windows. No terminal, Python, Node.js, server, or app ac
 
 [All downloads and version history](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Step-by-step user guide](docs/USER_GUIDE.md) · [Report a problem](https://github.com/YobieBenjamin/llm-battle-arena/issues)
 
-These are unsigned community builds. Your computer may ask you to approve the first launch. See [first-launch help](docs/USER_GUIDE.md#first-launch-security-prompts). Work/school laptop policies may block unsigned apps. This is for modern desktop Mac and Windows systems; it is not an iPhone, iPad, Chromebook, or browser extension app.
+Windows builds are unsigned. Mac builds are ad-hoc signed (sealed, but without a verified publisher or Apple notarization). Your computer may ask you to approve the first launch. See [first-launch help](docs/USER_GUIDE.md#first-launch-security-prompts). Work/school laptop policies may block unsigned apps. This is for modern desktop Mac and Windows systems; it is not an iPhone, iPad, Chromebook, or browser extension app.
 
 ## 1. Install
 
@@ -61,7 +61,7 @@ You can start with one provider and uncheck **Include** on the others. For three
 
 Try **“Explain Wi-Fi to a pirate,” “Invent the world's worst superhero,”** or **“What is a belief you think people should question?”**
 
-- Tiny counters at the top of every card show **Q** (question) and **A** (answer) tokens. **~** means a rough estimate; counts without ~ are reported by the provider. Hover over a counter for details. These are not prices.
+- Tiny counters at the top of every card show **Q** (question), **A** (estimated visible answer), and **R** (reported reasoning, or — when unknown). **A always uses the same rough estimator across providers**; Q uses reported input when available. Hover over a counter for details. These are not prices.
 - **Stop** preserves partial answers. **Retry** sends just that card's original prompt again and may incur another API charge.
 - **Copy answer** copies one response. **Export Markdown** saves a readable comparison; **JSON** saves structured data.
 - **Ctrl+Enter** (Windows) or **Cmd+Enter** (Mac) starts a comparison.
@@ -97,4 +97,6 @@ This mode is manual. Each website controls signup, models, and free limits; no u
 
 Your keys are encrypted on your computer. Live prompts go to the selected providers; the app has no hosted server or analytics. Answers display as plain text, including Markdown source. Models can be wrong; don't treat three similar answers as proof.
 
-A fun little project by Yobie Benjamin. MIT licensed. This desktop version continues the original [YobieBen/llm-battle-arena](https://github.com/YobieBen/llm-battle-arena) project.
+A fun little project by Yobie Benjamin. MIT licensed. The public home for code, downloads, and support is **YobieBenjamin/llm-battle-arena**.
+
+[Claude review response and 2.2.1 fixes](docs/CLAUDE-REVIEW.md)

@@ -10,6 +10,7 @@
 
 - [Developer guide](DEVELOPMENT.md)
 - [Release notes](RELEASE_NOTES.md)
-- [One-time audit report](AUDIT.md)
+- [Historical one-time audit report](AUDIT.md)
+- [Claude review response and corrective release](CLAUDE-REVIEW.md)
 
 You do not need the developer guide or any source-code files to install the app.

@@ -1,5 +1,7 @@
 # One-time code and documentation audit — 2.2.0
 
+**Historical record.** The subsequent independent review found issues missed or underweighted here, including Mac bundle sealing and a destructive paste shortcut. See the [2.2.1 response and verification limits](CLAUDE-REVIEW.md) for corrections.
+
 Performed October 18, 2026 (America/Los_Angeles) by the implementation assistant. This is a source review and verification record, not an independent security certification or a promise that all defects have been found. It is a one-time audit, not a scheduled monitor.
 
 ## Scope

@@ -39,7 +39,7 @@ If you see a page with **Assets**, click the installer filename there. **Do not 
 
 ### If your computer shows a security warning
 
-This hobby app is unsigned, so Mac or Windows may ask you to approve the first launch. Only proceed if you trust the project and downloaded from the links above. [Follow the first-launch instructions here](docs/USER_GUIDE.md#first-launch-security-prompts). Do not switch off your computer's security protections globally. A work or school laptop may need its administrator's approval.
+Windows downloads are unsigned. Mac downloads are ad-hoc signed but not Apple-notarized, so either system may block or ask you to approve the first launch. Only proceed if you trust the project and downloaded from the links above. [Follow the first-launch instructions here](docs/USER_GUIDE.md#first-launch-security-prompts). Do not switch off your computer's security protections globally. A work or school laptop may need its administrator's approval.
 
 ## Step 3 — Try the free sample
 
@@ -74,7 +74,7 @@ If you have only one or two keys, uncheck **Include** on the cards you have not 
 4. Watch the answers arrive. Each card scrolls separately.
 5. Decide which you like best. Try another question!
 
-Tiny **Q** and **A** counters mean question tokens and answer tokens. **~** means an estimate. Tokens are pieces of text, not words or prices. [More about counters](docs/USER_GUIDE.md#what-do-the-tiny-token-counters-mean).
+Tiny **Q** and **A** counters mean question tokens and estimated visible-answer tokens. **R** shows reported reasoning, or **—** when unknown. **~** means an estimate. Tokens are pieces of text, not words or prices. [More about counters](docs/USER_GUIDE.md#what-do-the-tiny-token-counters-mean).
 
 **Copy answer** copies one answer. **Export Markdown** lets you choose where to save the whole comparison. Export before closing if you want to keep it—there is no automatic answer history. **How to play** opens a reminder inside the app.
 

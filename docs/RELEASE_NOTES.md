@@ -19,7 +19,18 @@ Windows: double-click Setup; the one-click installer opens the app. Mac: open th
 
 API usage may be billed by your providers. Chat website subscriptions and API access are separate. Without keys, **Website assist** helps you copy/paste between official websites and the comparison cards manually.
 
-## New in 2.2.0
+## Corrective release 2.2.1
+
+- Mac app bundles are now explicitly ad-hoc signed and must pass strict deep signature verification in CI. They are still not Developer ID signed or notarized; OS approval can still be required or blocked.
+- Ctrl/Cmd+Enter inside a Website-assist paste box preserves pasted answers.
+- A consistently estimates visible answer text; R separately shows reported reasoning. Raw provider output usage is retained in both exports and the hover explanation.
+- Pinned artifacts dock beside or below the cards without covering Copy/Retry controls.
+- Friendly IPC errors, distinct key-unlock failures, idle-aware timeouts, settings reset with backup, and display-aware window sizing.
+- A reproducible UI regression harness now gates releases.
+
+[Findings and verification limits](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/CLAUDE-REVIEW.md)
+
+## Previous: 2.2.0
 
 - A small Y badge for detected artifacts: hover to preview, click to pin, click again to hide. Static HTML/SVG previews, JSON/source views, multiple-file tabs, and Save file. Includes a sample artifact with no API calls.
 
@@ -35,6 +46,6 @@ API usage may be billed by your providers. Chat website subscriptions and API ac
 - OS-encrypted local keys, editable model IDs, and built-in How to play.
 - Plain-language installation, troubleshooting, privacy, and uninstall instructions.
 
-These are unsigned community builds, not verified-publisher releases. macOS/Windows may show first-launch prompts; managed computers may block them. See the guide for per-app approval information. No automatic updater or hosted service is included.
+Windows builds are unsigned; Mac builds are ad-hoc sealed but not verified-publisher or notarized releases. macOS/Windows may show first-launch prompts; managed computers may block them. See the guide for per-app approval information. No automatic updater or hosted service is included.
 
 SHA-256 checksums accompany the downloads. CI builds/tests run for all four OS/CPU targets. Local runtime smoke checks were performed on Apple Silicon Mac; live API calls require your keys. Cross-platform build success is not a claim of hands-on runtime testing on every laptop.
