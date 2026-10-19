@@ -19,7 +19,7 @@ async function nativeAction(child,action,folder,expectedFile) {
  }
  if(!process.env.CI)throw new Error('Use ARENA_MANUAL_NATIVE=1 outside CI to handle native Save/Quit through the app UI.');
  if(process.platform==='darwin')await promisify(execFile)('/usr/bin/osascript',[path.join(__dirname,'native/mac-ui.applescript'),String(child.pid),action,folder],{timeout:20000});
- else if(process.platform==='win32')await promisify(execFile)('pwsh.exe',['-NoProfile','-File',path.join(__dirname,'native/windows-ui.ps1'),'-TargetPid',String(child.pid),'-Action',action,'-Destination',expectedFile||''],{timeout:60000});
+ else if(process.platform==='win32'){const native=await promisify(execFile)('pwsh.exe',['-NoProfile','-File',path.join(__dirname,'native/windows-ui.ps1'),'-TargetPid',String(child.pid),'-Action',action,'-Destination',expectedFile||''],{timeout:60000});console.log(native.stdout.trim());}
  else throw new Error('Native release smoke supports macOS and Windows.');
 }
 async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPORT}={}){
