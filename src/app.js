@@ -6,7 +6,9 @@ import { PROVIDERS } from './providers.js';
 import { tokenSummary, formatTokenSummary, estimateTokens } from './tokens.js';
 const $ = id => document.getElementById(id);
 const api = window.arena;
-let savingConnections=false;
+let savingConnections=false, voting=false;
+const renderTimers=new Map();
+function queueRender(id) { if(!renderTimers.has(id)) renderTimers.set(id,setTimeout(()=>{renderTimers.delete(id);render(id);},100)); }
 let artifacts, preferences={checkUpdates:false,tally:{}};
 function hiddenBattle() { return Boolean(comparison?.blind && !comparison.blind.revealed); }
 function battleUI() {
@@ -19,7 +21,9 @@ function battleUI() {
     card.querySelector('.avatar').textContent=hidden?'?':{claude:'✳',openai:'◎',gemini:'✦'}[id];
     card.querySelector('.enabled-label').hidden=hidden;
     $(`${id}-answer`).setAttribute('aria-label',hidden?`Answer ${String.fromCharCode(65+order.indexOf(id))}`:`${PROVIDERS[id].name} answer`);
-    $(`${id}-vote`).hidden=!hidden; $(`${id}-vote`).disabled=!canVote(comparison,results,pending.size);
+    $(`${id}-vote`).textContent=hidden?'Pick winner':comparison?.blind?.winner===id?'Winner':'Not selected';
+    $(`${id}-vote`).setAttribute('aria-label',`Pick Answer ${String.fromCharCode(65+order.indexOf(id))} as winner`);
+    $(`${id}-vote`).hidden=!comparison?.blind; $(`${id}-vote`).disabled=voting || !canVote(comparison,results,pending.size);
   }
   $('export-md').disabled=hidden; $('export-json').disabled=hidden; $('reveal-blind').hidden=!hidden; $('reveal-blind').disabled=Boolean(pending.size);
   $('battle-note').textContent=hidden?'Pick your favorite when all answers finish. Answers may identify themselves; this is a casual blind vote.':comparison?.blind?.winner?`Winner: ${PROVIDERS[comparison.blind.winner].name}. Local wins: ${Object.entries(PROVIDERS).map(([id,p])=>`${p.name} ${preferences.tally[id]||0}`).join(' · ')}`:'';
@@ -87,15 +91,19 @@ function busy() {
 function render(id) {
   const result = results[id];
   renderTokens(id);
-  if(!hiddenBattle()) artifacts?.update(id, result?.text || '');
+  const streaming=['queued','connecting','streaming','retrying'].includes(result?.status);
+  const plain=streaming || (comparison?.mode==='manual' && !$(`${id}-manual`).hidden);
+  if(!hiddenBattle() && !streaming) artifacts?.update(id, result?.text || '');
   else $(`${id}-artifact`).hidden=true;
   const answer = $(`${id}-answer`);
   const nextText = result?.text || '';
-  if (renderedText.get(answer) !== nextText) {
+  const signature=(plain?'plain:':'formatted:')+nextText;
+  if (renderedText.get(answer) !== signature) {
     const position = answer.scrollTop;
     const following = answer.scrollHeight - position - answer.clientHeight < 24;
-    answer.replaceChildren(renderMarkdown(nextText));
-    renderedText.set(answer, nextText);
+    answer.classList.toggle('streaming-text',plain);
+    if(plain) answer.textContent=nextText; else answer.replaceChildren(renderMarkdown(nextText));
+    renderedText.set(answer, signature);
     answer.scrollTop = following ? answer.scrollHeight : position;
   }
   const state = $(`${id}-status`);
@@ -125,8 +133,8 @@ function createCards() {
     // Only fixed application strings and fixed provider IDs enter this template.
     card.innerHTML = `<div class="card-top"><div class="avatar">${id === 'claude' ? '✳' : id === 'openai' ? '◎' : '✦'}</div><div class="card-title"><h3>${provider.name}</h3><div id="${id}-model" class="model"></div><div id="${id}-tokens" class="token-counts"></div></div><button id="${id}-artifact" class="artifact-trigger" aria-expanded="false" aria-controls="artifact-panel" hidden>Y</button><label class="enabled-label"><input id="${id}-enabled" type="checkbox" checked> Include</label></div><div id="${id}-status" class="status" role="status"></div><div id="${id}-answer" class="answer" tabindex="0" aria-label="${provider.name} answer"></div><textarea id="${id}-manual" class="manual-answer" aria-label="Paste ${provider.name} website answer" placeholder="Paste the answer from the official website here…" hidden maxlength="200000"></textarea><div class="card-actions"><button id="${id}-vote" hidden>Pick winner</button><button id="${id}-copy">Copy answer</button><button id="${id}-format" hidden>Read formatted</button><button id="${id}-retry" hidden>Retry</button><button id="${id}-website" hidden>Open ${provider.name}</button></div>`;
     $('cards').append(card);
-    $(`${id}-vote`).onclick=()=>guarded(async()=>{await saveHistory(); preferences=await api.vote(runId,id); comparison.blind={...comparison.blind,revealed:true,winner:id}; for(const provider of Object.keys(PROVIDERS))render(provider); battleUI(); await saveHistory();});
-    $(`${id}-format`).onclick = () => { const input=$(`${id}-manual`); input.hidden=!input.hidden; $(`${id}-answer`).hidden=!input.hidden; $(`${id}-format`).textContent=input.hidden?'Edit pasted answer':'Read formatted'; };
+    $(`${id}-vote`).onclick=()=>guarded(async()=>{if(voting || !canVote(comparison,results,pending.size))return; voting=true; battleUI(); try {await saveHistory(); preferences=await api.vote(runId,id); comparison.blind={...comparison.blind,revealed:true,winner:preferences.winner || id}; for(const provider of Object.keys(PROVIDERS))render(provider); if(preferences.warning)notice(preferences.warning); } finally {voting=false;battleUI();}});
+    $(`${id}-format`).onclick = () => { const input=$(`${id}-manual`); input.hidden=!input.hidden; $(`${id}-answer`).hidden=!input.hidden; $(`${id}-format`).textContent=input.hidden?'Edit pasted answer':'Read formatted'; render(id); };
     $(`${id}-copy`).onclick = () => guarded(async () => { await copy(results[id]?.text || ''); notice('Answer copied.'); });
     $(`${id}-retry`).onclick = () => guarded(() => launch([id], true));
     $(`${id}-website`).onclick = () => guarded(async () => { await copy($('prompt').value); await api.open(id, 'website'); notice('Prompt copied. Paste it into the website, then paste its answer back here.'); });
@@ -141,6 +149,7 @@ function createCards() {
 async function copy(text) { if (api) await api.copy(text); else await navigator.clipboard.writeText(text); }
 async function guarded(action) { try { await action(); } catch (error) { notice(error.message); } }
 function reset() {
+  for(const timer of renderTimers.values())clearTimeout(timer);renderTimers.clear();
   guarded(saveHistory);
   comparison = null;
   artifacts?.reset();
@@ -214,7 +223,7 @@ function exportData(format) {
   if(hiddenBattle()) throw new Error('Vote or reveal before exporting.');
   const exportedResults = Object.fromEntries(Object.entries(results).map(([id, result]) => [id, { ...result, tokenCounts: cardTokenSummary(id) }]));
   const payload = { ...comparison, results: exportedResults };
-  const text = format === 'json' ? JSON.stringify(payload, null, 2) : `# LLM Battle Arena\n\nMode: ${comparison.mode}\nDate: ${comparison.timestamp}\n\n## Prompt\n\n${comparison.prompt}\n\n` + Object.entries(results).map(([id, r]) => `## ${PROVIDERS[id].name}\n\nModel: ${r.model}\nTokens: ${formatTokenSummary(cardTokenSummary(id))} (~ = estimate; R = reasoning, — = unknown)\nProvider output usage: ${r.tokens ?? 'not reported'} tokens (may include reasoning/formatting)\nStatus: ${r.status}${r.error ? ` — ${r.error}` : ''}${r.truncated ? ' — output limit reached' : ''}\n\n${r.text}\n`).join('\n');
+  const text = format === 'json' ? JSON.stringify(payload, null, 2) : `# LLM Battle Arena\n\nMode: ${comparison.mode}\nRoute: ${comparison.mode==='live'?(comparison.route || 'direct'):'No API route'}\nDate: ${comparison.timestamp}\n\n## Prompt\n\n${comparison.prompt}\n\n` + Object.entries(results).map(([id, r]) => `## ${PROVIDERS[id].name}\n\nModel: ${r.model}\nTokens: ${formatTokenSummary(cardTokenSummary(id))} (~ = estimate; R = reasoning, — = unknown)\nProvider output usage: ${r.tokens ?? 'not reported'} tokens (may include reasoning/formatting)\nStatus: ${r.status}${r.error ? ` — ${r.error}` : ''}${r.truncated ? ' — output limit reached' : ''}\n\n${r.text}\n`).join('\n');
   if (api) return api.export(text, format).then(saved => notice(saved ? 'Comparison exported.' : 'Export cancelled.'));
   const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); const a = document.createElement('a'); a.href = url; a.download = `comparison.${format}`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -229,7 +238,7 @@ if(api) api.onClosing(async()=>{ try { await saveHistory(); } finally { await ap
 $('reveal-blind').onclick=()=>guarded(async()=>{comparison.blind.revealed=true;for(const id of Object.keys(PROVIDERS))render(id);battleUI();await saveHistory();});
 $('download-update').onclick=()=>guarded(()=>api.openUpdate());
 $('check-update-now').onclick=()=>guarded(updateNotice);
-$('check-updates').onchange=()=>guarded(async()=>{await api.setUpdates($('check-updates').checked);preferences.checkUpdates=$('check-updates').checked;});
+$('check-updates').onchange=()=>guarded(async()=>{try{await api.setUpdates($('check-updates').checked);preferences.checkUpdates=$('check-updates').checked;}catch(error){$('check-updates').checked=preferences.checkUpdates;throw error;}});
 $('help').onclick = () => $('help-dialog').showModal();
 $('close-help').onclick = () => $('help-dialog').close();
 $('mode').onchange = changeMode;
@@ -240,12 +249,13 @@ $('stop').onclick = () => guarded(() => api.cancel());
 $('export-md').onclick = () => guarded(() => exportData('md'));
 $('export-json').onclick = () => guarded(() => exportData('json'));
 $('connections').onclick = () => api ? openSettings() : notice('Connections are available inside the desktop app.');
-$('close-settings').onclick = () => { $('settings').close(); $('connection-fields').replaceChildren(); };
+$('close-settings').onclick = () => { if(savingConnections)return; $('settings').close(); $('connection-fields').replaceChildren(); };
+$('settings').addEventListener('cancel',event=>{if(savingConnections)event.preventDefault();});
 $('settings').addEventListener('close', () => $('connection-fields').replaceChildren());
 $('settings-form').onsubmit = async event => {
   event.preventDefault();
   if(savingConnections)return;
-  savingConnections=true; $('settings-form').querySelector('button[type=submit]').disabled=true;
+  savingConnections=true; $('close-settings').disabled=true; $('settings-form').querySelector('button[type=submit]').disabled=true;
   try {
     const value = readConnections();
     $('settings-error').textContent='Checking keys (no answer generation)…';
@@ -255,15 +265,15 @@ $('settings-form').onsubmit = async event => {
     if(mode()==='live') $('mode-note').textContent=connections.route==='openrouter'?'OpenRouter route: prompts and answers pass through OpenRouter and model hosts. OpenRouter billing and privacy policies apply.':'Direct route: send the same prompt to selected providers. Each provider may charge for usage.';
     notice('Connections saved on this computer.');
   } catch (error) { $('settings-error').textContent = error.message; }
-  finally { savingConnections=false; $('settings-form').querySelector('button[type=submit]').disabled=false; }
+  finally { savingConnections=false; $('close-settings').disabled=false; $('settings-form').querySelector('button[type=submit]').disabled=false; }
 };
 document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && !$('history-dialog').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
 if (api) {
   api.onUpdate(update => {
     if (update.runId !== runId || !pending.has(update.id)) return;
-    results[update.id] = { ...update, prompt: comparison.prompt }; render(update.id);
-    if (['done','error','cancelled'].includes(update.status)) pending.delete(update.id);
-    busy();
+    results[update.id] = { ...update, prompt: comparison.prompt };
+    if (['done','error','cancelled'].includes(update.status)) { clearTimeout(renderTimers.get(update.id));renderTimers.delete(update.id);render(update.id);pending.delete(update.id);busy(); }
+    else queueRender(update.id);
     if(pending.size) scheduleHistory(); else guarded(saveHistory);
     if (!pending.size) notice('Comparison finished. Each card shows its own outcome.');
   });

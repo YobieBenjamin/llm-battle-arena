@@ -130,11 +130,14 @@ test('silent thinking gets the first-byte allowance before the shorter idle dead
  }});
  assert.equal(updates.at(-1).status,'done');
 });
-test('after first bytes, a stalled stream uses the shorter idle deadline',async()=>{
+test('after visible text, a stalled stream uses the shorter idle deadline',async()=>{
  const updates=[];
  await runProvider({...base,id:'openai',firstByteMs:1000,idleMs:10,emit:e=>updates.push(e),fetchImpl:async(_url,{signal})=>new Response(new ReadableStream({start(controller){
-  controller.enqueue(new TextEncoder().encode(': heartbeat\n\n'));
+  controller.enqueue(new TextEncoder().encode(frame(fixtures.openai[0])));
   signal.addEventListener('abort',()=>controller.error(signal.reason),{once:true});
  }}))});
  assert.match(updates.at(-1).error,/waiting for provider data/);
+});
+test('metadata before silent thinking retains the initial grace period',async()=>{
+ let final;await runProvider({...base,id:'openai',firstByteMs:500,idleMs:10,emit:e=>final=e,fetchImpl:async()=>new Response(new ReadableStream({async start(controller){controller.enqueue(new TextEncoder().encode(frame({type:'response.created'})));await new Promise(r=>setTimeout(r,50));controller.enqueue(new TextEncoder().encode(fixtures.openai.map(frame).join('')));controller.close();}}))});assert.equal(final.status,'done');
 });

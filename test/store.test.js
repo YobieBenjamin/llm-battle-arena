@@ -35,3 +35,7 @@ test('OpenRouter is opt-in, encrypted, persistent and cannot replace direct keys
  store.save(value);const reloaded=createStore(dir,fakeCrypto);assert.equal(reloaded.snapshot().route,'openrouter');assert.equal(reloaded.key('openrouter'),'router-secret');assert.equal(reloaded.key('claude'),'direct-secret');assert.ok(!JSON.stringify(reloaded.snapshot()).includes('secret'));assert.ok(!fs.readFileSync(path.join(dir,'connections.json'),'utf8').includes('router-secret'));
  const invalid={...value,openrouter:{...value.openrouter,models:{...value.openrouter.models,claude:'openai/wrong'}}};assert.throws(()=>store.save(invalid),/matching/);assert.equal(store.key('openrouter'),'router-secret');
 });
+test('credential-store failures use friendly errors and leave saved settings unchanged',t=>{
+ const {store}=setup(t,{...fakeCrypto,encryptString:()=>{throw new Error('native secret diagnostic');}});const value=input();value.claude.key='synthetic';assert.throws(()=>store.save(value),/credential store could not save/);assert.equal(store.snapshot().providers.claude.connected,false);
+ const second=setup(t,{...fakeCrypto,decryptString:()=>{throw new Error('native secret diagnostic');}});second.store.save(value);assert.throws(()=>second.store.key('claude'),/Saved key could not be unlocked/);
+});

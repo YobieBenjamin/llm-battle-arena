@@ -3,6 +3,9 @@ const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
 let window, store, history, preferences, checkUpdate, listModels, providers, runProvider, validateRequest;
+const ownsProfile=app.requestSingleInstanceLock();
+if(!ownsProfile)app.quit();
+app.on('second-instance',()=>{if(window){if(window.isMinimized())window.restore();window.show();window.focus();}else if(app.isReady() && store)createWindow();});
 let quitting = false;
 app.on('before-quit', () => { quitting=true; });
 const running = new Map();
@@ -23,6 +26,12 @@ function createWindow() {
   const height = Math.min(980, Math.max(400, area.height - 32));
   window = new BrowserWindow({ width, height, minWidth: Math.min(880, width), minHeight: Math.min(650, height), backgroundColor: '#101319', title: 'LLM Battle Arena', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true } });
   window.setMenuBarVisibility(false);
+  window.webContents.on('render-process-gone',async()=>{
+    if(quitting)return;
+    cancel();
+    const result=await dialog.showMessageBox({type:'warning',title:'Arena needs to reload',message:'The display stopped responding. Saved comparisons are still in History.',buttons:['Reload','Quit'],defaultId:0,cancelId:1});
+    if(result.response===0 && window)window.webContents.reload();else app.quit();
+  });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.on('will-frame-navigate', event => {
@@ -39,15 +48,22 @@ function createWindow() {
   window.on('closed', () => { cancel(); window = null; });
   window.loadFile(path.join(__dirname, '..', 'index.html'));
 }
-app.whenReady().then(async () => {
+if(ownsProfile) app.whenReady().then(async () => {
   ({ PROVIDERS: providers, runProvider, validateRequest } = await import('../src/providers.js'));
   const { createStore } = await import('./store.js');
   const dataDirectory = app.getPath('userData');
   const { createHistory } = await import('./history.js');
-  history = createHistory(dataDirectory);
+  async function recoverStorage(name,factory) {
+    try{return factory(dataDirectory);}catch{
+      const answer=await dialog.showMessageBox({type:'warning',title:`${name} unavailable`,message:`${name} could not be read or backed up.`,detail:`Folder: ${dataDirectory}\nUse a temporary session to continue without overwriting these files. Export any work before quitting.`,buttons:['Use temporary session','Open folder and quit','Quit'],defaultId:0,cancelId:2});
+      if(answer.response!==0){if(answer.response===1)await shell.openPath(dataDirectory);app.quit();return null;}
+      return factory(dataDirectory,{temporary:true});
+    }
+  }
+  history = await recoverStorage('History',createHistory);if(!history)return;
   ({ listModels } = await import('../src/catalog.js'));
   const {createPreferences,createUpdateCheck}=await import('./preferences.js');
-  preferences=createPreferences(dataDirectory); checkUpdate=createUpdateCheck(app.getVersion());
+  preferences=await recoverStorage('Preferences',createPreferences);if(!preferences)return; checkUpdate=createUpdateCheck(app.getVersion());
   try { store = createStore(dataDirectory, safeStorage); }
   catch {
     const file = path.join(dataDirectory, 'connections.json');
@@ -64,6 +80,7 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     ...(process.platform === 'darwin' ? [{ label: app.name, submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' }, { type: 'separator' }, { role: 'quit' }] }] : []),
     { label: 'Edit', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
+    { label:'View', submenu:[{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'}] },
     { label: 'Window', submenu: [{ role: 'close' }, { role: 'minimize' }, { role: 'zoom' }, ...(process.platform === 'darwin' ? [{ type: 'separator' }, { role: 'front' }] : [])] }
   ]));
   handle('finish-close', () => { setImmediate(()=>quitting ? app.quit() : window?.close()); });
@@ -84,9 +101,11 @@ app.whenReady().then(async () => {
   handle('open-update', () => shell.openExternal('https://github.com/YobieBenjamin/llm-battle-arena/releases/latest'));
   handle('vote', (id,winner) => {
     const entry=history.get(id);
+    const existing=preferences.winner(id);if(existing)return {...preferences.snapshot(),winner:existing};
     if(!entry?.blind || entry.blind.revealed || !entry.blind.order.includes(winner) || !entry.blind.order.every(provider=>entry.results[provider]?.status==='done' && entry.results[provider]?.text)) throw new Error('Finish all blind answers before picking a winner.');
-    preferences.vote(id,winner); entry.blind.revealed=true; entry.blind.winner=winner; history.save(entry);
-    return preferences.snapshot();
+    preferences.vote(id,winner); entry.blind.revealed=true; entry.blind.winner=winner;
+    try{history.save(entry);}catch{return {...preferences.snapshot(),winner,warning:'Your vote was saved. Its history copy could not be updated; reopening the comparison will recover the winner.'};}
+    return {...preferences.snapshot(),winner};
   });
   handle('connections', () => store.snapshot());
   handle('list-models', async (id,key) => {
@@ -96,14 +115,16 @@ app.whenReady().then(async () => {
   handle('save-connections', async value => {
     if(running.size) throw new Error('Wait for the comparison to finish before changing connections.');
     if(!value || typeof value!=='object') throw new Error('Invalid settings.');
+    const before=store.snapshot();
     for(const id of ['claude','openai','gemini','openrouter']) {
       const entry=value[id]; if(!entry || entry.remove) continue;
       if(typeof entry.key!=='string')throw new Error('Invalid API key.');
-      // Check new keys, and the saved keys on the active route. Never generate text here.
+      // Check only new keys or changed settings on the active route. Never generate text here.
       const active=id==='openrouter'?value.openrouter?.enabled:!value.openrouter?.enabled;
-      if(entry.key.trim() || active) {
+      const changed=id==='openrouter'?(entry.enabled!== (before.route==='openrouter') || Object.keys(providers).some(p=>entry.models?.[p]!==before.openrouter.models[p])):entry.model!==before.providers[id].model;
+      if(entry.key.trim() || (active && changed)) {
         const key=entry.key.trim() || store.key(id); if(!key) continue;
-        try { await listModels(id,key); } catch(error) { throw new Error(`${id}: ${error.message}`); }
+        try { await listModels(id,key); } catch(error) { throw new Error(`${providers[id]?.name || 'OpenRouter'}: ${error.message}`); }
       }
     }
     if(running.size) throw new Error('Wait for the comparison to finish before changing connections.');
@@ -150,5 +171,5 @@ app.whenReady().then(async () => {
   });
   createWindow();
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
-});
+}).catch(()=>{dialog.showErrorBox('Arena could not start','Local settings could not be opened. Check the app-data folder permissions and free disk space, then reopen the app.');app.quit();});
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

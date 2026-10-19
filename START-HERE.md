@@ -1,5 +1,8 @@
 # Start here: download, open, play
 
+**Release status:** This source guide describes v2.4.1. Until v2.4.1 appears on the [Downloads page](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest), the available installer is v2.3.0; use its [matching guide](https://github.com/YobieBenjamin/llm-battle-arena/blob/v2.3.0/docs/USER_GUIDE.md). Blind battles and OpenRouter require the newer installer.
+
+
 **You do not need to know GitHub. You do not need a GitHub account. You do not need to install anything for programming.**
 
 This is a small app that puts three AI answers next to each other. The app is free. You can try the sample immediately; real AI answers use your own provider API keys and may cost money.

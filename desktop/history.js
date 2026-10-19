@@ -15,23 +15,27 @@ function clean(value) {
   }
   return { id:value.id, prompt:value.prompt, mode:value.mode, timestamp:value.timestamp, route:value.route==='openrouter'?'openrouter':'direct', blind:value.blind && value.mode==='live' && Array.isArray(value.blind.order) && value.blind.order.length>=2 && value.blind.order.length<=3 && new Set(value.blind.order).size===value.blind.order.length && value.blind.order.every(id=>ids.includes(id)) ? {order:value.blind.order,revealed:value.blind.revealed===true,winner:ids.includes(value.blind.winner)?value.blind.winner:null} : null, maxTokens:[2048,4096,8192].includes(value.maxTokens)?value.maxTokens:4096, results };
 }
-export function createHistory(directory) {
-  fs.mkdirSync(directory,{recursive:true});
+export function createHistory(directory,{temporary=false}={}) {
+  if(!temporary)fs.mkdirSync(directory,{recursive:true});
   const file=path.join(directory,'history.json');
-  let entries=[], warning='';
-  if(fs.existsSync(file)) {
-    try { const data=JSON.parse(fs.readFileSync(file,'utf8')); if(!Array.isArray(data)) throw new Error(); entries=data.map(clean).slice(0,50); }
+  let entries=[], warning=temporary?'History is temporary for this session. Export comparisons before quitting.': '';
+  let recovered=false;
+  if(!temporary && fs.existsSync(file)) {
+    try { const data=JSON.parse(fs.readFileSync(file,'utf8')); if(!Array.isArray(data)) throw new Error(); const valid=[];let invalid=0;for(const entry of data){try{valid.push(clean(entry));}catch{invalid++;}} entries=valid.slice(0,50);
+      if(invalid){const backup=`${file}.${Date.now()}.bak`;fs.renameSync(file,backup);warning=`Recovered ${entries.length} valid comparisons; ${invalid} unsupported entries are preserved at ${backup}.`;recovered=true;} }
     catch { const backup=`${file}.${Date.now()}.bak`; fs.renameSync(file,backup); warning=`Damaged history was preserved at ${backup}. New history starts empty.`; }
   }
   function commit(next) {
+    if(temporary){entries=next;return;}
     const temp=file+'.tmp';
     try { fs.writeFileSync(temp,JSON.stringify(next),{mode:0o600}); fs.renameSync(temp,file); entries=next; }
     catch { throw new Error('History could not be saved. Export this comparison and check free disk space.'); }
   }
+  if(recovered)commit(entries);
   return {
     list:()=>({entries:entries.map(({results,...entry})=>entry),warning}),
     get:id=>structuredClone(entries.find(e=>e.id===id) || null),
-    save:value=>{ const entry=clean(value); commit([entry,...entries.filter(e=>e.id!==entry.id)].slice(0,50)); },
+    save:value=>{ const entry=clean(value); const index=entries.findIndex(e=>e.id===entry.id);commit(index<0?[entry,...entries].slice(0,50):entries.map((e,i)=>i===index?entry:e)); },
     remove:id=>commit(entries.filter(e=>e.id!==id)),
     clear:()=>commit([])
   };

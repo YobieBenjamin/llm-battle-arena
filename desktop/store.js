@@ -15,12 +15,13 @@ export function createStore(directory, crypto) {
     }
   }
   function canPersist() { return crypto.isEncryptionAvailable() && crypto.getSelectedStorageBackend?.() !== 'basic_text'; }
+  function encrypt(key) {try{return crypto.encryptString(key.trim()).toString('base64');}catch{throw new Error('Your credential store could not save the key. Unlock it and try again.');}}
   function snapshot() {
     return { canPersist: canPersist(), route:settings.openrouter?.enabled?'openrouter':'direct', openrouter:{connected:Boolean(settings.openrouter?.secret),models:{...ROUTER_MODELS,...settings.openrouter?.models}}, providers: Object.fromEntries(Object.entries(PROVIDERS).map(([id, p]) => [id, { model: settings[id]?.model || p.model, connected: Boolean(settings[id]?.secret) }])) };
   }
   return {
     snapshot,
-    key(id) { return settings[id]?.secret ? crypto.decryptString(Buffer.from(settings[id].secret, 'base64')) : ''; },
+    key(id) { try{return settings[id]?.secret ? crypto.decryptString(Buffer.from(settings[id].secret, 'base64')) : '';}catch{throw new Error('Saved key could not be unlocked. Unlock your credential store or paste this provider’s key again.');} },
     save(input) {
       if (!input || typeof input !== 'object') throw new Error('Invalid connection settings.');
       const next = structuredClone(settings);
@@ -32,7 +33,7 @@ export function createStore(directory, crypto) {
         if (entry.remove) delete next[id].secret;
         else if (entry.key.trim()) {
           if (!canPersist()) throw new Error('OS credential encryption is unavailable. Use Website assist on this machine.');
-          next[id].secret = crypto.encryptString(entry.key.trim()).toString('base64');
+          next[id].secret = encrypt(entry.key);
         }
       }
       if(input.openrouter) {
@@ -48,13 +49,14 @@ export function createStore(directory, crypto) {
         if(r.remove) delete next.openrouter.secret;
         else if(r.key.trim()) {
           if(!canPersist()) throw new Error('OS credential encryption is unavailable.');
-          next.openrouter.secret=crypto.encryptString(r.key.trim()).toString('base64');
+          next.openrouter.secret=encrypt(r.key);
         }
         if(r.enabled && !next.openrouter.secret) throw new Error('Add an OpenRouter key before enabling it.');
       }
-      fs.mkdirSync(directory, { recursive: true });
+      try { fs.mkdirSync(directory, { recursive: true });
       fs.writeFileSync(file + '.tmp', JSON.stringify(next), { mode: 0o600 });
       fs.renameSync(file + '.tmp', file);
+      } catch {throw new Error('Connections could not be saved. Check folder access and free disk space.');}
       settings = next;
       return snapshot();
     }

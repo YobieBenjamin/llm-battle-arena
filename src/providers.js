@@ -61,7 +61,7 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => { timeoutKind = 'idle'; deadline.abort(); }, delay);
   };
-  const touch = () => armIdle(idleMs);
+  const touch = () => armIdle(text.length ? idleMs : firstByteMs);
   armIdle(firstByteMs);
   const combined = AbortSignal.any([signal, deadline.signal]);
   const send = (status, extra = {}) => emit({ id, model, status, text, tokens, inputTokens, reasoningTokens, elapsed: Date.now() - started, ...extra });
@@ -83,10 +83,15 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
       response=await request();
     }
     if (!response.ok) {
-      await response.body?.cancel();
-      throw new Error(({ 401: 'API key rejected. Check Connections.', 403: 'Access denied. Check your account and model access.', 404: 'Model unavailable. Update the model ID in Connections.', 429: 'Rate limit or billing quota reached. Check your provider account and retry later.' })[response.status] || `Provider returned HTTP ${response.status}. Try again later.`);
+      let billing=response.status===402;
+      if(response.status===400 && response.body){
+        const reader=response.body.getReader();let raw='',bytes=0,oversize=false;try{while(bytes<=8192){const {done,value}=await reader.read();if(done)break;bytes+=value.byteLength;if(bytes>8192){oversize=true;break;}raw+=new TextDecoder().decode(value);}if(!oversize){const error=JSON.parse(raw).error;billing=/credit balance.*(low|insufficient)|insufficient[_ ](credit|fund)|billing|payment.required/i.test(String(error?.type||'')+' '+String(error?.message||''));}}catch{}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+      }else await response.body?.cancel();
+      if(billing)throw new Error('Insufficient credit or billing setup. Add credit or enable billing on the provider’s website, then retry.');
+      throw new Error(({ 400:'The provider rejected this request (HTTP 400). Check the model and account settings.', 401: 'API key rejected. Check Connections.', 403: 'Access denied. Check your account and model access.', 404: 'Model unavailable. Update the model ID in Connections.', 429: 'Rate limit or billing quota reached. Check your provider account and retry later.' })[response.status] || `Provider returned HTTP ${response.status}. Try again later.`);
     }
     for await (const event of readSSE(response.body, touch)) {
+      const hadText=text.length>0;
       if (event.error || event.type === 'error' || event.type === 'response.failed') throw new Error('The provider reported an error during generation. Retry or check your account.');
       if (route === 'openrouter') {
         const choice=event.choices?.[0];
@@ -128,13 +133,14 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
         }
         if (event.promptFeedback?.blockReason) throw new Error('The provider blocked this prompt. Try another prompt.');
       }
+      if(!hadText && text.length)armIdle(idleMs);
       send('streaming');
     }
     if (combined.aborted) throw combined.reason;
     if (!finished) throw new Error('Connection ended before generation finished. Partial answer preserved.');
-    if (!text) throw new Error('No answer text returned. The output limit or safety settings may have stopped generation.');
+    if (!text) {const error=new Error(truncated?'The output budget was exhausted before an answer appeared. Try a higher output limit.':'No answer text returned. The output limit or safety settings may have stopped generation.');error.code=truncated?'output_budget_exhausted':'no_answer';throw error;}
     send('done', { truncated });
   } catch (error) {
-    send(signal.aborted ? 'cancelled' : 'error', { error: signal.aborted ? 'Stopped. Partial answer preserved.' : timeoutKind ? (timeoutKind === 'idle' ? 'Timed out waiting for provider data. Partial answer preserved.' : 'Timed out at the request time limit. Partial answer preserved.') : error.message });
+    send(signal.aborted ? 'cancelled' : 'error', { code:error.code, error: signal.aborted ? 'Stopped. Partial answer preserved.' : timeoutKind ? (timeoutKind === 'idle' ? 'Timed out waiting for provider data. Partial answer preserved.' : 'Timed out at the request time limit. Partial answer preserved.') : error.message });
   } finally { clearTimeout(totalTimer); clearTimeout(idleTimer); }
 }

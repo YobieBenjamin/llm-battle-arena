@@ -1,5 +1,8 @@
 # LLM Battle Arena
 
+**Release status:** This source guide describes v2.4.1. Until v2.4.1 appears on the [Downloads page](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest), the available installer is v2.3.0; use its [matching guide](https://github.com/YobieBenjamin/llm-battle-arena/blob/v2.3.0/docs/USER_GUIDE.md). Blind battles and OpenRouter require the newer installer.
+
+
 ## New here? Start here—no GitHub knowledge needed
 
 **[CLICK HERE: beginner installation guide](START-HERE.md)** · **[CLICK HERE: download the app](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest)**

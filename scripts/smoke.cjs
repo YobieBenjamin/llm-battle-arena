@@ -134,7 +134,7 @@ const appRoot=path.resolve(__dirname,'..');
   await page.locator('#artifact-panel').waitFor({state:'hidden'});
  }
  const roles=await app.evaluate(({Menu})=>{const roles=[];const walk=menu=>menu?.items.forEach(item=>{if(item.role)roles.push(item.role.toLowerCase());walk(item.submenu)});walk(Menu.getApplicationMenu());return roles;});
- for(const role of ['close','minimize']) assert.ok(roles.includes(role),`Missing ${role} menu role`);
+ for(const role of ['close','minimize','zoomin','zoomout','resetzoom']) assert.ok(roles.includes(role),`Missing ${role} menu role`);
  if(process.platform==='darwin') for(const role of ['about','hide','hideothers']) assert.ok(roles.includes(role));
  assert.ok(!roles.some(role=>['reload','forcereload','toggledevtools'].includes(role)));
  // Markdown is rendered only through the production sanitizer; no passive requests.
@@ -149,6 +149,12 @@ const appRoot=path.resolve(__dirname,'..');
  assert.equal(await page.locator('#claude-answer img, #claude-answer script, #claude-answer iframe, #claude-answer style').count(),0);
  assert.equal(await page.evaluate(()=>window.markdownPwned),undefined);
  assert.deepEqual(markdownRequests,[]);
+ for(const tag of ['script','iframe','title','style','textarea','svg']) {
+  const visible=await page.evaluate(async tag=>{const {renderMarkdown}=await import('./src/markdown.js');const el=document.getElementById('claude-answer');el.replaceChildren(renderMarkdown(`Explain <${tag}> and preserve the rest.\n\nFinal paragraph.`));return el.textContent;},tag);
+  assert.ok(visible.includes(`<${tag}>`) && visible.includes('Final paragraph.'),`Raw ${tag} must not swallow text`);
+ }
+ // Restore the link fixture after prose checks.
+ await page.evaluate(async()=>{const {renderMarkdown}=await import('./src/markdown.js');document.getElementById('claude-answer').replaceChildren(renderMarkdown('[Safe](https://example.com)'));});
  await app.evaluate(({ipcMain})=>{ipcMain.removeHandler('open-answer-link');ipcMain.handle('open-answer-link',(_event,url)=>{globalThis.smokeLink=url;return {ok:true};});});
  await page.locator('#claude-answer a').filter({hasText:'Safe'}).click();
  assert.equal(await app.evaluate(()=>globalThis.smokeLink),'https://example.com/');
@@ -197,7 +203,7 @@ const appRoot=path.resolve(__dirname,'..');
  assert.equal(await page.locator('#export-json').isEnabled(),true);
  const tally=await page.evaluate(()=>window.arena.preferences());assert.equal(tally.tally.claude,1);
  await page.locator('#history').click();await page.locator('.history-row button').filter({hasText:'Blind test question'}).first().click();
- assert.equal(await page.locator('#claude-vote').isVisible(),false);
+ assert.equal(await page.locator('#claude-vote').isDisabled(),true);
  assert.equal((await page.evaluate(()=>window.arena.preferences())).tally.claude,1);
  // Catalog UI with a fake model response; native setup still validates independently on Save.
  await app.evaluate(({ipcMain})=>{ipcMain.removeHandler('list-models');ipcMain.handle('list-models',(_event,id)=>({ok:true,value:id==='openrouter'?['anthropic/test-model','openai/test-model','google/test-model']:['gpt-test-model']}));ipcMain.removeHandler('check-update');ipcMain.handle('check-update',()=>({ok:true,value:{version:'v99.0.0'}}));});

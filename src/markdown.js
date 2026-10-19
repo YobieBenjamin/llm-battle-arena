@@ -1,7 +1,8 @@
-import { marked } from '../node_modules/marked/lib/marked.esm.js';
+import { Marked } from '../node_modules/marked/lib/marked.esm.js';
 import DOMPurify from '../node_modules/dompurify/dist/purify.es.mjs';
+const parser = new Marked({renderer:{html:({text}) => text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}});
 export function renderMarkdown(text) {
-  const fragment = DOMPurify.sanitize(marked.parse(text, {async:false, gfm:true}), {
+  const fragment = DOMPurify.sanitize(parser.parse(text, {async:false, gfm:true}), {
     ALLOWED_TAGS: ['p','br','strong','em','del','blockquote','ul','ol','li','h1','h2','h3','h4','h5','h6','pre','code','hr','table','thead','tbody','tr','th','td','a'],
     ALLOWED_ATTR: ['href','title','start'], ALLOW_DATA_ATTR:false, ALLOW_ARIA_ATTR:false, RETURN_DOM_FRAGMENT:true
   });

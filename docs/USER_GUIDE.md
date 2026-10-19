@@ -1,5 +1,8 @@
 # LLM Battle Arena: the friendly user guide
 
+**Release status:** This source guide describes v2.4.1. Until v2.4.1 appears on the [Downloads page](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest), the available installer is v2.3.0; use its [matching guide](https://github.com/YobieBenjamin/llm-battle-arena/blob/v2.3.0/docs/USER_GUIDE.md). Blind battles and OpenRouter require the newer installer.
+
+
 One prompt, three answers, and no complicated setup. Start with the sample, then connect your own model accounts through API keys if you want live answers.
 
 [Download the app](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Back to the quick start](../README.md)
@@ -120,7 +123,7 @@ The exact same prompt goes to every included provider. Each new comparison start
 | Try an example | Fills in an example question in a mode that accepts your own prompts. |
 | How to play | Opens a short guide inside the app. |
 
-An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Answers format Markdown headings, lists, tables, emphasis and code. Scripts, images and embedded content are removed. Click ordinary HTTP/HTTPS links to open them in your system browser. Copy answer and exports preserve the original Markdown. In Website assist, use **Read formatted** after pasting; **Edit pasted answer** returns to the paste box.
+An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Answers format Markdown headings, lists, tables, emphasis and code. While streaming, answers use plain text to keep the app responsive; formatting and artifact badges appear when the answer stops. Raw HTML examples display as text instead of running or hiding the rest of the answer. Active scripts, images and embedded content remain blocked. Click ordinary HTTP/HTTPS links to open them in your system browser. Copy answer and exports preserve the original Markdown. In Website assist, use **Read formatted** after pasting; **Edit pasted answer** returns to the paste box.
 
 ## What do the tiny token counters mean?
 
@@ -162,7 +165,7 @@ Changing the prompt or included providers in Website assist clears the pasted co
 
 ## Preview artifacts with the Y badge
 
-The Arena recognizes complete, labeled fenced code blocks as files. A small gold **Y** appears at the top of the matching answer card. Examples include HTML, SVG, JSON, CSV, Markdown, JavaScript, TypeScript/JSX/TSX, Python, CSS, and text. An unfinished code block does not produce a badge until its closing fence arrives. Up to 12 files are shown per answer, each limited to one million characters.
+The Arena recognizes complete, labeled fenced code blocks as files. A small gold **Y** appears at the top of the matching answer card. Examples include HTML, SVG, JSON, CSV, Markdown, JavaScript, TypeScript/JSX/TSX, Python, CSS, and text. An unfinished code block does not produce a badge until the answer stops and its closing fence is present. Up to 12 files are shown per answer, each limited to one million characters.
 
 1. **Hover over Y** to reveal the preview. You can move your pointer into the preview to inspect it; moving away from both hides an unpinned peek.
 2. **Click Y** to pin the preview in a dock beside the cards on wide windows or below the cards on smaller windows. It stays displayed without covering the answer controls. On smaller windows, scroll the results area to move between the answers and the preview; both keep readable heights. Ctrl/Cmd+Enter still starts a comparison while the preview is pinned (except inside website-answer paste boxes).
@@ -207,7 +210,7 @@ Connection settings normally survive because they are stored in your user profil
 | Access denied | Check your provider account's access to the selected model. |
 | Model unavailable / HTTP 404 | Open Connections, use Check key & load models, and select an available model. |
 | Rate limit or billing quota reached | Check the provider dashboard for credits, billing, or limits. Wait before retrying. |
-| Timed out | No first response data arrived within two minutes, no further data arrived for 45 seconds after streaming started, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
+| Timed out | No response data arrived within two minutes while waiting for visible text, no further data arrived for 45 seconds after visible text started, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
 | Saved key could not be unlocked | Unlock your OS keychain/credential store, or open Connections and paste a replacement key. A saved-key indicator does not guarantee the OS can decrypt it. |
 | Only one or two answers | Read the other card's error, check its key/Include setting, and Retry just that provider. |
 | No text or output limit reached | Increase the output limit or shorten the task. Reasoning models may spend the budget before producing visible text. |
@@ -248,7 +251,7 @@ Blind battles are casual: answer wording may identify the provider. The app does
 
 ## Easier setup: model menus and one-key OpenRouter
 
-**Direct keys:** Open Connections, paste a provider key, then click **Check key & load models**. Choose a model from its dropdown. Save connections checks supplied keys and active saved keys using model-list requests, without generating answers. A successful list check does not prove that generation, billing credit or every listed model is available. Restricted keys may lack model-list permission; network or permission errors leave saved connections unchanged. A saved model missing from the returned list is labeled so you can select a replacement. OpenAI's text-model menu uses a name filter because its list API does not expose endpoint compatibility.
+**Direct keys:** Open Connections, paste a provider key, then click **Check key & load models**. Choose a model from its dropdown. Save connections checks newly supplied keys and saved keys whose active model or route settings changed using model-list requests, without generating answers. A successful list check does not prove that generation, billing credit or every listed model is available. Restricted keys may lack model-list permission; network or permission errors leave saved connections unchanged. A saved model missing from the returned list is labeled so you can select a replacement. OpenAI's text-model menu uses a name filter because its list API does not expose endpoint compatibility.
 
 **One key instead of three:**
 
@@ -266,3 +269,16 @@ OpenRouter authentication is checked with its key endpoint before its public mod
 In Connections, enable **Check GitHub for updates on launch** if wanted. It is off initially. When enabled, the app makes one request per launch to this repository's latest-release endpoint. GitHub receives normal connection information such as your IP address; the request includes no API keys, prompts or answers. **Check now** is an explicit request and shares the same once-per-launch result. A banner opens the project's download page; installation stays manual. Disable the checkbox to stop future automatic checks.
 
 An initial HTTP 503 or 529 gets one retry after two seconds, with a visible retrying status. Stop cancels the wait. The app does not automatically retry rate limits, network failures, or failures after streaming begins. This is a limited response to an explicit busy-server rejection, not a promise about a provider's billing.
+
+
+## If something goes wrong (v2.4.1)
+
+- **Text too small?** Use View → Zoom In or Zoom Out. On Windows press Ctrl and + or −; on Mac press Command and + or −. Ctrl/Command+0 resets zoom. On Windows, Alt reveals the menu.
+- **Credit or billing message?** Open the provider’s API website, check billing, add credit if needed, then return and Retry. A working key alone does not mean the account has API credit.
+- **History or preferences cannot be opened?** The app offers **Use temporary session**, **Open folder and quit**, or **Quit**. Temporary mode does not overwrite the affected file. Export work before quitting; temporary history or votes will not survive closing the app. The dialog shows the folder to check.
+- **Some history entries are damaged?** The app preserves the original in a backup and keeps readable comparisons. Reopening a comparison keeps its position in history.
+- **The display crashes?** Choose **Reload** in the recovery dialog, then reopen History. The last unsaved fragment may be lost.
+- **Connections are saving?** Wait for Save to finish; Close and Escape are disabled during the check. Unchanged saved keys are not rechecked. You can use **Check key & load models** to check one deliberately.
+- **A vote was saved but history could not update?** The winner still appears and counts once. Reopening that comparison recovers the recorded winner.
+
+Opening the app again brings the existing window forward. Only one instance may write a profile at a time. Markdown and JSON exports identify whether a live comparison used direct providers or OpenRouter.

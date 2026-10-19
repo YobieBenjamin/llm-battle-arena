@@ -6,7 +6,28 @@ on:
 permissions:
   contents: read
 jobs:
+  configuration:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.keys.outputs.configured }}
+    steps:
+      - id: keys
+        name: Report whether any live checks are configured
+        env:
+          CLAUDE_KEY: ${{ secrets.ARENA_LIVE_CLAUDE_KEY }}
+          OPENAI_KEY: ${{ secrets.ARENA_LIVE_OPENAI_KEY }}
+          GEMINI_KEY: ${{ secrets.ARENA_LIVE_GEMINI_KEY }}
+        shell: bash
+        run: |
+          if [[ -n "$CLAUDE_KEY" || -n "$OPENAI_KEY" || -n "$GEMINI_KEY" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Live provider check SKIPPED: no dedicated keys configured. Provider health was not tested." >> "$GITHUB_STEP_SUMMARY"
+          fi
   live:
+    needs: configuration
+    if: needs.configuration.outputs.configured == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
