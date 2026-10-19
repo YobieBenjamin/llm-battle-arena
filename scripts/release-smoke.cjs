@@ -7,6 +7,15 @@ const verifyBundle=require('./verify-bundle.cjs');
 const {hash,archivePath}=require('./compare-builds.cjs');
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function eventually(fn,timeout=30000) {const end=Date.now()+timeout;while(Date.now()<end){const value=await fn();if(value)return value;await pause(100);}throw new Error('Timed out waiting for release UI operation');}
+async function readExport(file,format){
+ return eventually(()=>{
+  if(!fs.existsSync(file))return false;
+  const text=fs.readFileSync(file,'utf8');
+  if(!text.includes('ILLUSTRATIVE SAMPLE'))return false;
+  if(format==='json'){try{const data=JSON.parse(text);if(!data.results)return false;}catch{return false;}}
+  return text;
+ });
+}
 async function freePort(){const server=net.createServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));const port=server.address().port;await new Promise(r=>server.close(r));return port;}
 function portOpen(port){return new Promise(resolve=>{const socket=net.connect({host:'127.0.0.1',port});const finish=value=>{socket.destroy();resolve(value);};socket.once('connect',()=>finish(true));socket.once('error',()=>finish(false));socket.setTimeout(300,()=>finish(false));});}
 async function nativeAction(child,action,folder,expectedFile) {
@@ -53,7 +62,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
    const date=new Date().toISOString().slice(0,10),file=path.join(exports,`comparison-${date}.${format}`);
    await page.locator(format==='md'?'#export-md':'#export-json').click();
    await nativeAction(child,'save',exports,file);await eventually(()=>fs.existsSync(file));
-   const text=fs.readFileSync(file,'utf8');assert.match(text,/ILLUSTRATIVE SAMPLE/);
+   const text=await readExport(file,format);assert.match(text,/ILLUSTRATIVE SAMPLE/);
    if(format==='json'){const data=JSON.parse(text);assert.equal(data.mode,'sample');for(const id of ['claude','openai','gemini'])assert.match(data.results[id].text,/ILLUSTRATIVE SAMPLE/);}
    await page.locator('#notice').filter({hasText:'Comparison exported.'}).waitFor();
   }
@@ -69,5 +78,5 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
  }catch(error){if(page)console.error('Visible failure:',page.url(),await page.locator('#notice').textContent({timeout:3000}).catch(()=>''),await page.locator('#history-message').textContent({timeout:3000}).catch(()=>''));if(page)await page.screenshot({path:path.join(dir,'failure.png'),timeout:5000}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}
  finally{clearTimeout(watchdog);if(child&&child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await pause(500);}if(browser)await browser.close().catch(()=>{});if(!errors.length && !child)fs.rmSync(dir,{recursive:true,force:true});}
 }
-module.exports={runReleaseSmoke,portOpen};
+module.exports={runReleaseSmoke,portOpen,readExport};
 if(require.main===module){require('./packaged-preflight.cjs').assertPackagedAppClosed();runReleaseSmoke(path.resolve(process.argv[2]||process.env.ARENA_RELEASE_BUNDLE||'')).catch(error=>{console.error(error);process.exitCode=1;});}

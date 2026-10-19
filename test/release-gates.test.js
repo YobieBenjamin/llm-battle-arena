@@ -37,3 +37,13 @@ test('public asset gate rejects replacing both installer and its public proof',a
   assert.throws(()=>compareDownloads(download,reference),/download set differs/);
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+
+// Opening an export creates an empty file before the asynchronous write completes.
+test('export gate waits for the write and complete JSON rather than file existence',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'arena-export-gate-')),file=path.join(root,'sample.json');
+ fs.writeFileSync(file,'');
+ const partial=setTimeout(()=>fs.writeFileSync(file,'{"note":"ILLUSTRATIVE SAMPLE"'),100);
+ const complete=setTimeout(()=>fs.writeFileSync(file,JSON.stringify({note:'ILLUSTRATIVE SAMPLE',results:{}})),300);
+ try{assert.deepEqual(JSON.parse(await smoke.readExport(file,'json')),{note:'ILLUSTRATIVE SAMPLE',results:{}});}
+ finally{clearTimeout(partial);clearTimeout(complete);fs.rmSync(root,{recursive:true,force:true});}
+});
