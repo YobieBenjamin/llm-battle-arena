@@ -34,6 +34,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   child=spawn(executable,[`--user-data-dir=${profile}`,'--disable-backgrounding-occluded-windows','--disable-renderer-backgrounding','--disable-background-timer-throttling','--remote-debugging-address=127.0.0.1','--remote-debugging-port=0',`${flag}=127.0.0.1:${inspectorPort}`],{stdio:['ignore','pipe','pipe']});
   child.on('error',error=>errors.push(error.message));child.stderr.on('data',data=>{stderr=(stderr+data).slice(-64000);});
   const endpoint=await eventually(()=>{if(errors.length)throw new Error(errors.join('; '));if(child.exitCode!==null)throw new Error(`Release exited early: ${stderr}`);return stderr.match(/DevTools listening on (ws:\/\/127\.0\.0\.1:\d+\/devtools\/browser\/[^\s]+)/)?.[1];});
+  if(process.platform==='darwin' && process.env.CI)await nativeAction(child,'activate',exports);
   browser=await chromium.connectOverCDP(endpoint);const context=browser.contexts()[0];
   page=await eventually(()=>context.pages().find(p=>p.url().startsWith('file:')));page.setDefaultTimeout(20000);page.on('pageerror',error=>errors.push(error.message));
   console.log('Release renderer connected');await require('./ui-ready.cjs')(page);console.log('Release UI ready');

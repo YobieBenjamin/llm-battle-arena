@@ -6,7 +6,9 @@ on run argv
   set targetProcess to first application process whose unix id is targetPid
   tell targetProcess
    set frontmost to true
-   if actionName is "quit" then
+   if actionName is "activate" then
+    return name of every window
+   else if actionName is "quit" then
     keystroke "q" using command down
    else if actionName is "save" then
     set folderName to item 3 of argv
