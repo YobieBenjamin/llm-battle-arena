@@ -1,8 +1,9 @@
+require('./packaged-preflight.cjs').assertPackagedAppClosed();
 // Fault injection stays inside disposable profiles. No real keys or external requests.
 const {_electron}=require('playwright-core');const assert=require('node:assert/strict');const fs=require('node:fs');const os=require('node:os');const path=require('node:path');
 (async()=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'arena-audit-'));let app;
 try{
- app=await _electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH||require('electron'),args:[path.resolve(__dirname,'..'),`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'));
+ app=await _electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH||require('electron'),args:[path.resolve(__dirname,'..'),`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'),null,{timeout:30000,polling:100});
  await app.evaluate(({safeStorage})=>{
   Object.defineProperty(safeStorage,'isEncryptionAvailable',{value:()=>globalThis.testEncryptionAvailable!==false});Object.defineProperty(safeStorage,'getSelectedStorageBackend',{value:()=>globalThis.testStorageBackend||'test'});Object.defineProperty(safeStorage,'encryptString',{value:key=>Buffer.from(key)});Object.defineProperty(safeStorage,'decryptString',{value:buffer=>buffer.toString()});
   globalThis.catalogCalls=[];globalThis.fetch=async url=>{globalThis.catalogCalls.push(url);if(globalThis.catalogOffline)throw new Error('offline');return new Response(JSON.stringify({data:[{id:'test-model'}],models:[{name:'models/test-model',supportedGenerationMethods:['generateContent']}]}));};
@@ -35,7 +36,7 @@ try{
  const again=await page.evaluate(()=>window.arena.vote('vote-fault','openai'));assert.equal(again.winner,'claude');assert.equal(again.tally.claude,1);
  assert.equal((await page.evaluate(()=>window.arena.historyGet('vote-fault'))).blind.winner,'claude');
  await app.evaluate(()=>{const fs=process.getBuiltinModule('fs');fs.writeFileSync=function(file,...rest){if(String(file).endsWith('preferences.json.tmp'))throw new Error('ENOSPC /private/path');return globalThis.originalWrite.call(this,file,...rest);};});
- await page.locator('#connections').click();await page.locator('#check-updates').click();await page.waitForFunction(()=>!document.getElementById('check-updates').checked);assert.match(await page.locator('#notice').textContent(),/Preferences could not be saved/);assert.ok(!(await page.locator('#notice').textContent()).includes('ENOSPC'));
+ await page.locator('#connections').click();await page.locator('#check-updates').click();await page.waitForFunction(()=>!document.getElementById('check-updates').checked,null,{polling:100});assert.match(await page.locator('#notice').textContent(),/Preferences could not be saved/);assert.ok(!(await page.locator('#notice').textContent()).includes('ENOSPC'));
  await app.evaluate(()=>{process.getBuiltinModule('fs').writeFileSync=globalThis.originalWrite;globalThis.catalogOffline=false;globalThis.fetch=async()=>{await new Promise(r=>setTimeout(r,600));return new Response(JSON.stringify({data:[],models:[]}));};});
  await page.locator('#claude-key').fill('replacement');await page.locator('#settings-form button[type=submit]').click();assert.ok(await page.locator('#close-settings').isDisabled());await page.keyboard.press('Escape');assert.ok(await page.locator('#settings').isVisible());await page.locator('#settings').waitFor({state:'hidden'});
  await app.evaluate(async({app,dialog,BrowserWindow})=>{

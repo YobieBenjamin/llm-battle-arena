@@ -1,3 +1,4 @@
+require('./packaged-preflight.cjs').assertPackagedAppClosed();
 // Production renderer, history and IPC; synthetic stream only. No credentials or network.
 const {_electron}=require('playwright-core');
 const assert=require('node:assert/strict');
@@ -7,7 +8,7 @@ const fs=require('node:fs');const os=require('node:os');const path=require('node
  const args=[path.resolve(__dirname,'..'),`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])];
  let app;
  try{
-  app=await _electron.launch({executablePath,args});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'));
+  app=await _electron.launch({executablePath,args});const page=await app.firstWindow();await page.waitForFunction(()=>document.getElementById('claude-answer'),null,{timeout:30000,polling:100});
   // A second process must exit without acquiring a separate writable profile snapshot.
   const second=spawn(executablePath,args,{stdio:'ignore'});
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{second.kill();reject(new Error('Second instance did not exit'));},10000);second.on('error',reject);second.on('exit',()=>{clearTimeout(timer);resolve();});});
@@ -26,7 +27,7 @@ const fs=require('node:fs');const os=require('node:os');const path=require('node
   while(Date.now()-start<120000){const t=Date.now();const state=await page.evaluate(()=>({done:['claude','openai','gemini'].every(id=>document.getElementById(id+'-status').textContent.toLowerCase().startsWith('done')),lengths:['claude','openai','gemini'].map(id=>document.getElementById(id+'-answer').textContent.length)}));latencies.push(Date.now()-t);if(state.done)break;await new Promise(r=>setTimeout(r,100));}
   const elapsed=Date.now()-start;const timing=await app.evaluate(()=>({start:globalThis.perfStart,end:globalThis.perfEnd}));
   assert.ok(timing.end,'Stream must finish');
-  await page.waitForFunction(()=>['claude','openai','gemini'].every(id=>document.getElementById(id+'-status').textContent.toLowerCase().startsWith('done')),null,{timeout:10000});
+  await page.waitForFunction(()=>['claude','openai','gemini'].every(id=>document.getElementById(id+'-status').textContent.toLowerCase().startsWith('done')),null,{timeout:10000,polling:100});
   const p95=latencies.sort((a,b)=>a-b)[Math.floor(latencies.length*.95)];
   assert.ok(elapsed<1.5*(timing.end-timing.start),`Renderer finished too slowly: ${elapsed}ms`);assert.ok(p95<250,`UI p95 ${p95}ms exceeds 250ms`);
   console.log(`PASS: three 24KB streams; elapsed ${elapsed}ms; stream ${timing.end-timing.start}ms; UI p95 ${p95}ms; second instance exited.`);

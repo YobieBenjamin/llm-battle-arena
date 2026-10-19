@@ -1,3 +1,4 @@
+require('./packaged-preflight.cjs').assertPackagedAppClosed();
 const { _electron: electron } = require('playwright-core');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -14,7 +15,7 @@ const appRoot=path.resolve(__dirname,'..');
  try {
  console.log('Electron launched');
  page=await app.firstWindow({timeout:30000}); page.setDefaultTimeout(15000);
- await page.waitForFunction(()=>document.getElementById('claude-answer') && window.arena,null,{timeout:60000});
+ await page.waitForFunction(()=>document.getElementById('claude-answer') && window.arena,null,{timeout:60000,polling:100});
  console.log('Window ready',page.url());
  if(process.env.ARENA_DEBUG) { app.process().stderr?.on('data',data=>process.stderr.write(data)); page.on('console',message=>{if(message.type()==='error')console.error('Renderer:',message.text());}); }const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.locator('#compare').click();
@@ -119,7 +120,7 @@ const appRoot=path.resolve(__dirname,'..');
  await page.locator('#settings').waitFor({state:'hidden'});
  for(const [width,height] of [[880,650],[1280,720],[1440,900]]) {
   await app.evaluate(({BrowserWindow},{width,height})=>BrowserWindow.getAllWindows()[0].setBounds({width,height}),{width,height});
-  await page.waitForFunction(width=>innerWidth===width,width,{timeout:15000});
+  await page.waitForFunction(width=>innerWidth===width,width,{timeout:15000,polling:100});
   await page.locator('#mode').selectOption('sample');
   await page.locator('#compare').click();
   await page.locator('#gemini-artifact').click();

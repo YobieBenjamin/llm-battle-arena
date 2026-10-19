@@ -39,11 +39,11 @@ A failed post-publication job does not automatically remove a release: inspect i
 
 ## Audit regression gates
 
-`npm run test:ui` runs the UI smoke suite, disposable-profile fault injection, and a three-provider 24 KB streaming test. The latter uses 12-character chunks every 30 ms, requires completion within 1.5 times stream duration and UI round-trip p95 below 250 ms, and verifies a second instance exits. The same command runs against the packaged Apple Silicon app in CI. Fixtures replace network and credential storage only where stated; they do not certify real provider billing or OS keychain prompts.
+`npm run test:ui` runs the UI smoke suite, disposable-profile fault injection, and a three-provider 24 KB streaming test. The latter uses 12-character chunks every 30 ms, requires completion within 1.5 times stream duration and UI round-trip p95 below 250 ms, and verifies a second instance exits. The same command runs against the packaged Apple Silicon and Intel apps in CI. Fixtures replace network and credential storage only where stated; they do not certify real provider billing or OS keychain prompts.
 
 Before recommending a release widely, a person should download it with Safari on an Apple Silicon Mac and install it on Windows, including first-launch prompts and an upgrade from the preceding release. CI signature/checksum checks do not replace those tests. Do not bypass OS protections to claim a successful first launch.
 
 
 ## Keep only the current installers public
 
-The **Archive superseded installers** workflow runs after a successful tagged Desktop installers workflow, including public-file verification. It checks that the verified tag is still the latest release, then converts older public stable releases to drafts. Source tags remain intact. It does not execute code or artifacts from the triggering run and ignores failed runs, branch builds and fork runs. If a newer release has appeared meanwhile, it changes nothing.
+The **Archive superseded installers** workflow runs after a successful tagged Desktop installers workflow, including public-file verification. It checks that the verified tag is still the latest release, then labels older stable releases OLD (DO NOT USE) and converts them to drafts. Source tags remain intact. It does not execute code or artifacts from the triggering run and ignores failed runs, branch builds and fork runs. If a newer release has appeared meanwhile, it changes nothing.

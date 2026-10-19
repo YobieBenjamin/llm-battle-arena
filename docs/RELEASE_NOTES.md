@@ -1,3 +1,12 @@
+## v2.4.5 — Mac build reliability and historical archives
+
+- Includes the v2.4.4 audit fixes listed below (v2.4.4 was never published).
+- Pin Apple Silicon CI to macOS 15 and Intel CI to macOS 15 Intel; test both packaged architectures natively.
+- Run public download verification on Intel capacity rather than competing for ARM runners.
+- Use timer-based readiness polling so obscured Mac windows do not stall automated startup checks.
+- Detect already-running Arena apps before local packaged Mac tests and give an actionable message instead of a startup timeout.
+- Mark superseded releases and historical source archives **OLD (DO NOT USE)**. Retain tags for auditing; keep obsolete installers private.
+
 ## v2.4.4 — verification follow-up
 
 - Normalize text files to LF on every platform before packaging.
