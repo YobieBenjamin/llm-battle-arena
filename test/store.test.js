@@ -23,3 +23,10 @@ test('invalid later provider leaves earlier settings untouched',t=>{
   const {store}=setup(t);const value=input();value.claude.key='secret';value.gemini.model='../../invalid';
   assert.throws(()=>store.save(value));assert.equal(store.key('claude'),'');
 });
+test('malformed saved settings are rejected at load with a recovery path',t=>{
+ const {dir}=setup(t);
+ for(const value of [null,[],{claude:null},{claude:{model:'../bad'}},{claude:{model:'valid',secret:123}}]) {
+  fs.writeFileSync(path.join(dir,'connections.json'),JSON.stringify(value));
+  assert.throws(()=>createStore(dir,fakeCrypto),/Invalid saved/);
+ }
+});

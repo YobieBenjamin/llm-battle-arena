@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('arena', {
   cancel: () => ipcRenderer.invoke('cancel'),
   open: (id, kind) => ipcRenderer.invoke('open-provider', id, kind),
   copy: text => ipcRenderer.invoke('copy', text),
+  saveArtifact: value => ipcRenderer.invoke('save-artifact', value),
   export: (text, format) => ipcRenderer.invoke('export', text, format),
   onUpdate: callback => {
     const listener = (_event, value) => callback(value);

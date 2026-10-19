@@ -1,3 +1,4 @@
+import { validTokenCount } from './tokens.js';
 export const PROVIDERS = {
   claude: { name: 'Claude', model: 'claude-sonnet-4-6', website: 'https://claude.ai/', keys: 'https://platform.claude.com/settings/keys' },
   openai: { name: 'OpenAI', model: 'gpt-5-mini', website: 'https://chatgpt.com/', keys: 'https://platform.openai.com/api-keys' },
@@ -27,7 +28,12 @@ export async function* readSSE(body) {
         const frame = pending.slice(0, boundary);
         pending = pending.slice(boundary + 2);
         const data = frame.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
-        if (data && data !== '[DONE]') yield JSON.parse(data);
+        if (data && data !== '[DONE]') {
+          let parsed;
+          try { parsed = JSON.parse(data); } catch { throw new Error('Provider returned an unreadable stream. Partial answer preserved.'); }
+          if (!parsed || typeof parsed !== 'object') throw new Error('Provider returned an unreadable stream. Partial answer preserved.');
+          yield parsed;
+        }
       }
       if (pending.length > 2000000) throw new Error('Provider stream frame is too large.');
       if (done) break;
@@ -45,10 +51,10 @@ export function buildRequest(id, prompt, model, maxTokens, key) {
 
 export async function runProvider({ id, prompt, model, maxTokens, key, signal, emit, fetchImpl = fetch, timeoutMs = 120000 }) {
   const started = Date.now();
-  let text = '', tokens = null, finished = false, truncated = false;
+  let text = '', tokens = null, inputTokens = null, reasoningTokens = null, finished = false, truncated = false;
   const timeout = AbortSignal.timeout(timeoutMs);
   const combined = AbortSignal.any([signal, timeout]);
-  const send = (status, extra = {}) => emit({ id, model, status, text, tokens, elapsed: Date.now() - started, ...extra });
+  const send = (status, extra = {}) => emit({ id, model, status, text, tokens, inputTokens, reasoningTokens, elapsed: Date.now() - started, ...extra });
   try {
     if (!key) throw new Error('Add an API key in Connections, or use Website assist.');
     const req = buildRequest(id, prompt, model, maxTokens, key);
@@ -61,23 +67,36 @@ export async function runProvider({ id, prompt, model, maxTokens, key, signal, e
     for await (const event of readSSE(response.body)) {
       if (event.error || event.type === 'error' || event.type === 'response.failed') throw new Error('The provider reported an error during generation. Retry or check your account.');
       if (id === 'claude') {
+        if (event.type === 'message_start' && event.message?.usage) {
+          const usage = event.message.usage;
+          if (validTokenCount(usage.input_tokens) !== null) inputTokens = usage.input_tokens + (validTokenCount(usage.cache_creation_input_tokens) ?? 0) + (validTokenCount(usage.cache_read_input_tokens) ?? 0);
+        }
         if (event.delta?.type === 'text_delta') text += event.delta.text;
-        if (event.usage?.output_tokens != null) tokens = event.usage.output_tokens;
+        if (event.usage?.output_tokens != null) tokens = validTokenCount(event.usage.output_tokens);
         if (event.delta?.stop_reason === 'max_tokens') truncated = true;
         if (event.type === 'message_stop') finished = true;
       } else if (id === 'openai') {
         if (event.type === 'response.output_text.delta') text += event.delta;
         if (event.type === 'response.completed' || event.type === 'response.incomplete') {
           finished = true;
-          tokens = event.response?.usage?.output_tokens ?? null;
-          truncated = event.type === 'response.incomplete';
+          tokens = validTokenCount(event.response?.usage?.output_tokens);
+          inputTokens = validTokenCount(event.response?.usage?.input_tokens);
+          reasoningTokens = validTokenCount(event.response?.usage?.output_tokens_details?.reasoning_tokens);
+          truncated = event.type === 'response.incomplete' && event.response?.incomplete_details?.reason === 'max_output_tokens';
+          if (event.type === 'response.incomplete' && !truncated) throw new Error('The provider stopped this answer before completion. Partial answer preserved.');
         }
         if (event.type === 'response.refusal.delta') text += event.delta;
       } else {
         const candidate = event.candidates?.[0];
         text += (candidate?.content?.parts || []).filter(p => !p.thought).map(p => p.text || '').join('');
-        tokens = event.usageMetadata?.candidatesTokenCount ?? tokens;
-        if (candidate?.finishReason) { finished = true; truncated = candidate.finishReason === 'MAX_TOKENS'; }
+        tokens = validTokenCount(event.usageMetadata?.candidatesTokenCount) ?? tokens;
+        inputTokens = validTokenCount(event.usageMetadata?.promptTokenCount) ?? inputTokens;
+        reasoningTokens = validTokenCount(event.usageMetadata?.thoughtsTokenCount) ?? reasoningTokens;
+        if (candidate?.finishReason) {
+          finished = true;
+          truncated = candidate.finishReason === 'MAX_TOKENS';
+          if (!['STOP', 'MAX_TOKENS'].includes(candidate.finishReason)) throw new Error('The provider stopped or filtered this answer. Partial answer preserved.');
+        }
         if (event.promptFeedback?.blockReason) throw new Error('The provider blocked this prompt. Try another prompt.');
       }
       send('streaming');

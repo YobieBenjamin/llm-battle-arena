@@ -69,6 +69,37 @@ test('providers run independently when another provider fails', async () => {
 });
 test('output cap is reported explicitly', async()=>{
   const updates=[];
-  await runProvider({...base,id:'openai',emit:e=>updates.push(e),fetchImpl:async()=>stream(frame(fixtures.openai[0])+frame({type:'response.incomplete',response:{usage:{output_tokens:10}}}))});
+  await runProvider({...base,id:'openai',emit:e=>updates.push(e),fetchImpl:async()=>stream(frame(fixtures.openai[0])+frame({type:'response.incomplete',response:{usage:{output_tokens:10},incomplete_details:{reason:'max_output_tokens'}}}))});
   assert.equal(updates.at(-1).truncated,true);
+});
+test('Claude reports full input including cached tokens and cumulative output usage',async()=>{
+ const updates=[];
+ const events=[{type:'message_start',message:{usage:{input_tokens:12,cache_creation_input_tokens:3,cache_read_input_tokens:5}}},...fixtures.claude];
+ await runProvider({...base,id:'claude',emit:e=>updates.push(e),fetchImpl:async()=>stream(events.map(frame).join(''))});
+ assert.equal(updates.at(-1).inputTokens,20);assert.equal(updates.at(-1).tokens,1);
+});
+test('OpenAI preserves reported input/output counts and separate reasoning metadata',async()=>{
+ const updates=[];const events=[fixtures.openai[0],{type:'response.completed',response:{usage:{input_tokens:25,output_tokens:30,output_tokens_details:{reasoning_tokens:20}}}}];
+ await runProvider({...base,id:'openai',emit:e=>updates.push(e),fetchImpl:async()=>stream(events.map(frame).join(''))});
+ assert.equal(updates.at(-1).inputTokens,25);assert.equal(updates.at(-1).tokens,30);assert.equal(updates.at(-1).reasoningTokens,20);
+});
+test('Gemini retains late usage metadata and keeps thoughts separate from answer candidates',async()=>{
+ const updates=[];const events=[fixtures.gemini[0],{usageMetadata:{promptTokenCount:13,candidatesTokenCount:8,thoughtsTokenCount:11}}];
+ await runProvider({...base,id:'gemini',emit:e=>updates.push(e),fetchImpl:async()=>stream(events.map(frame).join(''))});
+ assert.equal(updates.at(-1).inputTokens,13);assert.equal(updates.at(-1).tokens,8);assert.equal(updates.at(-1).reasoningTokens,11);
+});
+test('filtered partial Gemini output is not falsely marked complete',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'gemini',emit:e=>updates.push(e),fetchImpl:async()=>stream(frame({candidates:[{content:{parts:[{text:'Partial'}]},finishReason:'SAFETY'}]}))});
+ assert.equal(updates.at(-1).status,'error');assert.equal(updates.at(-1).text,'Partial');
+});
+test('OpenAI content-filter incompletion does not claim output limit reached',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'openai',emit:e=>updates.push(e),fetchImpl:async()=>stream(frame(fixtures.openai[0])+frame({type:'response.incomplete',response:{incomplete_details:{reason:'content_filter'}}}))});
+ assert.equal(updates.at(-1).status,'error');assert.ok(!updates.at(-1).truncated);
+});
+test('malformed SSE errors never echo raw provider content',async()=>{
+ const updates=[];
+ await runProvider({...base,id:'openai',emit:e=>updates.push(e),fetchImpl:async()=>stream('data: secret-test-key invalid JSON\n\n')});
+ assert.equal(updates.at(-1).status,'error');assert.ok(!JSON.stringify(updates).includes(base.key));
 });

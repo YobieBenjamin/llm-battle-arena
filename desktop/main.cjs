@@ -15,6 +15,9 @@ function createWindow() {
   window.setMenuBarVisibility(false);
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
+  window.webContents.on('will-frame-navigate', event => {
+    if (!['about:srcdoc', 'about:blank'].includes(event.url)) event.preventDefault();
+  });
   window.on('closed', () => { cancel(); window = null; });
   window.loadFile(path.join(__dirname, '..', 'index.html'));
 }
@@ -48,6 +51,14 @@ app.whenReady().then(async () => {
     return shell.openExternal(providers[id][kind]);
   });
   handle('copy', text => { if (typeof text !== 'string' || text.length > 4000000) throw new Error('Invalid text.'); clipboard.writeText(text); });
+  handle('save-artifact', async value => {
+    if (!value || typeof value.name !== 'string' || !/^[a-z0-9-]+\.(html|svg|json|csv|md|txt|js|ts|jsx|tsx|py|css)$/.test(value.name) || typeof value.content !== 'string' || value.content.length > 1000000) throw new Error('Invalid artifact file.');
+    const extension = value.name.split('.').pop();
+    const result = await dialog.showSaveDialog(window, { defaultPath: value.name, filters: [{ name: 'Artifact file', extensions: [extension] }] });
+    if (result.canceled) return false;
+    await fs.writeFile(result.filePath, value.content, 'utf8');
+    return true;
+  });
   handle('export', async (text, format) => {
     if (!['md', 'json'].includes(format) || typeof text !== 'string' || text.length > 4000000) throw new Error('Invalid export.');
     const result = await dialog.showSaveDialog(window, { defaultPath: `comparison-${new Date().toISOString().slice(0, 10)}.${format}`, filters: [{ name: format === 'md' ? 'Markdown' : 'JSON', extensions: [format] }] });

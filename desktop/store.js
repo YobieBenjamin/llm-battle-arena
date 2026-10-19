@@ -5,7 +5,13 @@ import { PROVIDERS } from '../src/providers.js';
 export function createStore(directory, crypto) {
   const file = path.join(directory, 'connections.json');
   let settings = {};
-  if (fs.existsSync(file)) settings = JSON.parse(fs.readFileSync(file, 'utf8'));
+  if (fs.existsSync(file)) {
+    settings = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw new Error('Invalid saved connections.');
+    for (const [id, entry] of Object.entries(settings)) {
+      if (!Object.hasOwn(PROVIDERS, id) || !entry || typeof entry !== 'object' || Array.isArray(entry) || typeof entry.model !== 'string' || !/^[a-zA-Z0-9._:-]{1,120}$/.test(entry.model) || (entry.secret !== undefined && (typeof entry.secret !== 'string' || !/^[A-Za-z0-9+/]+=*$/.test(entry.secret)))) throw new Error('Invalid saved connection.');
+    }
+  }
   function canPersist() { return crypto.isEncryptionAvailable() && crypto.getSelectedStorageBackend?.() !== 'basic_text'; }
   function snapshot() {
     return { canPersist: canPersist(), providers: Object.fromEntries(Object.entries(PROVIDERS).map(([id, p]) => [id, { model: settings[id]?.model || p.model, connected: Boolean(settings[id]?.secret) }])) };

@@ -1,5 +1,14 @@
 # LLM Battle Arena
 
+## New here? Start here—no GitHub knowledge needed
+
+**[CLICK HERE: beginner installation guide](START-HERE.md)** · **[CLICK HERE: download the app](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest)**
+
+GitHub is simply the website where this free app's files are kept. You do **not** need a GitHub account. You do **not** need to understand the folders above, click the green **Code** button, or download “Source code.” Choose your computer from the download table below; those are the ready-to-open installers.
+
+**The short version:** download → open the installer → try Sample → add API keys in Connections → ask a question.
+
+
 **One question. Three answers. Have fun seeing where Claude, OpenAI, and Gemini agree—or completely disagree.**
 
 A small app for Mac and Windows. No terminal, Python, Node.js, server, or app account needed. Download it, open it, and try the free offline sample. Connect your own API keys when you want real answers.
@@ -28,6 +37,7 @@ These are unsigned community builds. Your computer may ask you to approve the fi
 1. Leave **Sample · no setup** selected.
 2. Click **Show sample**.
 3. Read the three example cards. No keys, signup, internet, or API charges are involved.
+4. Try the tiny **Y** badge on the Gemini sample: hover to preview its example file, click to keep it open, and click again to hide it.
 
 Samples are fixed, human-written examples, not actual model answers. For your own questions, use the next step.
 
@@ -51,12 +61,26 @@ You can start with one provider and uncheck **Include** on the others. For three
 
 Try **“Explain Wi-Fi to a pirate,” “Invent the world's worst superhero,”** or **“What is a belief you think people should question?”**
 
+- Tiny counters at the top of every card show **Q** (question) and **A** (answer) tokens. **~** means a rough estimate; counts without ~ are reported by the provider. Hover over a counter for details. These are not prices.
 - **Stop** preserves partial answers. **Retry** sends just that card's original prompt again and may incur another API charge.
 - **Copy answer** copies one response. **Export Markdown** saves a readable comparison; **JSON** saves structured data.
 - **Ctrl+Enter** (Windows) or **Cmd+Enter** (Mac) starts a comparison.
 - Each question starts fresh. There is no chat memory or automatic history. Export anything you want to keep before closing.
 
 ![The desktop arena, showing illustrative sample answers](desktop-preview.png)
+
+## A little Y means there is an artifact
+
+When an answer contains a complete, labeled code/file block, a small **Y** badge appears on its card.
+
+- **Hover:** peek at the artifact. Move away from the badge and preview to dismiss the peek.
+- **Click:** keep it displayed while you read the other answers.
+- **Click the same Y again:** hide it. The Close button also hides it.
+- If there is more than one file, use its tabs. **Show source** displays the underlying HTML/SVG/JSON. **Save file** opens a save dialog.
+
+HTML/SVG show an isolated static preview with scripts and networking disabled. JSON is formatted; CSV, Markdown, and source code display as text. JavaScript, Python, React, and other source files are not executed. The app detects code blocks in the answer—it does not fetch providers' private cloud artifacts or links.
+
+Try: **“Make a small self-contained HTML greeting card. Put the full HTML in one fenced html code block.”**
 
 ## No keys? You can still play
 
@@ -69,6 +93,7 @@ This mode is manual. Each website controls signup, models, and free limits; no u
 - [Full user guide: installation, keys, updates, privacy, uninstalling, troubleshooting](docs/USER_GUIDE.md)
 - [Developer guide: source, architecture, tests, packaging, releases](docs/DEVELOPMENT.md)
 - [Release notes](docs/RELEASE_NOTES.md)
+- [One-time code and documentation audit](docs/AUDIT.md)
 
 Your keys are encrypted on your computer. Live prompts go to the selected providers; the app has no hosted server or analytics. Answers display as plain text, including Markdown source. Models can be wrong; don't treat three similar answers as proof.
 

@@ -4,6 +4,17 @@ One prompt, three answers, and no complicated setup. Start with the sample, then
 
 [Download the app](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Back to the quick start](../README.md)
 
+## Never used GitHub before?
+
+That is fine. GitHub is just the download website for this app. You do not need to sign up, install Git, use a terminal, or understand source code.
+
+1. Open the [beginner start page](../START-HERE.md) in your web browser.
+2. Click the download link for your computer. A download means the installer file is being saved to your computer, usually in **Downloads**.
+3. Open that file from your browser's downloads list or the Downloads folder.
+4. Use the Mac or Windows instructions below.
+
+If you end up on a GitHub release page, scroll down to **Assets**. Click the Setup `.exe` for Windows or `.dmg` for Mac. Ignore **Source code (zip)** and **Source code (tar.gz)**—those are for programmers. If Assets is collapsed, click its heading to expand it. The **Code**, **Fork**, and **Pull requests** buttons are not part of installation.
+
 ## Choose your download
 
 | Computer | File to download |
@@ -111,6 +122,21 @@ The exact same prompt goes to every included provider. Each new comparison start
 
 An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Model answers render as readable plain text; Markdown symbols are preserved rather than formatted into HTML.
 
+## What do the tiny token counters mean?
+
+At the top of each answer card, **Q** means question and **A** means answer. For example, **Q ~24 · A 180 tokens** means the question is estimated at about 24 tokens and the provider reported 180 output tokens. The prompt box also shows its current estimated token count.
+
+A token is a piece of text a model processes—sometimes a word, sometimes part of one. It is not the same as a word or a character.
+
+- **~ before a number:** a rough local estimate using about four characters per token. It is mainly useful for ordinary English. Other languages, code, emoji, and model-specific tokenizers can differ substantially.
+- **No ~:** usage reported by the provider. Input counts may include message formatting or cached input. Some providers' output counts include hidden reasoning; Gemini reports candidate-answer tokens and exposes thinking separately in the JSON export. These counts are not a perfectly equal measurement across providers.
+- While an answer streams, its counter estimates the text received so far. When terminal usage arrives, the provider's number replaces the estimate. If a request is stopped or fails before usage arrives, the estimate remains.
+- Sample and Website assist counts are always estimates. They make no extra token-counting API requests.
+- Counters on an existing result stay attached to that comparison's original question, even if you start typing a different question in the prompt box. The prompt box shows the new draft's estimate.
+- Exports include token counts and whether each was estimated. These counters are not prices or a prediction of your bill; check your provider dashboard for actual charges.
+
+Hover over a counter for a short explanation. You do not need to configure anything.
+
 ## Have some fun
 
 - “Write a dramatic breakup letter from a toaster to a microwave.”
@@ -136,6 +162,25 @@ Judge the results yourself: funniest, clearest, most useful, or most surprising.
 This mode does not automate website submissions or read website answers. Each provider controls its own free limits and login requirements. There is no guaranteed shared “one or three free questions” offer. The app never collects website passwords.
 
 Changing the prompt or included providers in Website assist clears the pasted comparison to avoid mixing answers from different questions. Export before changing those settings if you want to keep it.
+
+## Preview artifacts with the Y badge
+
+The Arena recognizes complete, labeled fenced code blocks as files. A small gold **Y** appears at the top of the matching answer card. Examples include HTML, SVG, JSON, CSV, Markdown, JavaScript, TypeScript/JSX/TSX, Python, CSS, and text. An unfinished code block does not produce a badge until its closing fence arrives. Up to 12 files are shown per answer, each limited to one million characters.
+
+1. **Hover over Y** to reveal the preview. You can move your pointer into the preview to inspect it; moving away from both hides an unpinned peek.
+2. **Click Y** to pin the preview so it stays displayed while you read elsewhere.
+3. **Click the same Y again** to hide it. The Close button also hides it.
+4. A pinned file stays put if you merely hover over another provider's badge. Clicking the other provider's Y deliberately switches the pinned preview.
+5. Use the filename tabs for multiple files. **Show source** toggles the source view for HTML, SVG, and JSON.
+6. **Save file** opens your computer's save dialog. Choose a folder and click Save. The app does not automatically open or execute the saved file.
+
+HTML/SVG are rendered in an isolated static frame: no JavaScript, outside images, network access, forms, or app controls. Inline styling and data-embedded images can display. JSON is prettified when valid; CSV, Markdown, and programming languages are displayed as source text. The preview will not run a React project or execute Python. A saved file may behave differently when you later open it in another program.
+
+This feature detects files embedded in the answer text. It does not retrieve Claude/ChatGPT/Gemini website artifacts, cloud documents, remote images, or private links. If no Y appears, try asking: **“Give me a complete self-contained HTML file in a fenced html code block.”**
+
+The Gemini sample includes a human-written HTML reminder card so you can try Y without keys or a charge. Model-generated files are not guaranteed to be correct.
+
+![The Y badge opens an isolated example artifact](artifact-preview.png)
 
 ## Keep or share a comparison
 

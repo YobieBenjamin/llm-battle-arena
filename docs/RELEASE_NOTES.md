@@ -9,7 +9,7 @@ One question. Three answers. A small, free desktop curiosity toy for comparing C
 
 Windows: double-click Setup; the one-click installer opens the app. Mac: open the DMG, drag the app into Applications, and open it there. Optional Windows Portable EXEs are also included.
 
-[Step-by-step installation and user guide](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/USER_GUIDE.md)
+[START HERE: novice installation guide](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/START-HERE.md) · [Full user guide](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/USER_GUIDE.md)
 
 ## Start playing
 
@@ -18,6 +18,14 @@ Windows: double-click Setup; the one-click installer opens the app. Mac: open th
 3. Type a question and click **Compare** to stream three independent answers.
 
 API usage may be billed by your providers. Chat website subscriptions and API access are separate. Without keys, **Website assist** helps you copy/paste between official websites and the comparison cards manually.
+
+## New in 2.2.0
+
+- A small Y badge for detected artifacts: hover to preview, click to pin, click again to hide. Static HTML/SVG previews, JSON/source views, multiple-file tabs, and Save file. Includes a sample artifact with no API calls.
+
+- Tiny question/answer token counters on every card and a draft-question estimate. `~` means estimated; provider-reported usage replaces estimates when available. No extra API requests.
+- A novice **START HERE** guide explaining downloads without assuming any GitHub knowledge.
+- A one-time documented code/documentation audit and fixes for title navigation, malformed settings, safe stream errors, incomplete response status, and checksum paths.
 
 ## Included
 

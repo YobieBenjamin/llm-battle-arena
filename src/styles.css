@@ -40,3 +40,15 @@ main{height:calc(100vh - 46px);max-width:none;padding:10px 20px 8px;display:flex
 #notice{flex-shrink:0;min-height:15px;margin:5px 0 0;font-size:10px;line-height:1.4}
 footer{flex-shrink:0;margin-top:6px;padding:5px 0 0;font-size:9px;line-height:1.4}
 @media(max-width:700px){body{height:auto;overflow:auto}main{height:auto}.cards{display:grid;flex:auto}.card{height:400px}footer{display:block}}
+
+.token-counts{font-size:9px;line-height:1.4;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px;cursor:help}
+
+.composer-bottom .subtle{margin-right:auto}
+
+.artifact-trigger{flex-shrink:0;border-radius:50%;width:23px;height:23px;padding:0;border:1px solid #d6bf78;background:#d6bf7820;color:#f1d88a;font-size:11px;font-weight:800}
+.artifact-trigger[aria-expanded=true]{background:#d6bf78;color:#201b0d}
+#artifact-panel{position:fixed;z-index:15;right:22px;top:65px;width:min(640px,calc(100vw - 44px));height:min(570px,calc(100vh - 95px));background:#181d25;border:1px solid #776b46;border-radius:12px;box-shadow:0 16px 70px #000b;display:flex;flex-direction:column;overflow:hidden}
+.artifact-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}.artifact-panel-header strong{font-size:13px}#artifact-state{font-size:10px;color:var(--muted);margin-top:3px}
+#artifact-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px 12px;flex-shrink:0}#artifact-tabs button{font-size:10px;white-space:nowrap;padding:5px 8px}#artifact-tabs [aria-pressed=true]{border-color:#d6bf78}
+.artifact-tools{display:flex;align-items:center;gap:7px;padding:0 12px 9px;flex-shrink:0}.artifact-tools span{font-size:9px;color:var(--muted);margin-right:auto}.artifact-tools button{font-size:10px;padding:5px 8px}
+#artifact-body{flex:1;min-height:0;overflow:auto;border-top:1px solid var(--line)}#artifact-body iframe{width:100%;height:100%;border:0;background:white;display:block}#artifact-body pre{margin:0;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,monospace}

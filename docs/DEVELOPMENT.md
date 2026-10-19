@@ -26,6 +26,8 @@ Electron downloads its development runtime on first use if it is not already cac
 | `desktop/preload.cjs` | Minimal allowlisted bridge; no arbitrary IPC access exposed to renderer. |
 | `desktop/store.js` | Atomic settings updates and OS-encrypted key persistence. |
 | `src/providers.js` | Request validation, fixed official endpoints, SSE decoding, provider adapters, statuses and usage. |
+| `src/artifacts.js`, `src/artifact-view.js` | Complete fenced-file detection, isolated preview, hover/pin/hide interactions, source tabs, and native save. |
+| `src/tokens.js` | Rough local estimates, provider-count validation, formatting, and estimated/reported metadata. |
 | `test/` | Behavioral tests with provider fixtures and a fake encryption adapter. |
 | `.github/workflows/desktop.yml` | Four architecture-specific installer builds and tag-triggered release publishing. |
 
@@ -35,9 +37,23 @@ No persistent chat history or analytics is implemented. Sample answers are fixed
 
 ## Security boundaries
 
-The renderer has Node integration disabled, context isolation and sandboxing enabled, a restrictive content policy, and no remote scripts/fonts. IPC validates the calling window/main-frame URL. Keys never return through the bridge. Answers enter the DOM through `textContent`, not HTML parsing. External navigation is limited to allowlisted provider/key links opened in the system browser.
+The renderer has Node integration disabled, context isolation and sandboxing enabled, a restrictive content policy, and no remote scripts/fonts. IPC validates the calling window/main-frame URL. Keys never return through the bridge. Regular answers/source views enter the DOM through `textContent`. HTML/SVG artifact previews alone use `srcdoc` inside an iframe with an empty sandbox, restrictive child CSP, no scripts, no networking, no forms, no app bridge, and blocked frame navigation. The parent permits inline styling for these static previews; it still forbids inline scripts. File saving validates a fixed extension allowlist and uses a native save dialog. External navigation is limited to allowlisted provider/key links opened in the system browser.
 
 Encrypted credentials are outside the checkout in Electron's app-data directory. Linux `basic_text` fallback storage is refused. The app exits with a recovery message on malformed settings rather than silently overwriting credentials. Do not log request headers, plaintext keys, or private prompts.
+
+## Artifact previews
+
+Detection is local and does not alter prompts, fetch links, or make extra API calls. Supported labeled fences become bounded files only once closed. Hover reveals a single shared preview panel; a click pins it; a second click hides it. Explicit clicks can switch between providers while hovering cannot replace a different pinned preview. The sample includes a fixed illustrative HTML card.
+
+Scripts are not executed in preview, even for HTML. Nonvisual code/CSV/Markdown is source text; JSON is formatted locally. Save file never automatically executes its output. An exported HTML/source file opened by a user in another program is outside the in-app sandbox.
+
+## Token counts
+
+Each result preserves its original prompt. `inputTokens`, `tokens` (provider output), and `reasoningTokens` come from usage events when present. Claude input includes cache creation/read input categories; OpenAI output already includes reasoning and must not have reasoning added again. Gemini candidate-output and thoughts counts remain separate. Missing/invalid usage falls back to an explicitly marked local estimate. Streaming output uses an estimate until a terminal event. There are no extra count API requests.
+
+JSON exports include `tokenCounts.question` and `.answer`, each with `value` and `estimated`. Markdown includes the labeled counts. UI counters for completed results never switch to a new unsent draft prompt. The heuristic is Unicode code points / 4 rounded up, suitable only as a rough English-text guide—not cost calculation or quota enforcement.
+
+Official usage references: [OpenAI](https://developers.openai.com/api/docs/guides/token-counting), [Claude streaming](https://platform.claude.com/docs/en/build-with-claude/streaming), [Gemini UsageMetadata](https://ai.google.dev/api/generate-content#UsageMetadata).
 
 ## Tests and manual checks
 
@@ -86,7 +102,7 @@ The default branch is `main` in **YobieBenjamin/llm-battle-arena**. This reposit
 1. Update the version in `package.json` and the root/package entries in `package-lock.json`.
 2. Update `docs/RELEASE_NOTES.md` and the user guide for changed behavior.
 3. Run tests and manual checks. Commit and push to main.
-4. Tag the reviewed commit with the matching version, for example `git tag v2.1.1`, then push the tag.
+4. Tag the reviewed commit with the matching version, for example `git tag v2.2.0`, then push the tag.
 5. The **Desktop installers** workflow builds Windows x64, Windows ARM64, macOS ARM64, and macOS x64. All four build jobs must pass before publishing.
 6. The release job combines artifacts, produces `SHA256SUMS.txt`, and publishes GitHub Release downloads using the workflow token.
 7. Check the public release and README links. The download filenames remain stable across versions, so `/releases/latest/download/...` always selects the newest release.
