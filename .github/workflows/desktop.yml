@@ -33,6 +33,11 @@ jobs:
       - name: Verify sealed Mac bundle
         if: matrix.platform == 'mac'
         run: codesign --verify --deep --strict --verbose=2 "dist/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/LLM Battle Arena.app"
+      - name: Test packaged Mac app
+        if: matrix.platform == 'mac' && matrix.arch == 'arm64'
+        env:
+          ARENA_ELECTRON_PATH: ${{ github.workspace }}/dist/mac-arm64/LLM Battle Arena.app/Contents/MacOS/LLM Battle Arena
+        run: npm run test:ui
       - uses: actions/upload-artifact@v4
         with:
           name: installers-${{ matrix.platform }}-${{ matrix.arch }}

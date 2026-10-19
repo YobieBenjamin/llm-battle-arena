@@ -33,11 +33,11 @@ Electron downloads its development runtime on first use if it is not already cac
 
 Live mode uses Anthropic Messages streaming, OpenAI Responses streaming (`store: false`), and Gemini `streamGenerateContent`. Every selected adapter receives the unchanged prompt. Requests have separate cancellation/error outcomes, a two-minute first-byte allowance followed by a 45-second idle deadline refreshed by stream bytes, and a five-minute overall cap. API errors are simplified for users; the app does not display raw provider error bodies. Partial text is retained. Retries are explicit rather than automatic to avoid surprise repeat charges.
 
-No persistent chat history or analytics is implemented. Sample answers are fixed written fixtures. Website assist opens fixed official URLs and lets the user paste answers manually. Model IDs are editable because account access and provider catalogs change; defaults are not a guarantee of equal capabilities or current availability.
+The last 50 comparisons persist locally in history.json; no analytics is implemented. History is not conversation context. Sample answers are fixed written fixtures. Website assist opens fixed official URLs and lets the user paste answers manually. Model IDs are editable because account access and provider catalogs change; defaults are not a guarantee of equal capabilities or current availability.
 
 ## Security boundaries
 
-The renderer has Node integration disabled, context isolation and sandboxing enabled, a restrictive content policy, and no remote scripts/fonts. IPC validates the calling window/main-frame URL. Keys never return through the bridge. Regular answers/source views enter the DOM through `textContent`. HTML/SVG artifact previews alone use `srcdoc` inside an iframe with an empty sandbox, restrictive child CSP, no scripts, no networking, no forms, no app bridge, and blocked frame navigation. The parent permits inline styling for these static previews; it still forbids inline scripts. File saving validates a fixed extension allowlist and uses a native save dialog. External navigation is limited to allowlisted provider/key links opened in the system browser.
+The renderer has Node integration disabled, context isolation and sandboxing enabled, a restrictive content policy, and no remote scripts/fonts. IPC validates the calling window/main-frame URL. Keys never return through the bridge. Answers use marked followed by DOMPurify with a narrow HTML tag/attribute allowlist, no images/styles/embedded content, and HTTP/HTTPS links only. Source views use `textContent`. HTML/SVG artifact previews alone use `srcdoc` inside an iframe with an empty sandbox, restrictive child CSP, no scripts, no networking, no forms, no app bridge, and blocked frame navigation. The parent permits inline styling for these static previews; it still forbids inline scripts. File saving validates a fixed extension allowlist and uses a native save dialog. Provider/key links are fixed; answer links require a click and main-process HTTP/HTTPS validation (no credentials or custom protocols) before opening in the system browser.
 
 Encrypted credentials are outside the checkout in Electron's app-data directory. Linux `basic_text` fallback storage is refused. Malformed settings offer Reset connections (preserving a backup), Open settings folder, or Quit. Unreadable keys produce a distinct unlock/re-enter message. Do not log request headers, plaintext keys, or private prompts.
 
@@ -101,7 +101,7 @@ The default branch is `main` in **YobieBenjamin/llm-battle-arena**. This reposit
 1. Update the version in `package.json` and the root/package entries in `package-lock.json`.
 2. Update `docs/RELEASE_NOTES.md` and the user guide for changed behavior.
 3. Run tests and manual checks. Commit and push to main.
-4. Tag the reviewed commit with the matching version, for example `git tag v2.2.2`, then push the tag.
+4. Tag the reviewed commit with the matching version, for example `git tag v2.3.0`, then push the tag.
 5. The **Desktop installers** workflow builds Windows x64, Windows ARM64, macOS ARM64, and macOS x64. All four build jobs and the UI regression job must pass before publishing.
 6. The release job combines artifacts, produces `SHA256SUMS.txt`, and publishes GitHub Release downloads using the workflow token.
 7. Check the public release and README links. The download filenames remain stable across versions, so `/releases/latest/download/...` always selects the newest release.
@@ -113,3 +113,9 @@ Windows Setup is per-user, one-click, and launches after installation. Portable 
 ## Dependency audit
 
 Compatible security fixes have been applied. Moderate advisories remain in the development-only electron-builder download/logging dependency chain. There are no production npm dependencies copied into the app; Electron itself supplies the runtime. Keep Electron and packaging tooling updated and review advisories before broader distribution.
+
+## Local history and packaged checks
+
+`desktop/history.js` validates and allowlists saved fields, keeps at most 50 entries, and atomically replaces history.json through a temporary file. No API keys or connection objects enter history. Raw model text is retained so reopening goes through the same Markdown sanitizer and artifact detection. Save errors are reported to the user. Streaming and manual edits are throttled to roughly 500ms, terminal results save immediately, and normal window close requests a final renderer flush with a two-second shutdown fallback. Abrupt crashes may lose the latest unsaved fragment. Corrupt history is backed up, not silently discarded.
+
+Mac ARM64 CI runs `scripts/smoke.cjs` with ARENA_ELECTRON_PATH pointing inside the signed app bundle before uploading the installer. The Linux source test remains. Other architectures are built and Mac signatures verified, but are not runtime-certified by this job.

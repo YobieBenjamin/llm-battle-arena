@@ -2,7 +2,9 @@ const { app, BrowserWindow, ipcMain, safeStorage, shell, clipboard, dialog, scre
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
-let window, store, providers, runProvider, validateRequest;
+let window, store, history, providers, runProvider, validateRequest;
+let quitting = false;
+app.on('before-quit', () => { quitting=true; });
 const running = new Map();
 const entry = pathToFileURL(path.join(__dirname, '..', 'index.html')).href;
 function trusted(event) {
@@ -26,6 +28,14 @@ function createWindow() {
   window.webContents.on('will-frame-navigate', event => {
     if (!['about:srcdoc', 'about:blank'].includes(event.url)) event.preventDefault();
   });
+  let closing=false, closeTimer;
+  window.on('close', event => {
+    if(closing) return;
+    event.preventDefault(); closing=true;
+    window.webContents.send('flush-history');
+    closeTimer=setTimeout(()=>quitting ? app.quit() : window?.close(),2000);
+  });
+  window.on('closed', () => clearTimeout(closeTimer));
   window.on('closed', () => { cancel(); window = null; });
   window.loadFile(path.join(__dirname, '..', 'index.html'));
 }
@@ -33,6 +43,8 @@ app.whenReady().then(async () => {
   ({ PROVIDERS: providers, runProvider, validateRequest } = await import('../src/providers.js'));
   const { createStore } = await import('./store.js');
   const dataDirectory = app.getPath('userData');
+  const { createHistory } = await import('./history.js');
+  history = createHistory(dataDirectory);
   try { store = createStore(dataDirectory, safeStorage); }
   catch {
     const file = path.join(dataDirectory, 'connections.json');
@@ -51,6 +63,18 @@ app.whenReady().then(async () => {
     { label: 'Edit', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
     { label: 'Window', submenu: [{ role: 'close' }, { role: 'minimize' }, { role: 'zoom' }, ...(process.platform === 'darwin' ? [{ type: 'separator' }, { role: 'front' }] : [])] }
   ]));
+  handle('finish-close', () => { setImmediate(()=>quitting ? app.quit() : window?.close()); });
+  handle('history-list', () => history.list());
+  handle('history-get', id => history.get(id));
+  handle('history-save', value => history.save(value));
+  handle('history-remove', id => history.remove(id));
+  handle('history-clear', () => history.clear());
+  handle('open-answer-link', value => {
+    if (typeof value !== 'string' || value.length > 4096) throw new Error('Invalid link.');
+    const url = new URL(value);
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Only ordinary web links can be opened.');
+    return shell.openExternal(url.href);
+  });
   handle('connections', () => store.snapshot());
   handle('save-connections', value => { if (running.size) throw new Error('Wait for the comparison to finish before changing connections.'); return store.save(value); });
   handle('compare', value => {

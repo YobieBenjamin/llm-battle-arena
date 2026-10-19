@@ -5,6 +5,14 @@ async function invoke(channel, ...args) {
   return result.value;
 }
 contextBridge.exposeInMainWorld('arena', {
+  onClosing: callback => ipcRenderer.on('flush-history', () => callback()),
+  finishClose: () => invoke('finish-close'),
+  historyList: () => invoke('history-list'),
+  historyGet: id => invoke('history-get', id),
+  historySave: value => invoke('history-save', value),
+  historyRemove: id => invoke('history-remove', id),
+  historyClear: () => invoke('history-clear'),
+  openAnswerLink: url => invoke('open-answer-link', url),
   connections: () => invoke('connections'),
   saveConnections: value => invoke('save-connections', value),
   compare: value => invoke('compare', value),

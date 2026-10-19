@@ -120,7 +120,7 @@ The exact same prompt goes to every included provider. Each new comparison start
 | Try an example | Fills in an example question in a mode that accepts your own prompts. |
 | How to play | Opens a short guide inside the app. |
 
-An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Model answers render as readable plain text; Markdown symbols are preserved rather than formatted into HTML.
+An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Answers format Markdown headings, lists, tables, emphasis and code. Scripts, images and embedded content are removed. Click ordinary HTTP/HTTPS links to open them in your system browser. Copy answer and exports preserve the original Markdown. In Website assist, use **Read formatted** after pasting; **Edit pasted answer** returns to the paste box.
 
 ## What do the tiny token counters mean?
 
@@ -183,7 +183,9 @@ The Gemini sample includes a human-written HTML reminder card so you can try Y w
 
 Click **Export Markdown** or **JSON**, choose a folder and filename, and save. The export includes answers even when they extend below the visible part of a card, plus errors or partial results if a run failed or was stopped.
 
-There is no automatic prompt/answer history. A new comparison, switching modes, or closing the app replaces/discards the in-memory results. Export first. Files and clipboard contents can contain sensitive prompts or answers, so check them before sharing.
+The app automatically saves the last 50 comparisons, including Sample and Website assist. Click **History**, then click a question to reopen it. Reopening never calls a provider. An unfinished saved answer is labeled interrupted; Retry in Live API mode is an explicit new request and may cost money. Each new question still starts fresh.
+
+Use **Delete** beside an entry to remove it. To clear everything, click **Delete all history**, then **Confirm delete all**. Export anything you want to keep beyond the latest 50. History is plain text in `history.json` in the app data folder, not encrypted like API keys. It may contain sensitive information you typed. Streaming/pasted answers save approximately every half second, and on normal close; a crash can lose the latest unsaved fragment. Damaged history is backed up as `history.json.<time>.bak`, with its location shown in History. Deleting history does not remove these recovery backups or files you exported. Files and clipboard contents can contain sensitive prompts or answers, so check them before sharing.
 
 ## Updates
 

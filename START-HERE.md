@@ -76,7 +76,7 @@ If you have only one or two keys, uncheck **Include** on the cards you have not 
 
 Tiny **Q** and **A** counters mean question tokens and estimated visible-answer tokens. **R** shows reported reasoning, or **—** when unknown. **~** means an estimate. Tokens are pieces of text, not words or prices. [More about counters](docs/USER_GUIDE.md#what-do-the-tiny-token-counters-mean).
 
-**Copy answer** copies one answer. **Export Markdown** lets you choose where to save the whole comparison. Export before closing if you want to keep it—there is no automatic answer history. **How to play** opens a reminder inside the app.
+**Copy answer** copies one answer. **Export Markdown** lets you choose where to save the whole comparison. The app automatically keeps the last 50 comparisons. Click **History**, then click a question to reopen it. Use **Delete** to remove one, or **Delete all history** and confirm to clear the list. History contains plain-text prompts and answers on your computer. Export comparisons you want to keep permanently. **How to play** opens a reminder inside the app.
 
 ## What is the little Y badge?
 

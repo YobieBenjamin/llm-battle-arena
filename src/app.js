@@ -1,9 +1,43 @@
+import { renderMarkdown } from './markdown.js';
 import { createArtifactViewer } from './artifact-view.js';
 import { PROVIDERS } from './providers.js';
 import { tokenSummary, formatTokenSummary, estimateTokens } from './tokens.js';
 const $ = id => document.getElementById(id);
 const api = window.arena;
 let artifacts;
+let saveTimer;
+const renderedText = new WeakMap();
+async function saveHistory() {
+  clearTimeout(saveTimer); saveTimer=undefined;
+  if (api && comparison) await api.historySave({ ...comparison, id:runId, results:structuredClone(results) });
+}
+function scheduleHistory() { if(!saveTimer) saveTimer=setTimeout(() => guarded(saveHistory), 500); }
+async function showHistory() {
+  const data=await api.historyList();
+  $('history-list').replaceChildren();
+  $('history-message').textContent=data.warning || (data.entries.length ? '' : 'No saved comparisons yet.');
+  for(const entry of data.entries) {
+    const row=document.createElement('div'); row.className='history-row';
+    const open=document.createElement('button'); open.textContent=`${new Date(entry.timestamp).toLocaleString()} · ${entry.mode} — ${entry.prompt}`;
+    open.onclick=()=>guarded(async()=>{
+      await saveHistory(); const saved=await api.historyGet(entry.id); if(!saved) throw new Error('This comparison was deleted.');
+      $('mode').value=saved.mode; changeMode(); comparison={...saved}; delete comparison.results; runId=saved.id;
+      $('prompt').value=saved.prompt; $('limit').value=String(saved.maxTokens);
+      for(const id of Object.keys(PROVIDERS)) {
+        const result=saved.results[id];
+        if(result) { results[id]=result; if(['queued','connecting','streaming'].includes(result.status)) result.status='interrupted'; }
+        $(`${id}-enabled`).checked=Boolean(result);
+        if(saved.mode==='manual' && result) { $(`${id}-manual`).value=result.text; $(`${id}-manual`).hidden=false; $(`${id}-answer`).hidden=true; }
+        render(id);
+      }
+      count(); busy(); $('history-dialog').close(); notice('Saved comparison reopened. No requests were sent.');
+    });
+    const remove=document.createElement('button'); remove.textContent='Delete'; remove.setAttribute('aria-label','Delete saved comparison');
+    remove.onclick=()=>guarded(async()=>{await api.historyRemove(entry.id); if(runId===entry.id) { comparison=null; clearTimeout(saveTimer); for(const id of Object.keys(PROVIDERS)) render(id); } await showHistory();});
+    row.append(open,remove); $('history-list').append(row);
+  }
+  $('confirm-clear-history').hidden=true; if(!$('history-dialog').open) $('history-dialog').showModal();
+}
 let connections, runId = '', pending = new Set(), comparison = null;
 const results = {};
 const samplePrompt = 'What are three practical ways to build a habit that lasts?';
@@ -25,6 +59,7 @@ function busy() {
   $('limit').disabled = active;
   $('stop').hidden = !active;
   $('connections').disabled = active;
+  $('history').disabled = active || !api;
   for (const id of Object.keys(PROVIDERS)) { $(`${id}-retry`).disabled = active; $(`${id}-enabled`).disabled = active; }
 }
 function render(id) {
@@ -33,16 +68,18 @@ function render(id) {
   artifacts?.update(id, result?.text || '');
   const answer = $(`${id}-answer`);
   const nextText = result?.text || '';
-  if (answer.textContent !== nextText) {
+  if (renderedText.get(answer) !== nextText) {
     const position = answer.scrollTop;
     const following = answer.scrollHeight - position - answer.clientHeight < 24;
-    answer.textContent = nextText;
+    answer.replaceChildren(renderMarkdown(nextText));
+    renderedText.set(answer, nextText);
     answer.scrollTop = following ? answer.scrollHeight : position;
   }
   const state = $(`${id}-status`);
   state.className = 'status' + (result?.status === 'error' ? ' error' : result?.status === 'done' ? ' done' : '');
   state.textContent = result ? `${result.status}${result.elapsed != null ? ` · ${(result.elapsed / 1000).toFixed(1)}s` : ''}${result.truncated ? ' · output limit reached' : ''}${result.error ? ` · ${result.error}` : ''}` : 'Ready';
   $(`${id}-copy`).disabled = !result?.text;
+  $(`${id}-format`).hidden = comparison?.mode !== 'manual' || !result;
   $(`${id}-retry`).hidden = comparison?.mode !== 'live' || !result || !['done','error','cancelled'].includes(result.status);
   $(`${id}-model`).textContent = result?.model || connections?.providers[id].model || PROVIDERS[id].model;
 }
@@ -61,14 +98,15 @@ function createCards() {
   for (const [id, provider] of Object.entries(PROVIDERS)) {
     const card = document.createElement('article'); card.className = `card ${id}`;
     // Only fixed application strings and fixed provider IDs enter this template.
-    card.innerHTML = `<div class="card-top"><div class="avatar">${id === 'claude' ? '✳' : id === 'openai' ? '◎' : '✦'}</div><div class="card-title"><h3>${provider.name}</h3><div id="${id}-model" class="model"></div><div id="${id}-tokens" class="token-counts"></div></div><button id="${id}-artifact" class="artifact-trigger" aria-expanded="false" aria-controls="artifact-panel" hidden>Y</button><label class="enabled-label"><input id="${id}-enabled" type="checkbox" checked> Include</label></div><div id="${id}-status" class="status" role="status"></div><div id="${id}-answer" class="answer" tabindex="0" aria-label="${provider.name} answer"></div><textarea id="${id}-manual" class="manual-answer" aria-label="Paste ${provider.name} website answer" placeholder="Paste the answer from the official website here…" hidden maxlength="200000"></textarea><div class="card-actions"><button id="${id}-copy">Copy answer</button><button id="${id}-retry" hidden>Retry</button><button id="${id}-website" hidden>Open ${provider.name}</button></div>`;
+    card.innerHTML = `<div class="card-top"><div class="avatar">${id === 'claude' ? '✳' : id === 'openai' ? '◎' : '✦'}</div><div class="card-title"><h3>${provider.name}</h3><div id="${id}-model" class="model"></div><div id="${id}-tokens" class="token-counts"></div></div><button id="${id}-artifact" class="artifact-trigger" aria-expanded="false" aria-controls="artifact-panel" hidden>Y</button><label class="enabled-label"><input id="${id}-enabled" type="checkbox" checked> Include</label></div><div id="${id}-status" class="status" role="status"></div><div id="${id}-answer" class="answer" tabindex="0" aria-label="${provider.name} answer"></div><textarea id="${id}-manual" class="manual-answer" aria-label="Paste ${provider.name} website answer" placeholder="Paste the answer from the official website here…" hidden maxlength="200000"></textarea><div class="card-actions"><button id="${id}-copy">Copy answer</button><button id="${id}-format" hidden>Read formatted</button><button id="${id}-retry" hidden>Retry</button><button id="${id}-website" hidden>Open ${provider.name}</button></div>`;
     $('cards').append(card);
+    $(`${id}-format`).onclick = () => { const input=$(`${id}-manual`); input.hidden=!input.hidden; $(`${id}-answer`).hidden=!input.hidden; $(`${id}-format`).textContent=input.hidden?'Edit pasted answer':'Read formatted'; };
     $(`${id}-copy`).onclick = () => guarded(async () => { await copy(results[id]?.text || ''); notice('Answer copied.'); });
     $(`${id}-retry`).onclick = () => guarded(() => launch([id], true));
     $(`${id}-website`).onclick = () => guarded(async () => { await copy($('prompt').value); await api.open(id, 'website'); notice('Prompt copied. Paste it into the website, then paste its answer back here.'); });
     $(`${id}-manual`).oninput = event => {
       results[id] = { id, prompt: comparison?.prompt ?? $('prompt').value, model: 'Website · user supplied', text: event.target.value, status: 'pasted' };
-      render(id);
+      render(id); scheduleHistory();
     };
     $(`${id}-enabled`).onchange = () => { if (mode() === 'manual') reset(); };
     render(id);
@@ -77,6 +115,7 @@ function createCards() {
 async function copy(text) { if (api) await api.copy(text); else await navigator.clipboard.writeText(text); }
 async function guarded(action) { try { await action(); } catch (error) { notice(error.message); } }
 function reset() {
+  guarded(saveHistory);
   comparison = null;
   artifacts?.reset();
   for (const id of Object.keys(PROVIDERS)) {
@@ -115,6 +154,7 @@ async function launch(ids = selected(), retry = false) {
   }
   if (comparison.mode === 'sample') {
     for (const id of ids) { results[id] = { id, prompt, model: 'Illustrative sample', text: samples[id], status: 'sample' }; render(id); }
+    await saveHistory();
     notice('Sample only. Choose Website assist or Live API for your own questions.'); return;
   }
   if (comparison.mode === 'manual') {
@@ -122,11 +162,13 @@ async function launch(ids = selected(), retry = false) {
       results[id] = { id, prompt, model: 'Website · user supplied', text: '', status: 'awaiting paste' };
       $(`${id}-manual`).hidden = false; $(`${id}-answer`).hidden = true; render(id);
     }
+    await saveHistory();
     notice('Use Open on each card to copy the prompt and visit its official website.'); return;
   }
   if (!api) throw new Error('Launch the desktop app with npm start to connect providers.');
   pending = new Set(ids); busy();
   for (const id of ids) { results[id] = { id, prompt, model: connections.providers[id].model, text: '', status: 'queued' }; render(id); }
+  await guarded(saveHistory);
   try { await api.compare({ runId, prompt, providers: ids, maxTokens: comparison.maxTokens }); }
   catch (error) { for (const id of ids) { results[id].status = 'error'; results[id].error = error.message; render(id); } pending.clear(); busy(); throw error; }
 }
@@ -153,6 +195,12 @@ function exportData(format) {
 }
 createCards();
 artifacts = createArtifactViewer({ providers: PROVIDERS, api, notice });
+$('history').onclick = () => guarded(async()=>{ await saveHistory(); await showHistory(); });
+$('close-history').onclick = () => $('history-dialog').close();
+$('clear-history').onclick = () => { $('confirm-clear-history').hidden=false; };
+$('confirm-clear-history').onclick = () => guarded(async()=>{ clearTimeout(saveTimer); await api.historyClear(); comparison=null; for(const id of Object.keys(PROVIDERS)) render(id); await showHistory(); });
+$('cards').addEventListener('click', event=>{ const link=event.target.closest('.answer a'); if(link) { event.preventDefault(); if(link.hasAttribute('href')) guarded(()=>api.openAnswerLink(link.href)); } });
+if(api) api.onClosing(async()=>{ try { await saveHistory(); } finally { await api.finishClose(); } });
 $('help').onclick = () => $('help-dialog').showModal();
 $('close-help').onclick = () => $('help-dialog').close();
 $('mode').onchange = changeMode;
@@ -175,13 +223,14 @@ $('settings-form').onsubmit = async event => {
     notice('Connections saved on this computer.');
   } catch (error) { $('settings-error').textContent = error.message; }
 };
-document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
+document.addEventListener('keydown', event => { if (event.target.closest?.('.manual-answer')) return; if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !$('settings').open && !$('help-dialog').open && !$('history-dialog').open && !pending.size) { event.preventDefault(); guarded(() => launch()); } });
 if (api) {
   api.onUpdate(update => {
     if (update.runId !== runId || !pending.has(update.id)) return;
     results[update.id] = { ...update, prompt: comparison.prompt }; render(update.id);
     if (['done','error','cancelled'].includes(update.status)) pending.delete(update.id);
     busy();
+    if(pending.size) scheduleHistory(); else guarded(saveHistory);
     if (!pending.size) notice('Comparison finished. Each card shows its own outcome.');
   });
   try { connections = await api.connections(); } catch (error) { notice(error.message); }

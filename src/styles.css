@@ -63,3 +63,6 @@ footer{flex-shrink:0;margin-top:6px;padding:5px 0 0;font-size:9px;line-height:1.
  #artifact-panel.is-pinned{flex:0 0 360px;min-height:360px}
 }
 @media(max-width:700px){.results-workspace{display:block}#artifact-panel.is-pinned{height:400px!important;margin-top:12px}}
+
+.answer{white-space:normal}.answer p{margin:0 0 .75em}.answer h1,.answer h2,.answer h3{font-size:1.1em;margin:.8em 0 .4em}.answer pre{white-space:pre;overflow:auto;background:#101319;padding:10px;border-radius:6px}.answer code{font-family:ui-monospace,monospace;font-size:.9em}.answer table{display:block;overflow:auto;border-collapse:collapse}.answer th,.answer td{border:1px solid var(--line);padding:5px 8px}.answer a{color:#b9dca4}.answer blockquote{margin-left:0;border-left:3px solid var(--line);padding-left:12px}
+#history-dialog{width:min(760px,90vw)}#history-list{max-height:55vh;overflow:auto}.history-row{display:flex;gap:8px;margin:8px 0}.history-row button:first-child{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

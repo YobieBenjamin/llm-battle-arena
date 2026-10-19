@@ -6,7 +6,7 @@ const os = require('node:os');
 const appRoot=path.resolve(__dirname,'..');
 (async()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'arena-smoke-'));
- const app=await electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH || require('electron'),args:[appRoot,`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});
+ let app=await electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH || require('electron'),args:[appRoot,`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});
  let page;
  try {
  console.log('Electron launched');
@@ -62,7 +62,10 @@ const appRoot=path.resolve(__dirname,'..');
  }
  await page.locator('#claude-manual').fill('<img src=x onerror=alert(1)>');
  assert.equal(await page.locator('#claude-answer img').count(),0);
- assert.match(await page.locator('#claude-answer').textContent(),/onerror/);
+ assert.match(await page.locator('#claude-manual').inputValue(),/onerror/);
+ await page.locator('#claude-format').click();
+ assert.equal(await page.locator('#claude-answer img').count(),0);
+ await page.locator('#claude-format').click();
  await page.locator('#claude-manual').fill('Long website answer\n'.repeat(300));
  assert.match(await page.locator('#claude-tokens').textContent(),/A ~[\d,]+ · R — tokens/);
 
@@ -132,7 +135,49 @@ const appRoot=path.resolve(__dirname,'..');
  for(const role of ['close','minimize']) assert.ok(roles.includes(role),`Missing ${role} menu role`);
  if(process.platform==='darwin') for(const role of ['about','hide','hideothers']) assert.ok(roles.includes(role));
  assert.ok(!roles.some(role=>['reload','forcereload','toggledevtools'].includes(role)));
+ // Markdown is rendered only through the production sanitizer; no passive requests.
+ const markdownRequests=[]; page.on('request',r=>{if(r.url().startsWith('https://markdown.invalid'))markdownRequests.push(r.url());});
+ await page.evaluate(async()=>{
+  const {renderMarkdown}=await import('./src/markdown.js');
+  document.getElementById('claude-answer').replaceChildren(renderMarkdown('## Heading\n\n**Bold**\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n[Safe](https://example.com) [Bad](javascript:alert(1))\n<img src="https://markdown.invalid/x" onerror="window.markdownPwned=1"><script>window.markdownPwned=1</script><iframe src="https://markdown.invalid/frame"></iframe><style>body{display:none}</style>'));
+ });
+ assert.equal(await page.locator('#claude-answer h2').textContent(),'Heading');
+ assert.equal(await page.locator('#claude-answer table').count(),1);
+ assert.equal(await page.locator('#claude-answer strong').textContent(),'Bold');
+ assert.equal(await page.locator('#claude-answer img, #claude-answer script, #claude-answer iframe, #claude-answer style').count(),0);
+ assert.equal(await page.evaluate(()=>window.markdownPwned),undefined);
+ assert.deepEqual(markdownRequests,[]);
+ await app.evaluate(({ipcMain})=>{ipcMain.removeHandler('open-answer-link');ipcMain.handle('open-answer-link',(_event,url)=>{globalThis.smokeLink=url;return {ok:true};});});
+ await page.locator('#claude-answer a').filter({hasText:'Safe'}).click();
+ assert.equal(await app.evaluate(()=>globalThis.smokeLink),'https://example.com/');
+ // Persist, reload renderer, and reopen without provider calls.
+ await page.locator('#history').click();
+ await page.locator('#history-dialog[open]').waitFor();
+ assert.ok(await page.locator('.history-row').count()>0);
+ await page.locator('.history-row button').first().click();
+ await page.locator('#history-dialog').waitFor({state:'hidden'});
+ await page.reload();
+ await page.locator('#history').click();
+ await page.locator('.history-row button').first().click();
+ await page.locator('#claude-answer').filter({hasText:'ILLUSTRATIVE SAMPLE'}).waitFor();
+ await page.locator('#history').click();
+ await page.locator('#clear-history').click();
+ await page.locator('#confirm-clear-history').click();
+ await page.locator('#history-message').filter({hasText:'No saved comparisons'}).waitFor();
+ await page.locator('#close-history').click();
+ await page.locator('#mode').selectOption('manual');
+ await page.locator('#prompt').fill('History restart check');
+ await page.locator('#compare').click();
+ await page.locator('#claude-manual').fill('**Saved across restart**');
+ await app.close();
+ app=await electron.launch({executablePath:process.env.ARENA_ELECTRON_PATH || require('electron'),args:[appRoot,`--user-data-dir=${dir}`,...(process.platform==='linux'?['--no-sandbox']:[])]});
+ page=await app.firstWindow({timeout:30000}); page.setDefaultTimeout(15000);
+ await page.locator('#history').click();
+ await page.locator('.history-row button').filter({hasText:'History restart check'}).click();
+ assert.equal(await page.locator('#claude-manual').inputValue(),'**Saved across restart**');
+ await page.locator('#claude-format').click();
+ assert.equal(await page.locator('#claude-answer strong').textContent(),'Saved across restart');
  assert.deepEqual(errors,[]);
  console.log('PASS: manual paste shortcuts preserve answers; pinned preview stays readable at three laptop sizes and scrolls; pinned Compare shortcut and standard menus; friendly IPC errors; artifact isolation; token counters/exports; scrolling/settings. No paid calls or renderer errors.');
- } catch(error) {console.error('Failure URL:',page?.url());throw error;} finally {await app.close();fs.rmSync(dir,{recursive:true,force:true});}
+ } catch(error) {console.error('Failure URL:',page?.url(),error); throw error;} finally {await Promise.race([app.close(),new Promise(resolve=>setTimeout(()=>{app.process().kill('SIGKILL');resolve();},10000).unref())]);fs.rmSync(dir,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

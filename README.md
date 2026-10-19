@@ -65,7 +65,7 @@ Try **“Explain Wi-Fi to a pirate,” “Invent the world's worst superhero,”
 - **Stop** preserves partial answers. **Retry** sends just that card's original prompt again and may incur another API charge.
 - **Copy answer** copies one response. **Export Markdown** saves a readable comparison; **JSON** saves structured data.
 - **Ctrl+Enter** (Windows) or **Cmd+Enter** (Mac) starts a comparison.
-- Each question starts fresh. There is no chat memory or automatic history. Export anything you want to keep before closing.
+- Each question starts fresh. The last 50 comparisons are saved locally in History. Previous answers are never sent with a new question. Export anything you want to keep beyond those 50.
 
 ![The desktop arena, showing illustrative sample answers](desktop-preview.png)
 
@@ -95,7 +95,7 @@ This mode is manual. Each website controls signup, models, and free limits; no u
 - [Release notes](docs/RELEASE_NOTES.md)
 - [One-time code and documentation audit](docs/AUDIT.md)
 
-Your keys are encrypted on your computer. Live prompts go to the selected providers; the app has no hosted server or analytics. Answers display as plain text, including Markdown source. Models can be wrong; don't treat three similar answers as proof.
+Your keys are encrypted on your computer. Live prompts go to the selected providers; the app has no hosted server or analytics. Answers display formatted Markdown, with scripts, images and embedded content removed. Prompt and answer history is saved as plain text on this computer; use History to delete it. Models can be wrong; don't treat three similar answers as proof.
 
 A fun little project by Yobie Benjamin. MIT licensed. The public home for code, downloads, and support is **YobieBenjamin/llm-battle-arena**.
 

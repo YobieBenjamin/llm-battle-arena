@@ -1,3 +1,9 @@
+## v2.3.0 — formatted answers and local history
+
+- Read headings, tables, lists and code as formatted Markdown. Copy and exports keep the original text. Website assist has Read formatted / Edit pasted answer controls.
+- History automatically keeps the last 50 comparisons on your laptop. Reopen a comparison without an API request, delete one, or confirm clearing all. History is plain text and may contain sensitive prompts and answers.
+- Packaged Apple Silicon Mac apps now run the UI regression suite in CI before release, alongside Linux source checks.
+
 ## v2.2.2 — readable artifact docks on laptops
 
 - Stacked pinned previews now keep 360px for the cards and 360px for the preview. Scroll inside the results area to reach both.
