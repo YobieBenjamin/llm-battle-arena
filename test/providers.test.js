@@ -141,3 +141,30 @@ test('after visible text, a stalled stream uses the shorter idle deadline',async
 test('metadata before silent thinking retains the initial grace period',async()=>{
  let final;await runProvider({...base,id:'openai',firstByteMs:500,idleMs:10,emit:e=>final=e,fetchImpl:async()=>new Response(new ReadableStream({async start(controller){controller.enqueue(new TextEncoder().encode(frame({type:'response.created'})));await new Promise(r=>setTimeout(r,50));controller.enqueue(new TextEncoder().encode(fixtures.openai.map(frame).join('')));controller.close();}}))});assert.equal(final.status,'done');
 });
+
+test('network failures are friendly, private, and only claim preserved text when present',async()=>{
+ for(const partial of [false,true]) {
+  let final;
+  await runProvider({...base,id:'openai',emit:e=>final=e,fetchImpl:async()=>{
+   if(!partial)throw new TypeError('fetch failed secret-test-key');
+   let first=true;return new Response(new ReadableStream({pull(c){if(first){first=false;c.enqueue(new TextEncoder().encode(frame(fixtures.openai[0])));}else c.error(new TypeError('terminated secret-test-key'));}}));
+  }});
+  assert.equal(final.status,'error');assert.equal(final.text,partial?'Hello':'');
+  assert.match(final.error,/internet connection/);assert.equal(final.error.includes('Partial answer preserved'),partial);
+  assert.doesNotMatch(final.error,/fetch failed|terminated|secret-test-key/);
+ }
+});
+test('HTML login pages and malformed empty streams never claim a partial answer',async()=>{
+ for(const body of ['<html>Sign in to hotel Wi-Fi</html>','data: invalid\n\n']){
+  let final;await runProvider({...base,id:'openai',emit:e=>final=e,fetchImpl:async()=>stream(body)});
+  assert.equal(final.status,'error');assert.equal(final.text,'');assert.doesNotMatch(final.error,/Partial answer preserved/);
+ }
+});
+test('Claude refusal preserves text and usage but never completes successfully',async()=>{
+ for(const partial of [false,true]){
+  let final;const events=[...(partial?[fixtures.claude[0]]:[]),{type:'message_delta',usage:{output_tokens:7},delta:{stop_reason:'refusal'}},{type:'message_stop'}];
+  await runProvider({...base,id:'claude',emit:e=>final=e,fetchImpl:async()=>stream(events.map(frame).join(''))});
+  assert.equal(final.status,'error');assert.equal(final.tokens,7);assert.match(final.error,/Claude declined/);
+  assert.equal(final.text,partial?'Hello':'');assert.equal(final.error.includes('Partial answer preserved'),partial);
+ }
+});

@@ -17,7 +17,7 @@ for(const arch of ['arm64','x64']){
   const bundled=asar.listPackage(archive).map(p=>p.replace(/^\//,'')).filter(p=>/^(src|desktop)\//.test(p) && !asar.statFile(archive,p).files).sort();
   if(JSON.stringify(bundled)!==JSON.stringify(files.filter(p=>/^(src|desktop)\//.test(p)).sort()))throw new Error('Bundled source file set differs from tag');
   for(const file of files){const actual=asar.extractFile(archive,file),source=fs.readFileSync(path.join(root,file));if(file==='package.json'){const a=JSON.parse(actual),b=JSON.parse(source);for(const key of ['version','name','main','dependencies'])if(JSON.stringify(a[key])!==JSON.stringify(b[key]))throw new Error(`Packaged metadata mismatch: ${key}`);}else if(!actual.equals(source))throw new Error(`Bundled source differs from tag: ${file}`);}
-  for(const file of ['node_modules/marked/lib/marked.esm.js','node_modules/dompurify/dist/purify.es.mjs']) if(!asar.extractFile(archive,file).equals(fs.readFileSync(path.join(root,file))))throw new Error(`Bundled dependency mismatch: ${file}`);
+  for(const file of ['node_modules/markdown-it/dist/browser/markdown-it.esm.min.mjs','node_modules/dompurify/dist/purify.es.mjs']) if(!asar.extractFile(archive,file).equals(fs.readFileSync(path.join(root,file))))throw new Error(`Bundled dependency mismatch: ${file}`);
   console.log(`Verified ${arch}: public checksum, sealed signature, source matches tag, Markdown dependencies match lockfile install.`);
  }finally{execFileSync('hdiutil',['detach',mount],{stdio:'inherit'});}
 }

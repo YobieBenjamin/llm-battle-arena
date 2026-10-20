@@ -15,7 +15,7 @@ const corpus=require('../test/fixtures/code-corpus.cjs');
  await app.evaluate(({BrowserWindow},size)=>BrowserWindow.getAllWindows()[0].setContentSize(...size),[width,height]);
  for(const id of ['claude','openai','gemini']){
  const answer=page.locator(`#${id}-answer`);
- assert.deepEqual(await answer.locator('pre code').allTextContents(),corpus.cases.map(c=>c.code.endsWith('\n')?c.code:c.code+'\n'));
+ assert.deepEqual(await answer.locator('pre code').allTextContents(),corpus.cases.map(c=>c.code+'\n'));
  assert.equal(await answer.locator('h1').evaluate(el=>getComputedStyle(el).letterSpacing),'normal');
  assert.equal(await answer.locator('th').first().evaluate(el=>getComputedStyle(el).whiteSpace),'nowrap');
  assert.equal(await answer.locator('td').first().evaluate(el=>getComputedStyle(el).overflowWrap),'normal');
@@ -27,6 +27,10 @@ const corpus=require('../test/fixtures/code-corpus.cjs');
  }
  await page.locator('#claude-answer .code-toolbar button').nth(1).click();
  assert.equal(await app.evaluate(()=>globalThis.copiedCode),corpus.cases[1].code+'\n');
+ for (let i=0;i<corpus.cases.length;i++) {
+ await page.locator('#claude-answer .code-toolbar button').nth(i).click();
+ assert.equal(await app.evaluate(()=>globalThis.copiedCode),corpus.cases[i].code+'\n',corpus.cases[i].id);
+ }
  await page.locator('#claude-copy').click();assert.equal(await app.evaluate(()=>globalThis.copiedCode),corpus.answer());
  await page.locator('#claude-artifact').click();
  const source=page.locator('#artifact-body pre');await source.waitFor();

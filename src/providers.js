@@ -21,7 +21,10 @@ export async function* readSSE(body, onData = () => {}) {
   let pending = '';
   try {
     while (true) {
-      const { value, done } = await reader.read();
+      let chunk;
+      try { chunk = await reader.read(); }
+      catch { throw new Error('Connection to the provider was interrupted. Check your internet connection, then retry.'); }
+      const { value, done } = chunk;
       if (value?.length) onData();
       pending += decoder.decode(value, { stream: !done });
       pending = pending.replace(/\r\n/g, '\n');
@@ -32,8 +35,8 @@ export async function* readSSE(body, onData = () => {}) {
         const data = frame.split('\n').filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
         if (data && data !== '[DONE]') {
           let parsed;
-          try { parsed = JSON.parse(data); } catch { throw new Error('Provider returned an unreadable stream. Partial answer preserved.'); }
-          if (!parsed || typeof parsed !== 'object') throw new Error('Provider returned an unreadable stream. Partial answer preserved.');
+          try { parsed = JSON.parse(data); } catch { throw new Error('Provider returned an unreadable stream.'); }
+          if (!parsed || typeof parsed !== 'object') throw new Error('Provider returned an unreadable stream.');
           yield parsed;
         }
       }
@@ -71,7 +74,10 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
     if (!key) throw new Error('Add an API key in Connections, or use Website assist.');
     const req = buildRequest(id, prompt, model, maxTokens, key, route);
     send('connecting');
-    const request=()=>fetchImpl(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: combined });
+    const request=async()=>{
+      try { return await fetchImpl(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: combined }); }
+      catch { throw new Error('Could not connect to the provider. Check your internet connection and any Wi-Fi sign-in page, then retry.'); }
+    };
     let response = await request();
     if([503,529].includes(response.status)) {
       await response.body?.cancel(); send('retrying', {error:'Provider busy. Retrying once…'});
@@ -95,7 +101,7 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
       if (route === 'openrouter') {
         const choice=event.choices?.[0];
         if(typeof choice?.delta?.content==='string') text+=choice.delta.content;
-        if(choice?.finish_reason) { finished=true; truncated=choice.finish_reason==='length'; if(!['stop','length'].includes(choice.finish_reason)) throw new Error('The provider stopped or filtered this answer. Partial answer preserved.'); }
+        if(choice?.finish_reason) { finished=true; truncated=choice.finish_reason==='length'; if(!['stop','length'].includes(choice.finish_reason)) throw new Error('The provider stopped or filtered this answer.'); }
         inputTokens=validTokenCount(event.usage?.prompt_tokens) ?? inputTokens;
         tokens=validTokenCount(event.usage?.completion_tokens) ?? tokens;
         reasoningTokens=validTokenCount(event.usage?.completion_tokens_details?.reasoning_tokens) ?? reasoningTokens;
@@ -107,6 +113,7 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
         if (event.delta?.type === 'text_delta') text += event.delta.text;
         if (event.usage?.output_tokens != null) tokens = validTokenCount(event.usage.output_tokens);
         if (event.delta?.stop_reason === 'max_tokens') truncated = true;
+        if (event.delta?.stop_reason === 'refusal') throw new Error('Claude declined this request. Try rephrasing your question.');
         if (event.type === 'message_stop') finished = true;
       } else if (id === 'openai') {
         if (event.type === 'response.output_text.delta') text += event.delta;
@@ -116,7 +123,7 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
           inputTokens = validTokenCount(event.response?.usage?.input_tokens);
           reasoningTokens = validTokenCount(event.response?.usage?.output_tokens_details?.reasoning_tokens);
           truncated = event.type === 'response.incomplete' && event.response?.incomplete_details?.reason === 'max_output_tokens';
-          if (event.type === 'response.incomplete' && !truncated) throw new Error('The provider stopped this answer before completion. Partial answer preserved.');
+          if (event.type === 'response.incomplete' && !truncated) throw new Error('The provider stopped this answer before completion.');
         }
         if (event.type === 'response.refusal.delta') text += event.delta;
       } else {
@@ -128,7 +135,7 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
         if (candidate?.finishReason) {
           finished = true;
           truncated = candidate.finishReason === 'MAX_TOKENS';
-          if (!['STOP', 'MAX_TOKENS'].includes(candidate.finishReason)) throw new Error('The provider stopped or filtered this answer. Partial answer preserved.');
+          if (!['STOP', 'MAX_TOKENS'].includes(candidate.finishReason)) throw new Error('The provider stopped or filtered this answer.');
         }
         if (event.promptFeedback?.blockReason) throw new Error('The provider blocked this prompt. Try another prompt.');
       }
@@ -136,10 +143,10 @@ export async function runProvider({ id, prompt, model, maxTokens, key, keyError,
       send('streaming');
     }
     if (combined.aborted) throw combined.reason;
-    if (!finished) throw new Error('Connection ended before generation finished. Partial answer preserved.');
+    if (!finished) throw new Error(text ? 'Connection ended before generation finished. Check your internet connection, then retry.' : 'No usable answer stream arrived. Check your internet connection and any Wi-Fi sign-in page, then retry.');
     if (!text) {const error=new Error(truncated?'The output budget was exhausted before an answer appeared. Try a higher output limit.':'No answer text returned. The output limit or safety settings may have stopped generation.');error.code=truncated?'output_budget_exhausted':'no_answer';throw error;}
     send('done', { truncated });
   } catch (error) {
-    send(signal.aborted ? 'cancelled' : 'error', { code:error.code, error: signal.aborted ? 'Stopped. Partial answer preserved.' : timeoutKind ? (timeoutKind === 'idle' ? 'Timed out waiting for provider data. Partial answer preserved.' : 'Timed out at the request time limit. Partial answer preserved.') : error.message });
+    send(signal.aborted ? 'cancelled' : 'error', { code:error.code, error: ( signal.aborted ? 'Stopped.' : timeoutKind ? (timeoutKind === 'idle' ? 'Timed out waiting for provider data.' : 'Timed out at the request time limit.') : error.message) + (text ? ' Partial answer preserved.' : '') });
   } finally { clearTimeout(totalTimer); clearTimeout(idleTimer); }
 }

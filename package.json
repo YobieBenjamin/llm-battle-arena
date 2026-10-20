@@ -1,6 +1,6 @@
 {
   "name": "llm-battle-arena",
-  "version": "2.4.9",
+  "version": "2.4.10",
   "description": "One prompt. Three perspectives. A private desktop LLM comparison app.",
   "main": "desktop/main.cjs",
   "type": "module",
@@ -82,6 +82,6 @@
   "productName": "LLM Battle Arena",
   "dependencies": {
     "dompurify": "3.4.17",
-    "marked": "18.1.1"
+    "markdown-it": "15.0.3"
   }
 }

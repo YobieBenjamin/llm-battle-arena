@@ -18,6 +18,8 @@ const cases = [
   { id: 'no-blank-before', lang: 'js', code: 'console.log("fence directly after text");', pre: 'Here:', tight: true },
   { id: 'indented-fence', lang: 'js', indent: '   ', code: 'const indented = true;\nif (indented) {\n  run();\n}', pre: 'Fence indented by three spaces:' },
   { id: 'list-code', lang: 'python', list: true, code: 'for i in range(3):\n    print(i)', pre: '1. Step one, run this:' },
+  ...['1.', '-'].flatMap(marker => ['makefile','go','python'].map(lang => ({id:`list-tabs-${marker}-${lang}`,lang,list:true,pre:`${marker} Create a file:`,code:lang==='makefile'?'all:\n\t@echo hello':'outer\n\tinner\n\t\tdeep'}))),
+  ...[1,2,3].flatMap(n => ['~~~','```'].map(fence => ({id:`fence-indent-${n}-${fence}`,lang:'yaml',indent:' '.repeat(n),fence,pre:'Indented fence:',code:'root:\n  child: value\n\n  other: yes'}))),
   { id: 'sql-wide', lang: 'sql', code: 'SELECT customer_id, first_name, last_name, email_address, phone_number, created_at, updated_at, lifetime_value FROM customers WHERE created_at > NOW() - INTERVAL \'30 days\' ORDER BY lifetime_value DESC;', pre: 'SQL:' },
   { id: 'big', lang: 'python', code: bigLines.join('\n'), pre: 'A 1500-line file:' }
 ];

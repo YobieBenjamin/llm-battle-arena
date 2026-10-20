@@ -1,4 +1,15 @@
-# v2.4.9 — clearer code answers
+# v2.4.10 — reliable code copying and clearer failures
+
+- Preserve tabs in fenced code inside numbered and bulleted steps, including Makefiles, Go, and Python.
+- Remove Markdown fence indentation consistently for backticks and tildes, without changing code indentation.
+- Replace the Markdown parser with markdown-it; raw HTML remains disabled and rendered answers still pass through DOMPurify.
+- Explain failed connections and interrupted streams in plain language. Only say “Partial answer preserved” when answer text exists.
+- Report Claude’s refusal signal as a declined request rather than a completed answer.
+- Expand exact-text and clipboard regression coverage; keep the hardened release and public-download verification gates.
+
+No API calls are needed for these regression tests. See [the audit response](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/AUDIT-RESPONSE-2.4.10.md).
+
+## v2.4.9 — clearer code answers
 
 - Normal heading spacing and readable table columns; wide tables scroll.
 - Code stays at 12 px with four-column tabs, visible horizontal scrollbars, keyboard focus, and a Copy code button for each block.

@@ -1,9 +1,10 @@
 import { codeView } from './code-view.js';
-import { Marked } from '../node_modules/marked/lib/marked.esm.js';
+import MarkdownIt from '../node_modules/markdown-it/dist/browser/markdown-it.esm.min.mjs';
 import DOMPurify from '../node_modules/dompurify/dist/purify.es.mjs';
-const parser = new Marked({renderer:{html:({text}) => text.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}});
+// Keep raw HTML inert; sanitization and trusted controls remain separate.
+const parser = new MarkdownIt({html:false, linkify:true});
 export function renderMarkdown(text, controls) {
-  const fragment = DOMPurify.sanitize(parser.parse(text, {async:false, gfm:true}), {
+  const fragment = DOMPurify.sanitize(parser.render(text), {
     ALLOWED_TAGS: ['p','br','strong','em','del','blockquote','ul','ol','li','h1','h2','h3','h4','h5','h6','pre','code','hr','table','thead','tbody','tr','th','td','a'],
     ALLOWED_ATTR: ['href','title','start'], ALLOW_DATA_ATTR:false, ALLOW_ARIA_ATTR:false, RETURN_DOM_FRAGMENT:true
   });
