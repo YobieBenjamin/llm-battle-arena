@@ -1,310 +1,355 @@
-# LLM Battle Arena: the friendly user guide
+# LLM Battle Arena: the complete beginner guide
 
-**Current download: [latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).** Older installer releases are archived and unavailable to the public; source tags remain for history.
+**Ask once. Compare answers or generated code in one place.**
 
+Instead of opening three AI websites and repeating your question, use **Live API** to send it to Claude, OpenAI, and Gemini together. Each answer appears in its own card. You choose which answer is most useful; the app does not choose a winner for you.
 
+You do not need to code or understand GitHub. The one-time setup is installing the app and connecting the AI accounts you want to use.
 
-One prompt, three answers, and no complicated setup. Start with the sample, then connect your own model accounts through API keys if you want live answers.
+[Install the app step by step](../START-HERE.md) · [Get API keys and understand costs](API_KEYS_AND_COSTS.md) · [Current downloads](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Home](../README.md)
 
-[Download the app](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) · [Back to the quick start](../README.md)
+## Find what you need
 
-## Never used GitHub before?
+- [Install on Mac or Windows](#install-on-mac-or-windows)
+- [Handle first-launch messages](#first-launch-security-prompts)
+- [Try the free sample](#your-first-minute-try-sample)
+- [Understand the unfamiliar words](#a-few-words-you-will-see)
+- [Connect API keys](#connect-your-api-keys)
+- [Understand costs](#what-does-it-cost)
+- [Ask your first real question](#run-a-real-comparison)
+- [Use the buttons and read code](#what-the-buttons-do)
+- [Use the websites without keys](#use-it-without-api-keys-website-assist)
+- [Play a blind battle](#blind-battles-and-local-wins)
+- [Preview files with Y](#preview-artifacts-with-the-y-badge)
+- [Keep answers in History or export them](#keep-or-share-a-comparison)
+- [Update the app](#updates)
+- [Troubleshoot a problem](#troubleshooting)
+- [Privacy and uninstalling](#privacy-and-local-settings)
 
-That is fine. GitHub is just the download website for this app. You do not need to sign up, install Git, use a terminal, or understand source code.
+## Install on Mac or Windows
 
-1. Open the [beginner start page](../START-HERE.md) in your web browser.
-2. Click the download link for your computer. A download means the installer file is being saved to your computer, usually in **Downloads**.
-3. Open that file from your browser's downloads list or the Downloads folder.
-4. Use the Mac or Windows instructions below.
+Use the **[numbered installation walkthrough](../START-HERE.md)**. It explains how to identify your computer, pick the correct file, find it in Downloads, install it, and recognize a successful first launch.
 
-If you end up on a GitHub release page, scroll down to **Assets**. Click the Setup `.exe` for Windows or `.dmg` for Mac. Ignore **Source code (zip)** and **Source code (tar.gz)**—those are for programmers. If Assets is collapsed, click its heading to expand it. The **Code**, **Fork**, and **Pull requests** buttons are not part of installation.
+You do not need a GitHub account. On a release page, **Assets** means downloadable files. Choose the Windows **Setup.exe** or Mac **.dmg** for your processor. Ignore **Source code**, **Code**, **Fork**, and programmer files.
 
-## Choose your download
-
-| Computer | File to download |
-| --- | --- |
-| Most Windows laptops (Intel or AMD) | `LLM-Battle-Arena-Windows-x64-Setup.exe` |
-| Windows laptop with an ARM/Snapdragon processor | `LLM-Battle-Arena-Windows-arm64-Setup.exe` |
-| Mac with an Apple M-series chip | `LLM-Battle-Arena-macOS-arm64.dmg` |
-| Mac with an Intel processor | `LLM-Battle-Arena-macOS-x64.dmg` |
-
-**Not sure?** On Mac, Apple menu → About This Mac shows Chip or Processor. On Windows, Settings → System → About → System type shows whether the processor is x64 or ARM. Use a currently supported, updated version of macOS or Windows; older systems may not run the bundled Electron runtime. Windows 7/8 and 32-bit PCs are not supported.
-
-Download the installer listed above, not GitHub's “Source code” ZIP. No GitHub account is needed to download public release assets. API keys require provider accounts, but the Arena itself has no account or password.
-
-## Install on Windows
-
-1. Click the Windows download link in the [README](../README.md), or find your Setup file on the [latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).
-2. Open your Downloads folder and double-click the downloaded `.exe`.
-3. Follow any Windows security approval described below. Only proceed if you trust this project and obtained the file from this repository's release page.
-4. The one-click installer installs for your Windows user, creates shortcuts, and opens the app. No destination-selection wizard is needed.
-5. Next time, use the **LLM Battle Arena** shortcut on your desktop or in Start.
-
-**Optional portable version:** release assets also include a `Portable.exe` for each Windows processor type. Double-click it to run without installing shortcuts. Connection settings are still saved in your Windows user profile, not alongside the portable file. Choose Setup for the easiest everyday experience.
-
-## Install on Mac
-
-1. Download the disk image matching your Mac's processor.
-2. Double-click the `.dmg` in Downloads.
-3. Drag **LLM Battle Arena** onto the **Applications** folder shown in the disk-image window.
-4. Open Finder → Applications → **LLM Battle Arena**.
-5. If macOS blocks the first launch, see the next section.
-6. Once the installed copy opens, eject the disk image from Finder. You can delete the downloaded `.dmg` if you wish.
-7. Next time, launch from Applications or Spotlight. You can also keep the app in your Dock.
-
-Do not keep running the app from inside the disk image. Install it into Applications first.
+Use a supported, updated desktop operating system. The downloads are for Mac and Windows x64/ARM64 computers, not phones, tablets, Chromebooks, 32-bit Windows, or a browser extension. The app runs in its own window after installation. Downloading, account setup, and Live API need internet access; the installed Sample works offline.
 
 ## First-launch security prompts
 
-Mac releases from 2.2.1 onward have an ad-hoc bundle signature verified during the build. They still have no verified publisher certificate or Apple notarization. Windows builds remain unsigned. A warning is expected; a warning alone is not proof that a download is safe. Use only this project's release page and decide whether you trust the source. Never turn off antivirus, Gatekeeper, or Smart App Control globally to run it.
+These hobby-project installers do not have a verified commercial publisher identity: Windows builds are unsigned; Mac builds have an ad-hoc bundle signature but are not Apple-notarized. Your computer may warn, ask for approval, or block them. A warning is not proof the file is safe. Use only the [official current release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) and decide whether you trust it.
 
-**Mac:** bundle verification is not Gatekeeper approval. An ad-hoc build can still be blocked as untrusted. After an attempted launch, macOS may offer a per-app approval in System Settings → Privacy & Security → Open Anyway. Follow the prompts only if you trust the downloaded app. Exact wording varies by macOS version. If macOS reports “damaged,” do not assume Open Anyway will appear: download the latest release and report the exact message. We have not certified a fresh Safari-download approval flow on every Mac. [Apple's official explanation](https://support.apple.com/en-us/102445).
+### Mac: unverified developer or cannot verify the app
 
-**Windows:** SmartScreen may say “Windows protected your PC.” Where Windows offers **More info → Run anyway**, that is a per-app choice you can make after checking the source. Smart App Control or an organization's policy may block it without offering that option. Do not disable those protections globally; on a managed machine, ask the administrator. [Microsoft's explanation of Smart App Control](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions).
+1. First try opening the installed copy in **Finder → Applications**.
+2. If macOS blocks it, open **Apple menu → System Settings → Privacy & Security**.
+3. Look for a message about **LLM Battle Arena**. If an **Open Anyway** option is offered, review it and proceed only if you trust the download.
+4. Follow any macOS confirmation prompts, then open the app again.
 
-Publisher signing would reduce installation friction, but these downloads do not claim a verified publisher identity.
+The wording and available options depend on your macOS version and policies. If it says **damaged** or offers no approval option, do not assume these steps will work: download the current version again and report the exact message. Do not disable Gatekeeper or run security-bypass commands. [Apple’s first-launch guidance](https://support.apple.com/en-us/102445).
+
+### Mac: Keychain prompt or startup appears stuck
+
+Keychain is macOS’s credential protection. Arena may wait while macOS asks you about access, including after an update. Look for that system prompt and handle it directly on your Mac. Do not type your Mac password into an Arena field or send it to someone in a chat. If you decline or the key cannot be unlocked, you may need to resolve credential access before using saved API keys.
+
+### Windows: Windows protected your PC
+
+If SmartScreen offers **More info**, review the file and source. A **Run anyway** option may be available if you choose to trust it. Some computers will not offer that option. Smart App Control or work/school policy can block an app separately; do not turn off those protections globally. On a managed computer, ask its administrator. [Microsoft’s SmartScreen explanation](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation) and [Smart App Control guidance](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions).
 
 ## Your first minute: try Sample
 
-1. Open the app.
-2. Leave **Sample · no setup** selected.
+1. Open Arena and find **Compare with** at the top.
+2. Choose **Sample · no setup**.
 3. Click **Show sample**.
-4. Read the three example answers. Scroll inside any card to read more.
-5. Click **How to play** at the top whenever you want a reminder.
+4. Read the three answers. Scroll inside each card to see more.
+5. Try the gold **Y** on the Gemini card: hover to peek, click to keep the preview open, click again to hide it.
 
-The sample question is fixed and cannot be edited in this mode. Sample answers are human-written illustrations, not model output. They work offline and make no API calls. Choose Live API or Website assist for your own questions.
+These are fixed, human-written examples. They do not contact AI providers or create charges. The sample question cannot be edited. Switch modes when you want to ask your own question. **How to play** opens a short reminder inside the app.
+
+## A few words you will see
+
+| Word | Plain-English meaning |
+| --- | --- |
+| **LLM / AI model** | The software that writes an answer. A provider can offer several versions, called models. |
+| **Provider** | The company supplying the model: Anthropic supplies Claude, OpenAI supplies the models on the OpenAI card, and Google supplies Gemini. |
+| **Prompt** | The question or instructions you type. |
+| **API** | A way for one app to ask another service to do something. Arena uses it to ask the providers for answers without you visiting each chat website. |
+| **API key** | A private access code that lets Arena use your provider account. It is not your website password. |
+| **API call / request** | One request sent to a provider. A three-provider comparison normally makes three requests. |
+| **Token** | A small piece of text used to measure input and generated output. It can be a word, part of a word, or punctuation. It is not a dollar amount. |
+| **Streaming** | The answer appears bit by bit while the model is writing it. |
+| **Artifact** | A file-like result in an answer, such as a small webpage, drawing, or code file. |
+
+You do not need to calculate tokens to use Arena. [Read the simple cost explanation](API_KEYS_AND_COSTS.md#api-calls-and-tokens-in-plain-english) before enabling live requests. The explanations and setup instructions draw on [OpenAI’s documentation](https://developers.openai.com/api/docs/quickstart), [Anthropic’s key guide](https://platform.claude.com/docs/en/get-api-key), and [Google’s Gemini key guide](https://ai.google.dev/gemini-api/docs/api-key).
 
 ## Connect your API keys
 
-API keys are like access passes for software. They are not your chat website username or password. Paying for a chat subscription does not automatically enable the matching API.
+**[Follow the complete API-key walkthrough →](API_KEYS_AND_COSTS.md)**
 
-1. Click **Connections**.
-2. For each provider, click **Get API key** to open its official developer site in your browser.
-3. Sign in there and create or find an API key. Providers may ask you to create a project or enable billing. Their screens and account requirements change over time.
-4. Copy the key and paste it into the matching Arena field. You can use the normal keyboard paste shortcut.
-5. Click **Check key & load models**, then choose a model from the menu. Availability depends on your provider account.
-6. Repeat for the other providers, then click **Save connections**.
-7. With at least one saved key, the app selects **Live API · automatic**.
+It has separate instructions for [Claude](API_KEYS_AND_COSTS.md#get-a-claude-key), [OpenAI](API_KEYS_AND_COSTS.md#get-an-openai-key), and [Gemini](API_KEYS_AND_COSTS.md#get-a-gemini-key), including copying, pasting, checking, selecting a model, and saving.
 
-Official key pages: [Anthropic](https://platform.claude.com/settings/keys), [OpenAI](https://platform.openai.com/api-keys), [Google AI Studio](https://aistudio.google.com/api-keys).
+The setup happens once:
 
-You can start with one key. Uncheck **Include** on cards you have not connected. For the direct route, three automatic answers require all three keys and working provider accounts. Alternatively, choose OpenRouter to use one key. Saving checks credentials through model-list requests, but does not validate generation access or billing credit.
+1. Click **Connections** and leave **Direct provider keys** selected.
+2. In the provider’s section, click **Get API key** to open its official site.
+3. Create a key there and check its API billing/allowance. A chat subscription is not the same as API access.
+4. Return to Arena and paste into that provider’s **API key** field.
+5. Click **Check key & load models**, then select an available text model whose pricing suits you.
+6. Repeat for any other providers you want. Click **Save connections** and wait for it to finish.
+7. In the main window, uncheck **Include** for any provider you have not connected.
 
-**Cost:** the Arena is free. Providers control API charges, credits, and quotas. Gemini has free tiers for some API models, but a free allowance is not guaranteed for every model or account. A comparison can make three paid requests, and Retry makes another request to that provider. Start with short questions and the default output limit. Set spending controls in the provider dashboards if desired.
+Start with one provider if you prefer. To get all three automatic direct answers, connect all three. The key stays saved between launches. A blank field labeled **Saved · leave blank to keep** is normal: the app does not display the secret again.
 
-### Change or remove a key
+A successful key check lists models; it does not guarantee billing credit or that every listed model can generate an answer through Arena. Save does not recheck unchanged saved keys. Use **Check key & load models** to deliberately check one again.
 
-- Open Connections, paste a new key into that provider's field, and Save connections to replace it.
-- Leave a key field blank to keep the saved key. The app does not display saved keys.
-- Check **Remove saved key** and Save connections to delete it locally. If both a replacement and Remove are selected, removal takes precedence.
-- To invalidate a key everywhere, revoke it in the provider's own dashboard. Removing it from this app alone does not revoke it.
+## What does it cost?
+
+The app is free. **Sample is free. Live API usage is billed or counted against an allowance by the selected providers.** Website assist uses the websites’ own plans and limits.
+
+For text APIs, costs commonly depend on the model and the tokens it reads and generates; reasoning can also be billed. An API call is the request, not a separate type of token or a universal extra fee. Three selected providers can mean three separately billed requests. Long questions, long code answers, and Retry can increase usage. Stop does not refund work already processed.
+
+Arena has no dollar spending cap or built-in price calculator. **Output limit** is a token limit per included provider, not a money limit. The token counters are not an invoice. Check the provider’s usage page and available spending controls; do not assume an alert is a hard cap. [Costs and sensible first-test steps](API_KEYS_AND_COSTS.md#before-you-connect-what-is-free-and-what-costs-money).
+
+Current official prices: [OpenAI](https://developers.openai.com/api/docs/pricing) · [Anthropic/Claude](https://platform.claude.com/docs/en/about-claude/pricing) · [Google/Gemini](https://ai.google.dev/gemini-api/docs/pricing). Free allowances vary; no free access to all three is promised.
 
 ## Run a real comparison
 
-1. Select **Live API · automatic**.
-2. Check **Include** on the providers you want.
-3. Type a question into the compact prompt box. Long prompts scroll inside that box; click it and use the mouse wheel, trackpad, or arrow keys to move through the text.
-4. Click **Compare** or press Ctrl+Enter on Windows / Cmd+Enter on Mac.
-5. Each provider starts independently. One error does not cancel the other answers.
-6. Scroll inside each answer card to read its full response. You can select text and copy it, or use **Copy answer** for the whole answer.
+1. Choose **Live API · automatic** under Compare with.
+2. Check **Include** on the connected providers you want to compare.
+3. Type a short question, for example: **“Explain how Wi-Fi works in three simple sentences.”**
+4. Leave **Output limit** at its default while learning, or choose a smaller limit for shorter responses. A low limit can cut off an answer or leave a reasoning model without visible output.
+5. Click **Compare**.
+6. Watch the answers appear in separate cards. Each provider works independently; one failure does not cancel the others.
+7. Scroll inside each card and compare clarity, usefulness, or accuracy. **Copy answer** copies a whole response.
 
-The exact same prompt goes to every included provider. Each new comparison starts fresh: previous answers are not sent as conversation history. Model IDs appear on cards so you know which models were used. OpenAI API results are not necessarily identical to the ChatGPT website's answers.
+**Success looks like:** new answers appear for your own question. They are not labeled illustrative samples. If a card shows an error, see [troubleshooting](#troubleshooting) before retrying.
 
-### Controls explained
+Every included provider gets the same prompt. Each comparison starts fresh: a new question does not include earlier answers as chat context. If you want the model to revise something, include the relevant text and instructions in your new prompt. Previous questions in History are saved records, not an ongoing conversation sent to the models.
 
-| Control | What it does |
+The OpenAI card uses API models; it is not a remote copy of the ChatGPT website. Model choices, website features, and answers can differ. Agreement between models is not proof of correctness.
+
+## What the buttons do
+
+| Control | What happens |
 | --- | --- |
-| Include | Selects which providers receive your prompt on the next comparison. |
-| Output limit | Sets the maximum generated token budget per provider. Some models use part of this budget for reasoning. It is not a fixed word count or price estimate. |
-| Stop | Stops active requests; keeps whatever text has arrived. It does not undo provider charges already incurred. |
-| Retry | Repeats only that card using the original comparison prompt and output limit. A fresh response may be different. |
-| Copy answer | Copies the entire answer, including text below the visible scroll area. |
-| Export Markdown | Opens a save dialog for a readable `.md` file containing the prompt and all recorded results. |
-| JSON | Opens a save dialog for structured data including mode, prompt, results, and status. It contains no saved API keys. |
-| Try an example | Fills in an example question in a mode that accepts your own prompts. |
-| How to play | Opens a short guide inside the app. |
-
-An answer may show **output limit reached**. Try a shorter question or a higher output limit and Retry. When no text is returned, reasoning may have consumed the budget or the provider may have blocked generation. Answers format Markdown headings, lists, tables, emphasis and code. While streaming, answers use plain text to keep the app responsive; formatting and artifact badges appear when the answer stops. Raw HTML examples display as text instead of running or hiding the rest of the answer. Active scripts, images and embedded content remain blocked. Click ordinary HTTP/HTTPS links to open them in your system browser. Copy answer and exports preserve the original Markdown. In Website assist, use **Read formatted** after pasting; **Edit pasted answer** returns to the paste box.
-
-## What do the tiny token counters mean?
-
-- **Q**: question/input tokens, reported by the provider when available, otherwise estimated.
-- **A ~**: the visible answer text, always estimated using the same local rule for all three providers (about four Unicode characters per token). This is an approximate comparison of visible answer size, not an exact model-token count.
-- **R**: separately reported reasoning/thinking tokens. **—** means the provider did not report a separate count; it does not mean zero.
-
-A token is a piece of text, not necessarily a word. Estimates can be substantially wrong for languages other than English, code, or emoji. Counts are not prices. The draft question's estimate is shown above the prompt box. Existing result counters stay attached to their original question even when you type a new draft.
-
-Provider output usage is shown in the hover explanation and both export formats. OpenAI output usage can include reasoning and non-visible formatting; Gemini reports answer candidates and thoughts separately. Even subtracting reasoning does not guarantee an exact visible-text count, so A consistently estimates only the displayed answer. JSON keeps the original usage fields plus the labeled summary. Markdown includes Q/A/R and raw provider output usage.
-
-While an answer streams, A grows with the visible text. Sample and Website assist make no extra token API calls. Use your provider dashboard to check actual charges.
-
-## Have some fun
-
-- “Write a dramatic breakup letter from a toaster to a microwave.”
-- “Explain black holes to a five-year-old, then to a pirate.”
-- “Give me a terrible business idea and sell it like it is brilliant.”
-- “Invent a superhero whose only power is mildly inconvenient.”
-- “Give three different endings to a mystery about a missing sock.”
-- “Find the flaw in this argument: all cats are mammals, so all mammals are cats.”
-
-Judge the results yourself: funniest, clearest, most useful, or most surprising. There is no automatic quality score, and fastest does not necessarily mean best.
-
-## Use it without API keys: Website assist
-
-1. Select **Website assist · no API keys**.
-2. Enter your prompt and choose the providers with Include.
-3. Click **Prepare comparison**.
-4. Click **Open Claude**, **Open OpenAI**, or **Open Gemini** on a card. The app copies your prompt and opens the official site in your system browser.
-5. Paste the prompt into that website, sign in if required, and submit it yourself.
-6. Copy the resulting answer from the website.
-7. Return to the Arena and paste it into that provider's answer field. The field scrolls as the answer grows.
-8. Repeat for the other providers, then copy or export the comparison.
-
-This mode does not automate website submissions or read website answers. Each provider controls its own free limits and login requirements. There is no guaranteed shared “one or three free questions” offer. The app never collects website passwords.
-
-Changing the prompt or included providers in Website assist clears the pasted comparison to avoid mixing answers from different questions. Export before changing those settings if you want to keep it.
-
-## Preview artifacts with the Y badge
-
-The Arena recognizes complete, labeled fenced code blocks as files. A small gold **Y** appears at the top of the matching answer card. Examples include HTML, SVG, JSON, CSV, Markdown, JavaScript, TypeScript/JSX/TSX, Python, CSS, and text. An unfinished code block does not produce a badge until the answer stops and its closing fence is present. Up to 12 files are shown per answer, each limited to one million characters.
-
-1. **Hover over Y** to reveal the preview. You can move your pointer into the preview to inspect it; moving away from both hides an unpinned peek.
-2. **Click Y** to pin the preview in a dock beside the cards on wide windows or below the cards on smaller windows. It stays displayed without covering the answer controls. On smaller windows, scroll the results area to move between the answers and the preview; both keep readable heights. Ctrl/Cmd+Enter still starts a comparison while the preview is pinned (except inside website-answer paste boxes).
-3. **Click the same Y again** to hide it. The Close button also hides it.
-4. A pinned file stays put if you merely hover over another provider's badge. Clicking the other provider's Y deliberately switches the pinned preview.
-5. Use the filename tabs for multiple files. **Show source** toggles the source view for HTML, SVG, and JSON.
-6. **Save file** opens your computer's save dialog. Choose a folder and click Save. The app does not automatically open or execute the saved file.
-
-HTML/SVG are rendered in an isolated static frame: no JavaScript, outside images, network access, forms, or app controls. Inline styling and data-embedded images can display. JSON is prettified when valid; CSV, Markdown, and programming languages are displayed as source text. The preview will not run a React project or execute Python. Saved HTML can run scripts and make network requests when you open it in a browser. The in-app preview restrictions do not follow the file into another program.
-
-This feature detects files embedded in the answer text. It does not retrieve Claude/ChatGPT/Gemini website artifacts, cloud documents, remote images, or private links. If no Y appears, try asking: **“Give me a complete self-contained HTML file in a fenced html code block.”**
-
-The Gemini sample includes a human-written HTML reminder card so you can try Y without keys or a charge. Model-generated files are not guaranteed to be correct.
-
-![The Y badge opens an isolated example artifact](artifact-preview.png)
-
-## Keep or share a comparison
-
-Click **Export Markdown** or **JSON**, choose a folder and filename, and save. The export includes answers even when they extend below the visible part of a card, plus errors or partial results if a run failed or was stopped.
-
-The app automatically saves the last 50 comparisons, including Sample and Website assist. Click **History**, then click a question to reopen it. Reopening never calls a provider. An unfinished saved answer is labeled interrupted; Retry in Live API mode is an explicit new request and may cost money. Each new question still starts fresh.
-
-Use **Delete** beside an entry to remove it. To clear everything, click **Delete all history**, then **Confirm delete all**. Export anything you want to keep beyond the latest 50. History is plain text in `history.json` in the app data folder, not encrypted like API keys. It may contain sensitive information you typed. Streaming/pasted answers save approximately every half second, and on normal close; a crash can lose the latest unsaved fragment. Damaged history is backed up as `history.json.<time>.bak`, with its location shown in History. Deleting history does not remove these recovery backups or files you exported. Files and clipboard contents can contain sensitive prompts or answers, so check them before sharing.
-
-## Updates
-
-There is no background updater. Download a newer installer from [Releases](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest).
-
-- **Windows:** close the Arena and run the newer Setup file for the same processor type.
-- **Mac:** close the Arena, open the newer `.dmg`, and replace the existing app in Applications.
-
-Connection settings normally survive because they are stored in your user profile, outside the installed application. You may need to re-enter keys if OS credential protection changes or you move to another computer. Do not copy encrypted key files between laptops.
-
-## Troubleshooting
-
-| What you see | What to try |
-| --- | --- |
-| Download link fails | Open the latest Releases page and choose the matching asset. Don't download source code. Report a missing asset if none appears. |
-| Mac app seems to wait during startup | Check for a macOS Keychain authorization prompt and handle it directly on your Mac. The app may be waiting for that decision. Do not enter your Mac login password in Arena or in a chat. |
-| Installer won't run | Check x64 vs ARM and Mac vs Windows. Use a supported, updated OS. See first-launch security prompts above. |
-| Add an API key | Open Connections, save that provider's key, or uncheck Include for that card. |
-| API key rejected | Replace the matching key. Check that it is an API key, not a website password, and has not been revoked. |
-| Access denied | Check your provider account's access to the selected model. |
-| Model unavailable / HTTP 404 | Open Connections, use Check key & load models, and select an available model. |
-| Rate limit or billing quota reached | Check the provider dashboard for credits, billing, or limits. Wait before retrying. |
-| Timed out | No response data arrived within two minutes while waiting for visible text, no further data arrived for 45 seconds after visible text started, or the request reached its five-minute overall cap. Check your connection, shorten the question, or Retry. Partial text is retained. |
-| Saved key could not be unlocked | Unlock your OS keychain/credential store, or open Connections and paste a replacement key. A saved-key indicator does not guarantee the OS can decrypt it. |
-| Only one or two answers | Read the other card's error, check its key/Include setting, and Retry just that provider. |
-| No text or output limit reached | Increase the output limit or shorten the task. Reasoning models may spend the budget before producing visible text. |
-| Can't save keys | OS credential encryption is unavailable. Use a normal logged-in user session with the OS keychain/credential store available, or use Website assist. |
-| A damaged connection file prevents launch | Choose Reset connections to preserve a backup and start fresh, or Open settings folder to inspect the path shown. Paste your keys again after resetting. Quit leaves the file unchanged. |
-| Answer appears cut off in its card | Put your pointer over that card and scroll. The whole answer remains available to Copy answer or Export. |
-
-If you report a bug, include the app version (the release you downloaded), OS, processor type, selected model IDs, and error wording. **Never include API keys or private prompts.** Use [GitHub Issues](https://github.com/YobieBenjamin/llm-battle-arena/issues).
-
-## Privacy and local settings
-
-Keys are encrypted with Electron's OS-backed `safeStorage`. They are used in the desktop process for fixed official API endpoints and are not sent to the interface. The app has no analytics, app login, shared key, or hosted backend. Live prompts are processed by the selected providers under their terms. Website assist uses your existing system browser.
-
-The app-data folder contains `connections.json` (encrypted keys and model selections), `history.json` (plain-text comparisons), and `preferences.json` (update preference and local votes):
-
-- **Mac:** `~/Library/Application Support/LLM Battle Arena/`
-- **Windows:** `%APPDATA%\LLM Battle Arena\`
-
-Finder → Go → Go to Folder on Mac, or File Explorer's address bar on Windows, can open these paths. OS encryption protects stored key material but is not a substitute for protecting your logged-in user account. Someone with access to that account may be able to use its applications and credentials.
-
-## Uninstall
-
-**Windows:** Settings → Apps → Installed apps → LLM Battle Arena → Uninstall. For the portable version, close it and delete the downloaded executable.
-
-**Mac:** close the app, then move LLM Battle Arena from Applications to Trash.
-
-Uninstalling may leave the app-data folder and encrypted connection settings behind. To remove those too, delete only the Arena's app-data folder listed above after closing the app. Exported comparisons and clipboard contents are separate; remove/clear those yourself if desired. Revoke API keys in each provider dashboard if you want to invalidate them beyond this app.
-
-## Blind battles and local wins
-
-1. Choose **Live API** and include at least two providers.
-2. Check **Blind battle**, enter your question, and click **Compare**.
-3. Read Answer A, B and C. The order is shuffled each round. Provider names, models, icons, timing and token counts are hidden; artifacts and exports wait until reveal.
-4. Once every included answer finishes successfully, click **Pick winner** on your favorite. The providers are revealed and a local win tally appears. Each comparison gets one vote, even if reopened from History.
-5. If an answer fails or you prefer not to vote, click **Reveal without voting** after the requests finish. Start a new comparison to play again. Retries are disabled for blind rounds so the answers cannot change after a vote.
-
-Blind battles are casual: answer wording may identify the provider. The app does not conceal identities from someone inspecting local files. Wins persist separately from the last 50 comparisons; deleting History does not reset the tally.
-
-## Easier setup: model menus and one-key OpenRouter
-
-**Direct keys:** Open Connections, paste a provider key, then click **Check key & load models**. Choose a model from its dropdown. Save connections checks newly supplied keys and saved keys whose active model or route settings changed using model-list requests, without generating answers. A successful list check does not prove that generation, billing credit or every listed model is available. Restricted keys may lack model-list permission; network or permission errors leave saved connections unchanged. A saved model missing from the returned list is labeled so you can select a replacement. OpenAI's text-model menu uses a name filter because its list API does not expose endpoint compatibility.
-
-**One key instead of three:**
-
-1. Open **Connections** and choose **OpenRouter · one key** under Connection route.
-2. Read the disclosure: OpenRouter receives prompts and answers and routes them to model hosts. Its billing and privacy policies apply.
-3. Click **Get API key**, create an OpenRouter account, configure credit/spending limits there, and copy a key.
-4. Paste it into the OpenRouter key box. Click **Check key & load models**.
-5. Choose an Anthropic model for Claude, an OpenAI model for OpenAI, and a Google model for Gemini. Click **Save connections**.
-6. Choose Live API and compare as usual. The mode note identifies the OpenRouter route. Direct provider keys remain saved if you switch back.
-
-OpenRouter authentication is checked with its key endpoint before its public model catalog is loaded. The router key uses the same OS encryption as direct keys. API access is separate from website subscriptions. This app does not promise free calls or account credits.
-
-## Updates and busy providers
-
-In Connections, enable **Check GitHub for updates on launch** if wanted. It is off initially. When enabled, the app makes one request per launch to this repository's latest-release endpoint. GitHub receives normal connection information such as your IP address; the request includes no API keys, prompts or answers. **Check now** is an explicit request and shares the same once-per-launch result. A banner opens the project's download page; installation stays manual. Disable the checkbox to stop future automatic checks.
-
-An initial HTTP 503 or 529 gets one retry after two seconds, with a visible retrying status. Stop cancels the wait. The app does not automatically retry rate limits, network failures, or failures after streaming begins. This is a limited response to an explicit busy-server rejection, not a promise about a provider's billing.
-
-
-## If something goes wrong
-
-- **Text too small?** Use View → Zoom In or Zoom Out. On Windows press Ctrl and + or −; on Mac press Command and + or −. Ctrl/Command+0 resets zoom. On Windows, Alt reveals the menu.
-- **Credit or billing message?** Open the provider’s API website, check billing, add credit if needed, then return and Retry. A working key alone does not mean the account has API credit.
-- **History or preferences cannot be opened?** The app offers **Use temporary session**, **Open folder and quit**, or **Quit**. Temporary mode does not overwrite the affected file. Export work before quitting; temporary history or votes will not survive closing the app. The dialog shows the folder to check.
-- **Some history entries are damaged?** The app preserves the original in a backup and keeps readable comparisons. Reopening a comparison keeps its position in history.
-- **The display crashes?** Choose **Reload** in the recovery dialog, then reopen History. The last unsaved fragment may be lost.
-- **Connections are saving?** Wait for Save to finish; Close and Escape are disabled during the check. Unchanged saved keys are not rechecked. You can use **Check key & load models** to check one deliberately.
-- **A vote was saved but history could not update?** The winner still appears and counts once. Reopening that comparison recovers the recorded winner.
-
-Opening the app again brings the existing window forward. Only one instance may write a profile at a time. Markdown and JSON exports identify whether a live comparison used direct providers or OpenRouter.
-
-
-### What Save connections checks (v2.4.4 and later)
-
-When you paste a new key, Save first checks that this computer can encrypt it. If encryption is unavailable, Save refuses before contacting any provider. Nothing is stored; Website assist remains available.
-
-Save checks newly supplied keys and changed active-provider settings. It intentionally does not recheck unchanged saved keys, so another provider's outage cannot block an unrelated change. A successful Save does not prove those unchanged keys are still valid. To check one now, click **Check key & load models** beside it. A revoked key will otherwise be reported on its next comparison. A successful model-list check still does not guarantee billing credit or generation access.
-
-
-### “API key rejected” for Gemini
-
-Open **Connections**, replace the Gemini key with the full key copied from Google AI Studio, and choose **Check key & load models**, then **Save**. A mistyped Gemini key can return HTTP 400; the app now identifies it as a key problem. Never post the key in an issue or screenshot.
-
-### A file could not be saved
-
-Choose a writable folder such as Documents and try again. If the message says the disk is full, free space first. Canceling the save dialog leaves the comparison or artifact in the app.
+| **Compare** | Sends the question to included providers in Live API mode. |
+| **Include** | Chooses which provider participates in the next comparison. Uncheck providers you have not connected. |
+| **Output limit** | Sets the maximum requested output budget per provider: 2,048, 4,096, or 8,192 tokens. Higher limits can allow longer answers and more usage. |
+| **Stop** | Cancels active requests and keeps text already received. |
+| **Retry** | Sends only that card’s original question again. It may incur another charge. |
+| **Copy answer** | Copies the complete original answer, including Markdown formatting marks. |
+| **Copy code** | Copies just one code block, preserving indentation and tabs. |
+| **History** | Opens saved comparisons on this computer. Reopening does not call a provider. |
+| **Export Markdown** | Saves the comparison as a readable text file ending in `.md`. |
+| **JSON** | Saves structured data, mainly useful for technical users and other software. You can ignore this button. |
+| **How to play** | Opens a short help reminder. |
+| **Connections** | Sets up keys, model choices, connection route, and optional update checks. |
+
+**Keyboard shortcuts:** Ctrl+Enter on Windows or Command+Enter on Mac starts a comparison. This shortcut does not submit or clear Website assist paste boxes. Use Tab to move between controls and Enter/Space to activate a focused button.
 
 ## Reading and copying code
 
-Code blocks have a **Copy code** button. It copies just that block, keeping indentation and tabs. **Copy answer** still copies the entire original Markdown answer.
+Answers format headings, lists, tables, and code when they finish. While an answer is arriving, it may show plain text and formatting marks; that is normal.
 
-Long code lines keep their original layout. Use the visible horizontal scrollbar, swipe sideways, or press Tab until the code area has a green outline and use the arrow keys. Tables also scroll sideways when needed. Tabs display four spaces wide; the underlying text is unchanged. Code uses a 12 px font. You can increase the app zoom from the View menu.
+Code blocks have their own **Copy code** button. You do not need to select the code manually. Long lines scroll horizontally rather than wrapping and changing how indentation looks. Use the visible scrollbar below a wide code block, swipe sideways, or Tab to the code region and use arrow keys. Wide tables also scroll sideways.
 
-The Y artifact panel uses the same scrolling and Copy code controls for source text. Long source lines do not wrap, so indentation stays clear.
+The code font is 12 px and tabs display four columns wide. The original text is preserved. **Copy answer** and exports keep the original Markdown, so they may contain marks such as `#`, `**`, and code fences. Markdown is simply text with formatting instructions.
+
+For larger text, use **View → Zoom In**. On Windows press Alt to reveal the menu if needed. **View → Actual Size** resets zoom. You can also use Ctrl/Command with + or −, and Ctrl/Command+0 to reset. At high zoom the cards may stack vertically; scroll the window to reach them.
+
+Generated code is not automatically tested or run by Arena. Read it before using it; a plausible-looking answer can still be wrong.
+
+## What do the tiny token counters mean?
+
+| Label | Meaning |
+| --- | --- |
+| **Q** | Question/input token count from the provider when available, otherwise an estimate. |
+| **A ~** | Approximate visible-answer size. The app uses the same rough estimator for every provider so the displayed sizes can be compared. |
+| **R** | Separately reported reasoning tokens. **—** means unknown, not zero. |
+| **~** | Estimated, not an exact count from the provider. |
+
+A token is a piece of text, not necessarily a word. Estimates can be especially inaccurate for code, emoji, and languages other than English. The app uses roughly four Unicode characters per estimated token. These counters are not prices and do not include every possible billing detail.
+
+Hover over a counter for raw provider usage details. Exports include those details too. Providers report output/reasoning differently, so a raw total may differ from visible answer size. The question-box counter describes your current draft; completed cards keep the counters for the question that produced them.
+
+## Use it without API keys: Website assist
+
+This alternative uses copying and pasting. **It does not remove the need to visit the websites.** Choose Live API if you want Arena to request all answers automatically.
+
+1. Choose **Website assist · no API keys**.
+2. Type your question and choose providers with **Include**.
+3. Click **Prepare comparison**.
+4. On a card, click **Open Claude**, **Open OpenAI**, or **Open Gemini**. Arena copies your question and opens the official website in your browser.
+5. Sign in there if required. Click that site’s question box, paste, and submit it yourself.
+6. Copy its answer. Return to Arena and paste into the matching provider’s answer box.
+7. Repeat for the other providers.
+8. Click **Read formatted** on a pasted card for easier reading. **Edit pasted answer** returns to its editable box.
+9. Compare, copy, or export the answers in Arena.
+
+Each website controls its free limits, plans, and login requirements. Arena does not promise “three free questions” or collect website passwords. Changing the prompt or included providers clears the pasted comparison to avoid mixing different questions; export first if you want to keep it.
+
+## Blind battles and local wins
+
+1. Choose Live API and include at least two connected providers.
+2. Check **Blind battle**, type your question, and click Compare.
+3. Read **Answer A**, **Answer B**, and **Answer C**. Provider identities are shuffled and hidden.
+4. After every included answer finishes successfully, click **Pick winner** on your favorite.
+5. The providers are revealed and a local win tally is updated. A comparison receives only one vote, even if reopened from History.
+
+To reveal without choosing, click **Reveal without voting** after requests finish. This also works when a provider failed. Retry is disabled during blind rounds; start a new comparison for another round. Artifact previews, exports, and identity details wait until reveal.
+
+This is a casual game: an answer may name its provider. Wins stay on this computer and persist separately from History; deleting History does not reset the tally. Nothing is posted to a public leaderboard.
+
+## Preview artifacts with the Y badge
+
+An **artifact** is a file-like answer, such as a small webpage, drawing, data file, or source code. A gold **Y** appears when an answer contains a complete, labeled code/file block the app recognizes.
+
+1. Hover over **Y** to peek. Moving away from the badge and preview hides an unpinned peek.
+2. Click **Y** to keep it open. It docks beside the cards on wide windows or below them on smaller windows.
+3. Click the same **Y** again, or the preview’s close button, to hide it.
+4. If several files are available, click their filename tabs.
+5. For HTML, SVG, or JSON, **Show source** lets you see the underlying text. Source text has scrolling and Copy code controls.
+6. Click **Save file**, choose a folder and name, and click Save to keep the file.
+
+If the preview sits below the cards, scroll the results area to reach it. Clicking another card’s Y switches the pinned preview; merely hovering does not.
+
+Try this question: **“Create a small self-contained HTML greeting card that says Hello. Put the complete file in one fenced html code block.”** You can copy that wording without understanding HTML.
+
+HTML webpages and SVG drawings have static previews: scripts, outside network requests, forms, and app access are blocked. Code such as Python or JavaScript is displayed as text, not executed. JSON data is formatted when valid. Saved HTML can run scripts and contact the internet if later opened in an external browser; the in-app restrictions do not follow the saved file.
+
+The app reads file blocks inside answers; it does not fetch private artifacts stored on AI websites. An unfinished or unlabeled block may not produce Y. Up to 12 files are shown per answer, each limited to one million characters. No preview guarantees that the generated file works correctly.
+
+## Keep or share a comparison
+
+### Reopen History
+
+1. Click **History** at the top.
+2. Click a saved question to reopen it.
+3. Read its answers without generating or paying for another request.
+
+Arena keeps the last **50 comparisons** on this computer, including Sample and Website assist. Export anything you want to keep beyond that. History is saved during use and normal close, but a crash can lose the latest unsaved fragment. An interrupted answer remains labeled as such; Retry in Live API is a new request.
+
+### Save a file you can keep
+
+1. Finish or stop your comparison.
+2. Click **Export Markdown**. Choose this unless you specifically need JSON.
+3. In the Save dialog, select a folder you recognize, such as **Documents**.
+4. Give the file a recognizable name and click **Save**.
+5. Find it in that folder later. A `.md` file can be opened with a text editor such as Notepad or TextEdit; you may see formatting marks, but the question and answers are readable. You can also paste a copied answer into a document or email.
+
+Exports include the complete recorded answers, not just what fits on screen, plus recorded errors and partial text. Review files before sharing; they may contain private material.
+
+### Remove saved history
+
+Use **Delete** beside an entry. To clear the list, click **Delete all history**, then **Confirm delete all**. Export anything you want to retain first. Deleting history does not delete your exports, clipboard contents, or damaged-file recovery backups.
+
+## Easier setup: model menus and one-key OpenRouter
+
+You can skip this section and use direct provider keys.
+
+A **model menu** chooses which version of an AI answers. Open Connections, click **Check key & load models**, pick an available text model, then Save connections. If your saved choice is no longer listed, choose a suitable replacement and check its pricing. A listed model is not a guarantee of generation access or available credit.
+
+**OpenRouter** is an optional third-party service that can route all three cards using one key. It receives the prompts and answers and applies its own billing and privacy policies. It is not a free substitute for paid API access.
+
+1. Open Connections. Change **Connection route** to **OpenRouter · one key**.
+2. Read the disclosure shown there.
+3. Click **Get API key** to open [OpenRouter’s key page](https://openrouter.ai/settings/keys). Create/sign in to an account there, review its billing, and create a key.
+4. Copy the key and paste it into Arena’s OpenRouter **API key** field.
+5. Click **Check key & load models**.
+6. Choose an Anthropic model for Claude, an OpenAI model for OpenAI, and a Google model for Gemini. Check the selected models’ rates before use.
+7. Click Save connections. Choose Live API and Compare normally. The note above your question identifies the OpenRouter route.
+
+Switching back to Direct provider keys keeps previously saved direct keys. The app encrypts the OpenRouter key using the same OS protection. Review [OpenRouter’s own documentation](https://openrouter.ai/docs/quickstart) for account requirements and current terms.
+
+## Updates
+
+There is no automatic background installation. You choose when to update.
+
+1. Export any work you want to keep and quit Arena.
+2. Download the current matching installer from the [beginner download table](../START-HERE.md#2-download-the-matching-installer).
+3. **Windows:** run the new Setup file for the same processor type.
+4. **Mac:** open the new DMG, drag Arena into Applications, and choose to replace the existing app when Finder asks. Open the Applications copy afterward.
+5. Check that your saved connections and History are available. Settings normally survive because they are outside the application itself. The OS may ask for credential authorization again.
+
+Do not copy encrypted key files between computers. Enter keys in Connections on the new computer instead.
+
+For an optional notification, open Connections and enable **Check GitHub for updates on launch**. It is initially off. The check sends no keys, questions, or answers; GitHub receives ordinary connection information such as your IP address. **Check now** requests a check manually; both use the same once-per-launch result. **View download** opens the release page; you still install the update yourself. Turning the checkbox off stops future automatic checks.
+
+## Troubleshooting
+
+| What you see | What to do |
+| --- | --- |
+| Download link fails | Use the [current release page](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest), expand Assets, and choose the installer for your computer. |
+| App is blocked, unverified, or damaged | Read [first-launch help](#first-launch-security-prompts). Confirm the computer type and current download. Do not disable OS protections globally. |
+| Mac seems stuck opening | Look for a macOS Keychain authorization prompt and handle it directly. Do not put your Mac password into Arena. |
+| Cannot type a new question | You are probably in Sample. Switch to Live API or Website assist. |
+| Add an API key | Save a key for that provider in Connections, or uncheck Include for its card. |
+| API key rejected | Replace the full key from the correct provider’s official key page. A Gemini key error can also be reported after a mistyped key. |
+| Insufficient credit or billing setup | Check that provider’s API billing/credit page. Chat subscription payments do not prove API credit. |
+| Access denied | Check your account or key’s model permissions with the provider. |
+| Model unavailable | Open Connections, use Check key & load models, choose a suitable available model, and save. |
+| Rate limit or quota reached | Wait and check the provider’s usage/credit/limits before retrying. |
+| Only one or two answers | Check Include, key, model, and the error on the missing card. Other cards can still succeed. |
+| Timed out | Check the internet connection, shorten the task, or Retry. The app allows two minutes waiting for data before visible text, 45 seconds between data once text starts, and five minutes overall. Partial text stays available. |
+| Output limit reached or no visible answer | Shorten the task or consider a higher Output limit. Some models spend output budget on reasoning. A higher limit and a retry can increase charges. |
+| Saved key could not be unlocked | Resolve the OS credential prompt or re-enter the key. Saved does not guarantee currently readable. |
+| Cannot save keys | OS credential encryption is unavailable or could not complete. Use Sample/Website assist while resolving it. New keys are not saved without encryption. |
+| Save connections seems busy | Wait for its checks; Close and Escape are disabled during saving. Errors do not mean you should paste keys into a support chat. |
+| Text looks cut off | Scroll inside the answer card. For wide code, use its horizontal scrollbar or keyboard focus. Copy answer/Export includes the full recorded text. |
+| Text is too small | Use View → Zoom In; on Windows Alt reveals the menu. |
+| File could not be saved | Choose a writable folder such as Documents. If the disk is full, free space and try again. Canceling Save keeps the comparison in Arena. |
+| Damaged connection settings at startup | The dialog offers Reset connections (keeps a backup), Open settings folder, or Quit. Reset means you will need to paste keys again. |
+| History/preferences cannot be read | The dialog offers Use temporary session, Open folder and quit, or Quit. A temporary session does not overwrite the affected file; export before closing because temporary records do not persist. |
+| Display crashed | Choose Reload in the recovery dialog, then reopen History. The latest unsaved fragment may be lost. |
+| Vote saved but history update failed | The vote is counted once. Reopening that comparison recovers the recorded winner. |
+
+An explicit busy-server response (HTTP 503/529) gets one automatic retry before text starts. Stop cancels that wait. Rate limits, network errors, and interrupted streams are not automatically retried. This is not a guarantee about provider billing.
+
+## Get help or report a problem
+
+If a friend gave you the app, you can ask them to help with installation. To report an app bug, use the project’s [GitHub Issues page](https://github.com/YobieBenjamin/llm-battle-arena/issues). GitHub requires an account to post an issue, even though downloading and using Arena does not.
+
+1. Check whether the same problem has already been reported.
+2. Choose **New issue** and describe the problem in ordinary words; you do not need to write code.
+3. Say which release you installed, whether you use Mac or Windows, and what you clicked.
+4. Include the exact error wording and model name if relevant.
+5. If attaching a screenshot, hide API keys, account details, and private questions/answers first.
+
+You can copy this format:
+
+> Computer: Mac or Windows, and version if known
+>
+> Arena release: the version shown on the download page
+>
+> Mode: Sample, Website assist, or Live API
+>
+> What I clicked: …
+>
+> What I expected: …
+>
+> What happened / exact error: …
+
+Never post an API key or password. For provider billing, credit, account restrictions, or key creation problems, contact that provider’s support; Arena cannot change its decisions.
+
+## Privacy and local settings
+
+API keys are encrypted on this computer using the operating system’s credential protection. Saved secrets are not displayed back to you. They are used to contact the configured providers. Anyone who can use your logged-in account may still be able to use its apps and credentials.
+
+**History is not encrypted:** saved questions and answers are plain text on this computer. The app has no analytics or hosted Arena server. In direct mode live prompts go to the selected providers under their terms. In OpenRouter mode they also go through OpenRouter. Website assist opens your system browser; website policies apply. Optional update checks contact GitHub.
+
+For normal use, manage History and keys through the app. If troubleshooting or removing all local data, the app-data folders are:
+
+- **Mac:** `~/Library/Application Support/LLM Battle Arena/`. In Finder, choose **Go → Go to Folder**, paste that path, and press Return.
+- **Windows:** `%APPDATA%\LLM Battle Arena\`. Open File Explorer, paste that path into its address bar, and press Enter.
+
+The folder holds `connections.json` (encrypted keys/settings), `history.json` (comparisons), and `preferences.json` (votes/update preference). If a recovery dialog shows a different path, use the path it shows. Damaged history may be backed up with a `.bak` suffix; clearing History does not remove those backups or exported files. Leave these files alone unless you are intentionally troubleshooting or removing data.
+
+## Uninstall
+
+Export anything you want to keep and quit Arena first.
+
+- **Windows:** open Settings → Apps → Installed apps, find LLM Battle Arena, and choose Uninstall. If you deliberately used the portable version, close it and remove its executable instead.
+- **Mac:** open Applications and move LLM Battle Arena to Trash.
+
+Uninstalling may leave local settings/history behind. If you also want to remove them, delete only Arena’s app-data folder listed above after closing the app. This removes saved comparisons, local votes, and the local encrypted key copies. Your exports and clipboard are separate. To stop a key working anywhere, revoke it on the provider’s website; uninstalling Arena alone does not revoke it.
+
+[Back to installation](../START-HERE.md) · [API keys and costs](API_KEYS_AND_COSTS.md) · [Project home](../README.md)
