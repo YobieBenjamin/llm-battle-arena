@@ -205,6 +205,7 @@ Connection settings normally survive because they are stored in your user profil
 | What you see | What to try |
 | --- | --- |
 | Download link fails | Open the latest Releases page and choose the matching asset. Don't download source code. Report a missing asset if none appears. |
+| Mac app seems to wait during startup | Check for a macOS Keychain authorization prompt and handle it directly on your Mac. The app may be waiting for that decision. Do not enter your Mac login password in Arena or in a chat. |
 | Installer won't run | Check x64 vs ARM and Mac vs Windows. Use a supported, updated OS. See first-launch security prompts above. |
 | Add an API key | Open Connections, save that provider's key, or uncheck Include for that card. |
 | API key rejected | Replace the matching key. Check that it is an API key, not a website password, and has not been revoked. |
