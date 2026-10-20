@@ -1,6 +1,6 @@
 {
   "name": "llm-battle-arena",
-  "version": "2.4.8",
+  "version": "2.4.9",
   "description": "One prompt. Three perspectives. A private desktop LLM comparison app.",
   "main": "desktop/main.cjs",
   "type": "module",
@@ -15,7 +15,7 @@
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win nsis portable --publish never",
     "dist:mac": "electron-builder --mac dmg --publish never",
-    "test:ui": "node scripts/smoke.cjs && node scripts/audit-regressions.cjs && node scripts/performance.cjs",
+    "test:ui": "node scripts/smoke.cjs && node scripts/audit-regressions.cjs && node scripts/performance.cjs && node scripts/code-render.cjs",
     "test:release": "node scripts/release-smoke.cjs"
   },
   "devDependencies": {

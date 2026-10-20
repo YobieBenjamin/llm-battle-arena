@@ -1,3 +1,4 @@
+import { codeView } from './code-view.js';
 import { extractArtifacts, previewDocument } from './artifacts.js';
 export function createArtifactViewer({ providers, api, notice }) {
   const $ = id => document.getElementById(id);
@@ -52,7 +53,7 @@ export function createArtifactViewer({ providers, api, notice }) {
       let text = artifact.content;
       if (!source && artifact.extension === 'json') { try { text = JSON.stringify(JSON.parse(text), null, 2); } catch { /* Show original source if JSON isn't valid. */ } }
       code.textContent = text;
-      body.append(code);
+      body.append(codeView(code, {copy: text => api ? api.copy(text) : navigator.clipboard.writeText(text), notice}));
     }
   }
   function show(id) {

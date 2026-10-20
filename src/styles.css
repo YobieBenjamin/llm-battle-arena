@@ -70,3 +70,19 @@ footer{flex-shrink:0;margin-top:6px;padding:5px 0 0;font-size:9px;line-height:1.
 .blind-option{font-size:10px}.card.blinded .avatar{background:#343b45;color:#ddd}.card.blinded{border-color:var(--line)}#battle-note:empty{display:none}#battle-note{flex-shrink:0;font-size:10px;margin:4px 0}#update-banner{font-size:11px;flex-shrink:0}.connection select{max-width:100%;width:100%}#settings{max-height:90vh;overflow:auto}#settings button{margin-top:4px}
 
 .answer.streaming-text{white-space:pre-wrap}
+
+/* Answer typography must not inherit the compact app title's tracking. */
+.answer h1,.answer h2,.answer h3,.answer h4,.answer h5,.answer h6{letter-spacing:normal}
+.answer th,.answer td{overflow-wrap:normal;word-break:normal}
+.answer th{white-space:nowrap}
+.code-view{min-width:0;max-width:100%;margin:.75em 0;background:var(--bg);border-radius:6px}
+.code-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;color:var(--muted);font-size:10px;white-space:normal}
+.code-toolbar button{flex-shrink:0;font-size:10px;padding:4px 7px}
+.answer .code-view pre,#artifact-body .code-view pre{margin:0;white-space:pre;overflow-wrap:normal;word-break:normal;overflow:auto;tab-size:4;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.answer pre code{font:inherit}
+.code-view pre:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.code-view pre::-webkit-scrollbar{height:10px;width:10px}
+.code-view pre::-webkit-scrollbar-track{background:#202630;border-radius:5px}
+.code-view pre::-webkit-scrollbar-thumb{background:#78869b;border:2px solid #202630;border-radius:5px}
+.answer table::-webkit-scrollbar{height:10px}
+.answer table::-webkit-scrollbar-thumb{background:#78869b;border-radius:5px}

@@ -57,6 +57,12 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   await launch('--inspect');
   await page.locator('#compare').click();
   for(const id of ['claude','openai','gemini'])await page.locator(`#${id}-answer`).filter({hasText:'ILLUSTRATIVE SAMPLE'}).waitFor();
+  const sampleCode=page.locator('#gemini-answer pre');
+  assert.equal(await sampleCode.getAttribute('tabindex'),'0');
+  assert.equal(await sampleCode.evaluate(el=>getComputedStyle(el).whiteSpace),'pre');
+  assert.equal(await sampleCode.evaluate(el=>getComputedStyle(el,'::-webkit-scrollbar').height),'10px');
+  await page.locator('#gemini-answer .code-toolbar button').click();
+  await page.locator('#notice').filter({hasText:'Code copied.'}).waitFor();
   await page.locator('#history').click();await page.locator('#history-list .history-row').first().waitFor();await page.locator('#close-history').click();
   for(const format of ['md','json']){
    const date=new Date().toISOString().slice(0,10),file=path.join(exports,`comparison-${date}.${format}`);
@@ -72,7 +78,7 @@ async function runReleaseSmoke(bundle,{reportFile=process.env.ARENA_RELEASE_REPO
   for(const id of ['claude','openai','gemini'])await page.locator(`#${id}-answer`).filter({hasText:'ILLUSTRATIVE SAMPLE'}).waitFor();
   await quit();assert.deepEqual(errors,[]);
   assert.equal(hash(archivePath(bundle)),archiveHash,'Testing changed application archive');assert.equal(hash(executable),executableHash,'Testing changed executable');
-  const result={version:require('../package.json').version,platform:process.platform,arch:process.arch,appAsarSha256:archiveHash,executableSha256:executableHash,inspector:false,credentialBackend:process.platform==='darwin'&&process.env.CI?'ci-mock-keychain':'native',ui:['launch','sample','history','native-markdown-export','native-json-export','quit','restart-history'],rejectedInspectorFlags:['--inspect','--inspect-brk']};
+  const result={version:require('../package.json').version,platform:process.platform,arch:process.arch,appAsarSha256:archiveHash,executableSha256:executableHash,inspector:false,credentialBackend:process.platform==='darwin'&&process.env.CI?'ci-mock-keychain':'native',ui:['launch','sample','code-controls','history','native-markdown-export','native-json-export','quit','restart-history'],rejectedInspectorFlags:['--inspect','--inspect-brk']};
   if(reportFile){fs.mkdirSync(path.dirname(path.resolve(reportFile)),{recursive:true});fs.writeFileSync(reportFile,JSON.stringify(result,null,2)+'\n');}
   console.log('PASS: hardened release UI, native exports, quit/restart/history; main inspector flags ignored; bundle unchanged.');return result;
  }catch(error){if(page)console.error('Visible failure:',page.url(),await page.locator('#notice').textContent({timeout:3000}).catch(()=>''),await page.locator('#history-message').textContent({timeout:3000}).catch(()=>''));if(page)await page.screenshot({path:path.join(dir,'failure.png'),timeout:5000}).catch(()=>{});console.error(`Release smoke evidence: ${dir}\n${stderr}`);throw error;}

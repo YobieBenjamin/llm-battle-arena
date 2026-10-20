@@ -1,3 +1,13 @@
+# v2.4.9 — clearer code answers
+
+- Normal heading spacing and readable table columns; wide tables scroll.
+- Code stays at 12 px with four-column tabs, visible horizontal scrollbars, keyboard focus, and a Copy code button for each block.
+- Artifact source preserves long lines instead of soft-wrapping them.
+- Audit corpus regression checks cover all three cards, exact text, keyboard scrolling, copy behavior and failure recovery.
+- Existing hardened release and public-download gates remain required.
+
+See [audit response](https://github.com/YobieBenjamin/llm-battle-arena/blob/main/docs/AUDIT-RESPONSE-2.4.9.md) for evidence and test limits.
+
 ## v2.4.8 — hardened release, separate regression build
 
 - v2.4.7 was an unpublished verification candidate; v2.4.8 includes the corrected Windows ARM native test helper.

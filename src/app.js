@@ -102,7 +102,7 @@ function render(id) {
     const position = answer.scrollTop;
     const following = answer.scrollHeight - position - answer.clientHeight < 24;
     answer.classList.toggle('streaming-text',plain);
-    if(plain) answer.textContent=nextText; else answer.replaceChildren(renderMarkdown(nextText));
+    if(plain) answer.textContent=nextText; else answer.replaceChildren(renderMarkdown(nextText, {copy, notice}));
     renderedText.set(answer, signature);
     answer.scrollTop = following ? answer.scrollHeight : position;
   }

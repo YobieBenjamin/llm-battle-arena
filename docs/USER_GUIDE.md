@@ -299,3 +299,11 @@ Open **Connections**, replace the Gemini key with the full key copied from Googl
 ### A file could not be saved
 
 Choose a writable folder such as Documents and try again. If the message says the disk is full, free space first. Canceling the save dialog leaves the comparison or artifact in the app.
+
+## Reading and copying code
+
+Code blocks have a **Copy code** button. It copies just that block, keeping indentation and tabs. **Copy answer** still copies the entire original Markdown answer.
+
+Long code lines keep their original layout. Use the visible horizontal scrollbar, swipe sideways, or press Tab until the code area has a green outline and use the arrow keys. Tables also scroll sideways when needed. Tabs display four spaces wide; the underlying text is unchanged. Code uses a 12 px font. You can increase the app zoom from the View menu.
+
+The Y artifact panel uses the same scrolling and Copy code controls for source text. Long source lines do not wrap, so indentation stays clear.
