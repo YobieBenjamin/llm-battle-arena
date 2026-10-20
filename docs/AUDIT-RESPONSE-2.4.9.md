@@ -20,8 +20,16 @@ Documentation now explicitly narrows dependency byte checks to the shipped marke
 
 ## Validation and boundaries
 
-Local validation uses disposable profiles and no paid calls. The 72 unit tests pass. The full offline UI suite and native packaged-release/public-download gates are required before release completion. The release fuse remains disabled, private build ASARs must match hardened build ASARs, and private test builds are never published.
+Local validation uses disposable profiles and no paid calls. The 72 unit tests pass. The full local offline UI suite passed, including smoke, fault injection, code rendering, and streaming performance (UI p95 15 ms against the unchanged 250 ms limit). Native packaged-release/public-download gates remain required before release completion. The release fuse remains disabled, private build ASARs must match hardened build ASARs, and private test builds are never published.
 
 Live provider testing requires configured credentials. At the start of this follow-up neither the normal local app profile nor dedicated GitHub live-test secrets contained keys. No real provider response or billing behavior is claimed from offline fixtures. Keys should be entered in Connections or dedicated GitHub Secrets, never committed or pasted into an audit report.
 
 Paid signing/notarization, Safari quarantine installation, real Windows installer prompts, and real provider coverage remain separate from the offline tests. Existing platform CI tests run the extracted installer payloads.
+
+The [v2.4.9 tagged release run](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39347000514) passed all 11 jobs: Linux regressions, four native private/hardened builds, publication, public source/signature/checksum verification, and four native downloaded-installer UI jobs. Each of the six installer payloads passed, including the new code controls. No gate was relaxed or retry needed.
+
+Live testing is intentionally deferred until the owner enters keys in the released app’s Connections screen, as requested.
+
+Local downloaded-Mac follow-up: checksums, sealed signature, fuse checks, and executable/ASAR identity passed. The normal-Keychain UI run then blocked during startup. A short process sample showed the main thread waiting in `SecItemCopyMatching` / `SecKeychainItemCopyContent` / `SecurityServer::ClientSession::decrypt`, with SecurityAgent running. The automation tool explicitly prohibits accessing SecurityAgent, so the owner was asked to handle any OS authorization prompt directly. This local UI run is not claimed as a pass; CI's explicitly disclosed mock-Keychain UI tests passed. No Keychain settings, permissions, or credentials were changed by the agent.
+
+Superseded v2.4.8 installers are private OLD (DO NOT USE) drafts after the successful [archive workflow](https://github.com/YobieBenjamin/llm-battle-arena/actions/runs/39347906837). Its local installer and tagged source ZIP are preserved in the OLD (DO NOT USE) archive.

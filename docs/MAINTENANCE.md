@@ -20,13 +20,13 @@ The workflow runs Mondays at 16:23 UTC and can also be started manually. Provide
 
 ## Dependabot
 
-`.github/dependabot.yml` checks npm and GitHub Actions weekly and opens up to five PRs for each. PRs run unit, source UI, packaged Mac UI and installer build checks. Review and merge updates manually; automatic merging is not enabled. Live-check secrets are not used by these PR checks.
+`.github/dependabot.yml` checks npm and GitHub Actions weekly and opens up to five PRs for each. PRs run unit and source UI checks, private packaged regressions on all four native Mac/Windows architectures, hardened UI checks, and extracted installer-payload checks. Review and merge updates manually; automatic merging is not enabled. Live-check secrets are not used by these PR checks.
 
 ## Public release verification
 
 After publishing, a macOS job downloads the public release assets. It checks all six installer hashes against SHA256SUMS.txt, mounts both DMGs read-only, verifies each app's existing ad-hoc signature, compares bundled src/desktop/index files with the release-tag checkout, and checks the packaged Markdown libraries against npm ci's locked versions. The package version, entrypoint and dependencies must also match. This checks the published bytes, not just local build output.
 
-A failed post-publication job does not automatically remove a release: inspect it promptly and mark or withdraw broken downloads. Checksums beside the release detect corruption, not a compromised GitHub account. Signature verification is not Apple notarization or a Safari-first-launch test. Windows installers receive checksum verification here, not an installation test. Signing and notarization are unchanged.
+A failed post-publication job does not automatically remove a release: inspect it promptly and mark or withdraw broken downloads. Checksums beside the release detect corruption, not a compromised GitHub account. Signature verification is not Apple notarization or a Safari-first-launch test. Separate native public-download jobs compare each installer and proof with its original CI artifact, verify the payload hashes and fuses, and run its UI on Mac and Windows x64/ARM64. Windows Setup and Portable payloads are extracted for these checks; the NSIS installation wizard itself is not exercised. Signing and notarization are unchanged.
 
 ## API references
 
@@ -39,7 +39,7 @@ A failed post-publication job does not automatically remove a release: inspect i
 
 ## Audit regression gates
 
-`npm run test:ui` runs the UI smoke suite, disposable-profile fault injection, and a three-provider 24 KB streaming test. The latter uses 12-character chunks every 30 ms, requires completion within 1.5 times stream duration and UI round-trip p95 below 250 ms, and verifies a second instance exits. The same command runs against the packaged Apple Silicon and Intel apps in CI. Fixtures replace network and credential storage only where stated; they do not certify real provider billing or OS keychain prompts.
+`npm run test:ui` runs the UI smoke suite, disposable-profile fault injection, a three-provider 24 KB streaming test, and the independent audit code-rendering corpus. The latter uses 12-character chunks every 30 ms, requires completion within 1.5 times stream duration and UI round-trip p95 below 250 ms, and verifies a second instance exits. The same command runs against private inspector-enabled packaged apps on all four native Mac/Windows architectures in CI; their application archives must match the hardened release build byte-for-byte. Fixtures replace network and credential storage only where stated; they do not certify real provider billing or OS keychain prompts.
 
 Before recommending a release widely, a person should download it with Safari on an Apple Silicon Mac and install it on Windows, including first-launch prompts and an upgrade from the preceding release. CI signature/checksum checks do not replace those tests. Do not bypass OS protections to claim a successful first launch.
 

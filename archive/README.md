@@ -2,7 +2,7 @@
 
 Use the `main` branch for current development and [the latest release](https://github.com/YobieBenjamin/llm-battle-arena/releases/latest) for installation.
 
-Tags v2.1.0 through v2.4.7 are historical snapshots, retained for audit and reproducibility. Do not build or install archived tags. v2.4.8 is the current hardened installer release. Earlier release records are private drafts labeled OLD (DO NOT USE). v2.4.7 was an unpublished test candidate and has no installer downloads.
+Tags v2.1.0 through v2.4.8 are historical snapshots, retained for audit and reproducibility. Do not build or install archived tags. v2.4.9 is the current hardened installer release. Earlier release records are private drafts labeled OLD (DO NOT USE). v2.4.7 was an unpublished test candidate and has no installer downloads.
 
 Old installer releases are private drafts titled **OLD (DO NOT USE)**. Git history and tags are retained rather than rewritten. GitHub can still generate source archives for historical commits: those are reference code, not supported installers.
 
