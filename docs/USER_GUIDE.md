@@ -10,6 +10,7 @@ You do not need to code or understand GitHub. The one-time setup is installing t
 
 ## Find what you need
 
+- [What kind of app is this? Why Electron?](#what-kind-of-app-is-this-why-electron)
 - [Install on Mac or Windows](#install-on-mac-or-windows)
 - [Handle first-launch messages](#first-launch-security-prompts)
 - [Try the free sample](#your-first-minute-try-sample)
@@ -25,6 +26,33 @@ You do not need to code or understand GitHub. The one-time setup is installing t
 - [Update the app](#updates)
 - [Troubleshoot a problem](#troubleshooting)
 - [Privacy and uninstalling](#privacy-and-local-settings)
+
+## What kind of app is this? Why Electron?
+
+**Arena is a stand-alone desktop app built with Electron.** Electron is the toolkit used to build it; “stand-alone” describes how you install and open it. Both descriptions apply. You launch Arena from Applications on Mac or Start on Windows, and it has its own window.
+
+Electron lets developers build desktop screens using the same technologies used for websites. It includes **Chromium**, the engine that draws the screen, and **Node.js**, which supports desktop operations behind the scenes. Everything needed is included in Arena’s installer. You do not install Electron, Chrome, Node.js, or programming tools separately. [Electron’s official introduction](https://www.electronjs.org/docs/latest/).
+
+### Why we chose it for Arena
+
+- **One app design for Mac and Windows.** We can maintain the comparison interface together instead of building two separate interfaces. That makes a small hobby project easier to maintain.
+- **Desktop conveniences.** Arena can use your computer’s credential protection to encrypt saved API keys, keep comparison history in its app-data folder, and offer familiar Save dialogs for answers and generated files.
+- **A ready-to-open package.** Friends download an installer and open the app. They do not need to start a local server, run commands, or configure a development environment.
+- **Consistent display.** Bundling the screen engine helps the answer cards, Markdown, and code blocks behave consistently across the supported computers.
+
+These are reasons for this project’s design, not a claim that Electron is the only way to build those features.
+
+### Why not just a website in a browser tab?
+
+A website could provide a comparison interface too. Browsers deliberately limit access to desktop files and credential storage. Matching Arena’s current setup would need different storage and connection arrangements, potentially including a server or a local helper. We chose a desktop package so Arena can handle provider requests and local storage on your computer without an Arena-operated server.
+
+You can close your regular browser and keep using Live API in Arena. Your browser is still used for creating provider accounts, getting keys, opening links, and Website assist. **Live answers still need internet access:** Electron does not install Claude, OpenAI’s models, or Gemini on your laptop. Sample and saved History can be read offline.
+
+### What is the tradeoff?
+
+Bundling a screen engine makes the download larger and can use more memory than a small app written specifically for one operating system. A browser-only service would avoid installing that engine with Arena. Electron also needs maintenance and security updates, so install current Arena releases. Electron itself is not a guarantee of safety; the app’s design and maintenance matter. [Electron’s security guidance](https://www.electronjs.org/docs/latest/tutorial/security/).
+
+You do not need to learn any of this technology to use Arena. Install it, try Sample, and connect your keys when you are ready.
 
 ## Install on Mac or Windows
 

@@ -4,6 +4,8 @@
 
 [Back to the home page](README.md) · [Complete user guide](docs/USER_GUIDE.md)
 
+Arena is a **stand-alone desktop app built with Electron**. Everything needed to run the app comes in its installer. [What Electron means and why we use it](docs/USER_GUIDE.md#what-kind-of-app-is-this-why-electron).
+
 ## Before you begin
 
 You need a Mac or Windows computer, an internet connection to download the app, and permission to install apps on that computer. Phones, tablets, Chromebooks, and web browsers are not supported installation targets. A work or school computer may require help from its administrator.

@@ -4,6 +4,8 @@
 
 A free desktop app for Mac and Windows, made for curiosity and a little friendly competition. You do not need to code or know how GitHub works.
 
+**Built with Electron:** Arena is an installed desktop app with its own window. Electron packages its web-based interface and desktop features together; you do not install Electron separately. [What Electron is and why we chose it](docs/USER_GUIDE.md#what-kind-of-app-is-this-why-electron).
+
 ## Start here
 
 ### [1. Follow the beginner installation guide →](START-HERE.md)
